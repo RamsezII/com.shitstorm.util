@@ -12,13 +12,6 @@ public static partial class Util
         return false;
     }
 
-    public static bool TryPullValue(ref string value, out string output)
-    {
-        output = value;
-        value = null;
-        return output != null;
-    }
-
     public static bool Equals2<T>(this T a, in T b)
     {
         if (a == null)

@@ -11,6 +11,18 @@ public static partial class Util
         return temp;
     }
 
+    public static bool TryPullValue(ref string value, out string output)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            output = null;
+            return false;
+        }
+        output = value;
+        value = null;
+        return true;
+    }
+
     public static void TrimNewline(ref string text)
     {
         if (text.EndsWith('\n'))
