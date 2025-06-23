@@ -21,6 +21,11 @@ partial class Util
 
     public static string QuoteStringSafely(this string input)
     {
+        // Si déjà quoté (simples ou doubles) on retourne direct
+        if ((input.StartsWith("'") && input.EndsWith("'")) ||
+            (input.StartsWith("\"") && input.EndsWith("\"")))
+            return input;
+
         bool containsSingle = input.Contains('\'');
         bool containsDouble = input.Contains('\"');
 
@@ -31,6 +36,7 @@ partial class Util
         else
             return $"\"{input.Replace("\"", "\\\"")}\""; // échappement JSON-like
     }
+
 
     public static string QuotePathIfNeeded(this string path)
     {
