@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using _UTIL_;
 
@@ -28,4 +29,7 @@ partial class Util
         string regex = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
         return Regex.IsMatch(value, regex, RegexOptions.IgnoreCase);
     }
+
+    public static string DOS2UNIX(this string path) => path.Replace("\\", "/");
+    public static string DOS2UNIX_full(this string path) => Path.GetFullPath(path).Replace("\\", "/");
 }
