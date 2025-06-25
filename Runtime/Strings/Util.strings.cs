@@ -52,15 +52,16 @@ public static partial class Util
         return new string(chars);
     }
 
-    public static bool TryIndexOf_min(this string text, out int index, in bool ignore_case = true, params char[] chars)
+    public static bool TryIndexOf_min(this string text, out int index, in int start_offset, in bool ignore_case, params char[] chars)
     {
         index = text.Length;
+        int count = text.Length - start_offset;
         var ordinal = ignore_case.ToOrdinal();
 
         for (int i = 0; i < chars.Length; i++)
         {
             char c = chars[i];
-            int find = text.IndexOf(c, ordinal);
+            int find = text.IndexOf(c.ToString(), start_offset, count, ordinal);
             if (find >= 0)
                 index = Mathf.Min(index, find);
         }
