@@ -13,11 +13,8 @@ partial class Util
 
     public static void RunExternalCommand(in string work_dir, in string command_line, Action<string> on_stdout = null, Action<string> on_err = null)
     {
-        static void LogStdout(string stdout) => Debug.Log(stdout);
-        static void LogErr(string error) => Debug.LogWarning(error);
-
-        on_stdout ??= LogStdout;
-        on_err ??= LogErr;
+        on_stdout ??= static stdout => Debug.Log(stdout);
+        on_err ??= static error => Debug.LogWarning(error);
 
         Debug.Log($"[CMD_start] {work_dir}$ {command_line}");
 
