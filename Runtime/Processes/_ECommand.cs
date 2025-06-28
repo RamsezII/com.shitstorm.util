@@ -5,7 +5,7 @@ using UnityEngine;
 partial class Util
 {
     // Fonction bloquante mais streaming
-    public static void RunExternalCommandBlockingStreaming(string work_dir, string command_line, Action<string> on_stdout = null, Action<string> on_err = null, Action on_end = null)
+    public static void RunExternalCommand_streaming(string work_dir, string command_line, Action<string> on_stdout = null, Action<string> on_err = null, Action on_end = null)
     {
         static void LogStdout(string stdout) => Debug.Log(stdout);
         static void LogErr(string error) => Debug.LogWarning(error);
