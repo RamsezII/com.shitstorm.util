@@ -7,13 +7,10 @@ partial class Util
     // Fonction bloquante mais streaming
     public static void RunExternalCommand_streaming(string work_dir, string command_line, Action<string> on_stdout = null, Action<string> on_err = null, Action on_end = null)
     {
-        static void LogStdout(string stdout) => Debug.Log(stdout);
-        static void LogErr(string error) => Debug.LogWarning(error);
+        on_stdout ??= stdout => Debug.Log(stdout);
+        on_err ??= stderr => Debug.LogWarning(stderr);
 
-        on_stdout ??= LogStdout;
-        on_err ??= LogErr;
-
-        Debug.Log($"[CMD_start] {work_dir}$ {command_line}");
+        on_stdout($"[CMD_start] {work_dir}$ {command_line}");
 
         using var process = new System.Diagnostics.Process();
         process.StartInfo.FileName = IsWindows() ? "powershell" : "/bin/bash";
@@ -53,7 +50,7 @@ partial class Util
         // Attend la fin des deux lectures (stdout, stderr)
         Task.WaitAll(stdoutTask, stderrTask);
 
-        Debug.Log("[CMD_end]\n");
+        on_stdout("[CMD_end]\n");
         on_end?.Invoke();
     }
 }

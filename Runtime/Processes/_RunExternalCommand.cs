@@ -16,7 +16,7 @@ partial class Util
         on_stdout ??= static stdout => Debug.Log(stdout);
         on_err ??= static error => Debug.LogWarning(error);
 
-        Debug.Log($"[CMD_start] {work_dir}$ {command_line}");
+        on_stdout($"[CMD_start] {work_dir}$ {command_line}");
 
         using var process = new System.Diagnostics.Process();
         process.StartInfo.FileName = IsWindows() ? "powershell" : "/bin/bash";
@@ -46,6 +46,6 @@ partial class Util
             on_err(err);
         }
 
-        Debug.Log("[CMD_end]\n");
+        on_stdout("[CMD_end]\n");
     }
 }
