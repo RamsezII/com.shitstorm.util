@@ -46,6 +46,6 @@ partial class Util
             on_err(err);
         }
 
-        on_stdout("[CMD_end]\n");
+        on_stdout("[CMD_end]");
     }
 }
