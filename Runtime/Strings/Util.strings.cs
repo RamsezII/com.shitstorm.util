@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public static partial class Util
@@ -21,6 +22,46 @@ public static partial class Util
         output = value;
         value = null;
         return true;
+    }
+
+    public static int CountLines(this string text, in bool check_rn = false)
+    {
+        if (string.IsNullOrEmpty(text))
+            return 0;
+
+        int count = 1;
+        for (int read_i = 0; read_i < text.Length; ++read_i)
+            switch (text[read_i])
+            {
+                case '\n':
+                    ++count;
+                    break;
+                case '\r':
+                    if (read_i < text.Length - 1)
+                    {
+                        ++count;
+                        ++read_i;
+                        if (text[read_i] == '\n')
+                            ++read_i;
+                    }
+                    else
+                        ++count;
+                    break;
+            }
+
+        return count;
+    }
+
+    public static string Repeat(this string text, int count)
+    {
+        if (count <= 0)
+            return string.Empty;
+
+        StringBuilder sb = new(text.Length * count);
+        for (int i = 0; i < count; ++i)
+            sb.Append(text);
+
+        return sb.ToString();
     }
 
     public static void TrimNewline(ref string text)

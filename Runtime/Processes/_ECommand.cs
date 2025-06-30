@@ -5,12 +5,13 @@ using UnityEngine;
 partial class Util
 {
     // Fonction bloquante mais streaming
-    public static void RunExternalCommand_streaming(string work_dir, string command_line, Action<string> on_stdout = null, Action<string> on_err = null, Action on_end = null)
+    public static void RunExternalCommand_streaming(in string work_dir, in string command_line, in bool log = true, Action<string> on_stdout = null, Action<string> on_err = null, in Action on_end = null)
     {
         on_stdout ??= stdout => Debug.Log(stdout);
         on_err ??= stderr => Debug.LogWarning(stderr);
 
-        on_stdout($"[CMD_start] {work_dir}$ {command_line}");
+        if (log)
+            on_stdout($"[CMD_start] {work_dir}$ {command_line}");
 
         using var process = new System.Diagnostics.Process();
         process.StartInfo.FileName = IsWindows() ? "powershell" : "/bin/bash";
@@ -50,7 +51,9 @@ partial class Util
         // Attend la fin des deux lectures (stdout, stderr)
         Task.WaitAll(stdoutTask, stderrTask);
 
-        on_stdout("[CMD_end]\n");
+        if (log)
+            on_stdout("[CMD_end]");
+
         on_end?.Invoke();
     }
 }
