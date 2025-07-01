@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Text;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 public static partial class Util
 {
@@ -83,4 +85,10 @@ public static partial class Util
     }
 
     public static string PercentLog(this in float lerp, int digits = 0) => $"{Math.Round(lerp * 100, digits)}%";
+
+    public static string ToProgressBar(this in float progress, in int width = 10, in int digits = 0)
+    {
+        int count = Mathf.RoundToInt(progress * width);
+        return $"[{new string('=', count)}>{new string('-', width - count)}] {progress.PercentLog(digits)}";
+    }
 }
