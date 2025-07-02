@@ -73,7 +73,7 @@ public abstract class JSon
             {
                 json.Save(filepath, true);
                 json.OnRead();
-                return true;
+                return false;
             }
             else
                 Debug.LogWarning($"can not read or find file at path: {filepath.SetColor(color_paths)}");
