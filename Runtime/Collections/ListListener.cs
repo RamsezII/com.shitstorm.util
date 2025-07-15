@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace _UTIL_
 {
-    public class ListListener : ListListener<object>
+    public sealed class ListListener : ListListener<object>
     {
     }
 
