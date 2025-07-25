@@ -5,7 +5,9 @@ namespace _UTIL_
 {
     public sealed class UIGridRenderer : Graphic
     {
-        public float tickness = 10f;
+        public float
+            tickness = 10f,
+            spacing = 100f;
 
         //--------------------------------------------------------------------------------------------------------------
 
@@ -22,34 +24,57 @@ namespace _UTIL_
             UIVertex vertex = UIVertex.simpleVert;
             vertex.color = color;
 
-            // out
-            vertex.position = new(0, 0);
-            vh.AddVert(vertex);
-            vertex.position = new(r.width, 0);
-            vh.AddVert(vertex);
-            vertex.position = new(r.width, r.height);
-            vh.AddVert(vertex);
-            vertex.position = new(0, r.height);
-            vh.AddVert(vertex);
+            int count_h = (int)(r.width / spacing);
+            int count_v = (int)(r.height / spacing);
+            float ht = .5f * tickness;
 
-            // in
-            vertex.position = new(tickness, tickness);
-            vh.AddVert(vertex);
-            vertex.position = new(r.width - tickness, tickness);
-            vh.AddVert(vertex);
-            vertex.position = new(r.width - tickness, r.height - tickness);
-            vh.AddVert(vertex);
-            vertex.position = new(tickness, r.height - tickness);
-            vh.AddVert(vertex);
+            for (int i = 1; i <= count_h; i++)
+            {
+                vertex.position = new(i * spacing - ht, 0);
+                vh.AddVert(vertex);
+                vertex.position = new(i * spacing + ht, 0);
+                vh.AddVert(vertex);
+                vertex.position = new(i * spacing - ht, r.height);
+                vh.AddVert(vertex);
+                vertex.position = new(i * spacing + ht, r.height);
+                vh.AddVert(vertex);
 
-            vh.AddTriangle(0, 4, 5);
-            vh.AddTriangle(0, 5, 1);
-            vh.AddTriangle(1, 5, 6);
-            vh.AddTriangle(1, 6, 2);
-            vh.AddTriangle(6, 2, 7);
-            vh.AddTriangle(2, 7, 3);
-            vh.AddTriangle(3, 7, 4);
-            vh.AddTriangle(3, 4, 0);
+                vh.AddTriangle(
+                    vh.currentVertCount - 4,
+                    vh.currentVertCount - 3,
+                    vh.currentVertCount - 2
+                    );
+
+                vh.AddTriangle(
+                    vh.currentVertCount - 3,
+                    vh.currentVertCount - 1,
+                    vh.currentVertCount - 2
+                    );
+            }
+
+            for (int j = 1; j <= count_v; j++)
+            {
+                vertex.position = new(0, j * spacing - ht);
+                vh.AddVert(vertex);
+                vertex.position = new(r.width, j * spacing - ht);
+                vh.AddVert(vertex);
+                vertex.position = new(0, j * spacing + ht);
+                vh.AddVert(vertex);
+                vertex.position = new(r.width, j * spacing + ht);
+                vh.AddVert(vertex);
+
+                vh.AddTriangle(
+                    vh.currentVertCount - 4,
+                    vh.currentVertCount - 3,
+                    vh.currentVertCount - 2
+                    );
+
+                vh.AddTriangle(
+                    vh.currentVertCount - 3,
+                    vh.currentVertCount - 1,
+                    vh.currentVertCount - 2
+                    );
+            }
         }
     }
 }
