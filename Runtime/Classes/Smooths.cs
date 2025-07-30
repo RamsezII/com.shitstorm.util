@@ -18,12 +18,10 @@ namespace _UTIL_
 
         //----------------------------------------------------------------------------------------------------------
 
-        public override bool Update(T value, in bool force = false) => base.Update(target = value, true);
-
-        public virtual void Reset(T value)
+        public virtual void ResetValue(in T value = default)
         {
             Update(value, true);
-            velocity = delta = default;
+            target = velocity = delta = value;
         }
     }
 

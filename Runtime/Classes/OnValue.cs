@@ -66,16 +66,13 @@ namespace _UTIL_
             }
         }
 
-        public T PullValue
+        public T PullValue()
         {
-            get
+            lock (this)
             {
-                lock (this)
-                {
-                    T temp = _value;
-                    Update(default);
-                    return temp;
-                }
+                T temp = _value;
+                Update(default);
+                return temp;
             }
         }
 
