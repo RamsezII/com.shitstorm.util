@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.EventSystems;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 partial class Util
@@ -9,24 +7,13 @@ partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
-    public static bool IsSelectedByEventSystem(this GameObject go)
+    public static void SetSprite(this Image image, in Sprite sprite, in bool toggle = true)
     {
-        if (EventSystem.current == null)
-            return false;
-        if (EventSystem.current.currentSelectedGameObject == null)
-            return false;
-        return EventSystem.current.currentSelectedGameObject == go;
-    }
-
-    public static bool RaycastAllUnderMouse(in List<RaycastResult> results)
-    {
-        PointerEventData pointer_data = new(EventSystem.current)
-        {
-            position = Input.mousePosition
-        };
-        results.Clear();
-        EventSystem.current.RaycastAll(pointer_data, results);
-        return results.Count > 0;
+        if (toggle)
+            image.gameObject.SetActive(sprite != null);
+        image.sprite = sprite;
+        if (sprite != null)
+            image.SetNativeSize();
     }
 
     public static (Vector2 min, Vector2 max) GetWorldCorners(this RectTransform rT)
@@ -51,31 +38,5 @@ partial class Util
         if (index == -1)
             return name;
         return name[(index + 2)..];
-    }
-
-    public static bool TryAutosizeLayoutgroup(this Transform transform)
-    {
-        Debug.LogWarning($"{nameof(TryAutosizeLayoutgroup)} UNTESTED");
-
-        if (!transform.TryGetComponent(out LayoutGroup lgroup))
-            return false;
-
-        RectTransform rt = (RectTransform)transform;
-
-        switch (lgroup)
-        {
-            case HorizontalLayoutGroup hlgroup:
-                rt.sizeDelta = new Vector2(hlgroup.preferredWidth, rt.sizeDelta.y);
-                break;
-
-            case VerticalLayoutGroup vlgroup:
-                rt.sizeDelta = new Vector2(rt.sizeDelta.x, vlgroup.preferredHeight);
-                break;
-
-            default:
-                return false;
-        }
-
-        return true;
     }
 }
