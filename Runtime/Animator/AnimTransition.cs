@@ -5,27 +5,82 @@ using UnityEngine;
 namespace _UTIL_
 {
     [Serializable]
-    public class AnimTransition<T> where T : Enum
+    public sealed class AnimTransition<T> : AnimTransition where T : Enum
     {
-        public readonly int layerIndex;
-        public T current, target;
-        public bool nfade;
-        public float fade, offset;
+        public T Target
+        {
+            set => target = Convert.ToInt32(value);
+#if UNITY_EDITOR
+            get => target.ToEnum<T>();
+#endif
+        }
+
+        public T Current => (T)Enum.ToObject(typeof(T), current);
+
+#if UNITY_EDITOR
+        [SerializeField] T _current, _target;
+#endif
 
         //----------------------------------------------------------------------------------------------------------
 
-        public AnimTransition(in int layerIndex) : base()
+        public AnimTransition(in Animator animator, in int layerIndex) : base(animator, layerIndex)
         {
+        }
+
+        //----------------------------------------------------------------------------------------------------------
+
+#if UNITY_EDITOR
+        public override void OnState(in int value)
+        {
+            base.OnState(value);
+            _current = Current;
+        }
+#endif
+    }
+
+    [Serializable]
+    public class AnimTransition
+    {
+        public readonly Animator animator;
+        public readonly int layerIndex;
+        public int current, target;
+        public bool nfade;
+        public float fade, offset, last_scaled, last_unscaled;
+        public int last_apply_frame;
+        public bool TargetChanged => !current.Equals(target);
+        public bool NoChange => current.Equals(target);
+
+        //----------------------------------------------------------------------------------------------------------
+
+        public AnimTransition(in Animator animator, in int layerIndex) : base()
+        {
+            this.animator = animator;
             this.layerIndex = layerIndex;
         }
 
         //----------------------------------------------------------------------------------------------------------
 
-        public void Apply(in Animator animator, in bool force)
+        public virtual void OnState(in int value)
         {
-            if (force || !target.Equals(current))
+            last_scaled = Time.time;
+            last_unscaled = Time.unscaledTime;
+            current = value;
+        }
+
+        public void BeforeEval()
+        {
+            target = current;
+            nfade = false;
+            fade = .2f;
+            offset = 0;
+        }
+
+        public void Apply(in bool force)
+        {
+            if (force || TargetChanged && last_apply_frame != Time.frameCount)
             {
-                int state = Convert.ToInt32(current);
+                last_apply_frame = Time.frameCount;
+                int state = Convert.ToInt32(target);
                 if (nfade)
                     animator.CrossFade(state, fade, layerIndex, offset);
                 else
@@ -33,20 +88,22 @@ namespace _UTIL_
             }
         }
 
-        public void OnWriteBytes(in BinaryWriter writer)
+        public void OnWriteBytes(BinaryWriter writer)
         {
-            writer.Write(Convert.ToInt32(current));
+            writer.Write((byte)layerIndex);
+            writer.Write(current);
             writer.Write(nfade);
             writer.Write_f16(fade);
             writer.Write_f16(offset);
         }
 
-        public void OnReadBytes(in BinaryReader reader)
+        public void OnReadBytes(in BinaryReader reader, in Animator animator)
         {
-            current = (T)Enum.ToObject(typeof(T), reader.ReadInt32());
+            target = current = reader.ReadInt32();
             nfade = reader.ReadBoolean();
             fade = reader.Read_f16();
             offset = reader.Read_f16();
+            Apply(true);
         }
     }
 }

@@ -14,19 +14,16 @@ namespace _UTIL_
             Object target = property.serializedObject.targetObject;
 
             // Récupérer la propriété via Reflection
-            PropertyInfo propertyInfo = target.GetType().GetProperty(attr.propertyName, BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo propertyInfo = target.GetType().GetProperty(attr.propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (propertyInfo != null)
             {
                 object value = propertyInfo.GetValue(target);
-
                 // Afficher la valeur dans l'inspecteur
                 EditorGUI.LabelField(position, attr.propertyName, value != null ? value.ToString() : "null");
             }
             else
-            {
                 EditorGUI.LabelField(position, attr.propertyName, "⚠️ Propriété introuvable");
-            }
         }
     }
 }
