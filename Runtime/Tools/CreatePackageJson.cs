@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+using UnityEditor;
 using System.IO;
 using UnityEngine;
 
@@ -49,3 +50,4 @@ namespace _UTIL_e
         }
     }
 }
+#endif

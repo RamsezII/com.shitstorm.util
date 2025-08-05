@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 
 namespace _UTIL_e
 {
@@ -9,3 +10,4 @@ namespace _UTIL_e
         public string[] references;
     }
 }
+#endif
