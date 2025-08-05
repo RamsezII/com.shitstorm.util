@@ -20,6 +20,18 @@ partial class Util_e
         AnimationUtility.SetEditorCurve(clip, binding, curve);
     }
 
+    public static void WriteLocalRotationKeyframes(this AnimationClip clip, in Transform transform, in float time)
+    {
+        string path = AnimationUtility.CalculateTransformPath(transform, transform.GetComponentInParent<Animator>().transform);
+        Type type = typeof(Transform);
+        Quaternion q = transform.localRotation;
+
+        WriteFloatKeyframes(clip, path, type, "m_LocalRotation.x", q.x, time);
+        WriteFloatKeyframes(clip, path, type, "m_LocalRotation.y", q.y, time);
+        WriteFloatKeyframes(clip, path, type, "m_LocalRotation.z", q.z, time);
+        WriteFloatKeyframes(clip, path, type, "m_LocalRotation.w", q.w, time);
+    }
+
     public static void WriteStructKeyframes<T>(this AnimationClip clip, in Component component, in FieldInfo struct_field, in T struct_value, in float time) => WriteStructKeyframes(
         clip: clip,
         path: AnimationUtility.CalculateTransformPath(component.transform, component.GetComponentInParent<Animator>().transform),
