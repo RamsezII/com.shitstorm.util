@@ -36,6 +36,12 @@ namespace _UTIL_
             _current = Current;
         }
 #endif
+
+        public void SetTargetAndApply(in T value, in bool force = false)
+        {
+            Target = value;
+            Apply(force);
+        }
     }
 
     [Serializable]

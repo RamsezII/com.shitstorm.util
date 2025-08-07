@@ -58,7 +58,14 @@ public static partial class Util
         return ForceFind(root, splits);
     }
 
-    public static Transform ForceFind(this Transform root, in string path) => ForceFind(root, path.Split('/'));
+    public static Transform ForceFind(this Transform root, in string path)
+    {
+        Transform T = root.Find(path);
+        if (T != null)
+            return T;
+        return ForceFind(root, path.Split('/'));
+    }
+
     static Transform ForceFind(this Transform root, params string[] splits)
     {
         Transform tfm = root.Find(splits[0]);
