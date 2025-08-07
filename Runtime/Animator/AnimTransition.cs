@@ -37,8 +37,9 @@ namespace _UTIL_
         }
 #endif
 
-        public void SetTargetAndApply(in T value, in bool force = false)
+        public void SetTargetAndApply(in T value, in float fade, in bool force = false)
         {
+            this.fade = fade;
             Target = value;
             Apply(force);
         }
