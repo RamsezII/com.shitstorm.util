@@ -36,13 +36,6 @@ namespace _UTIL_
             _current = Current;
         }
 #endif
-
-        public void SetTargetAndApply(in T value, in float fade, in bool force = false)
-        {
-            this.fade = fade;
-            Target = value;
-            Apply(force);
-        }
     }
 
     [Serializable]
