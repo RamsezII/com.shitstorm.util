@@ -4,7 +4,6 @@ using System;
 partial class Util
 {
     public static void Toggle(this OnValue<bool> self) => self.Update(!self.Value);
-    public static void Toggle(this OnValue<bool> self, in bool value) => self.Update(value);
 }
 
 namespace _UTIL_
