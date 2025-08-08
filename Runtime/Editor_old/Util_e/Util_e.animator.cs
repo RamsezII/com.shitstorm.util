@@ -42,42 +42,42 @@ public static partial class Util_e_OLD
             foreach (AnimatorControllerLayer layer in animator.layers)
                 log.Append(layer.name + ", ");
             log.AppendLine("_last_ }");
-        }
 
-        if (animator.layers.Length > 0)
             foreach (AnimatorControllerLayer layer in animator.layers)
-            {
-                log.AppendLine();
-                log.AppendLine($"public enum {layer.name}States");
-                log.AppendLine("{");
-
-                AllStates(layer.stateMachine, string.Empty, layer.name);
-
-                log.AppendLine("}");
-
-                void AllStates(in AnimatorStateMachine stateMachine, in string branch_name, in string branch_hash)
+                if (layer.syncedLayerIndex < 0)
                 {
-                    if (stateMachine.stateMachines != null)
-                        foreach (ChildAnimatorStateMachine subStateMachine in stateMachine.stateMachines)
-                            if (string.IsNullOrEmpty(branch_name))
-                                AllStates(subStateMachine.stateMachine, $"{subStateMachine.stateMachine.name}_", $"{branch_hash}.{subStateMachine.stateMachine.name}");
-                            else
-                                AllStates(subStateMachine.stateMachine, $"{branch_name}_{subStateMachine.stateMachine.name}_", $"{branch_hash}.{subStateMachine.stateMachine.name}");
+                    log.AppendLine();
+                    log.AppendLine($"public enum {layer.name}States");
+                    log.AppendLine("{");
 
-                    if (stateMachine.states != null)
-                        foreach (var subState in stateMachine.states)
-                        {
-                            log.Append($"    {branch_name}{subState.state.name} = ");
-                            if (string.IsNullOrEmpty(branch_hash))
-                                log.AppendLine(subState.state.nameHash + ",");
-                            else
+                    AllStates(layer.stateMachine, string.Empty, layer.name);
+
+                    log.AppendLine("}");
+
+                    void AllStates(in AnimatorStateMachine stateMachine, in string branch_name, in string branch_hash)
+                    {
+                        if (stateMachine.stateMachines != null)
+                            foreach (ChildAnimatorStateMachine subStateMachine in stateMachine.stateMachines)
+                                if (string.IsNullOrEmpty(branch_name))
+                                    AllStates(subStateMachine.stateMachine, $"{subStateMachine.stateMachine.name}_", $"{branch_hash}.{subStateMachine.stateMachine.name}");
+                                else
+                                    AllStates(subStateMachine.stateMachine, $"{branch_name}_{subStateMachine.stateMachine.name}_", $"{branch_hash}.{subStateMachine.stateMachine.name}");
+
+                        if (stateMachine.states != null)
+                            foreach (var subState in stateMachine.states)
                             {
-                                string fullhashname = branch_hash + "." + subState.state.name;
-                                log.AppendLine(Animator.StringToHash(fullhashname) + ",");
+                                log.Append($"    {branch_name}{subState.state.name} = ");
+                                if (string.IsNullOrEmpty(branch_hash))
+                                    log.AppendLine(subState.state.nameHash + ",");
+                                else
+                                {
+                                    string fullhashname = branch_hash + "." + subState.state.name;
+                                    log.AppendLine(Animator.StringToHash(fullhashname) + ",");
+                                }
                             }
-                        }
+                    }
                 }
-            }
+        }
 
         if (animator.parameters.Length > 0)
         {
