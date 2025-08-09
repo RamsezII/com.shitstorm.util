@@ -6,11 +6,10 @@ using UnityEngine;
 
 partial class Util_e
 {
-    /// Écrit des keyframes pour toutes les feuilles float sous `rootProp` (SerializedProperty),
+    /// <summary>
+    /// Écrit des keyframes pour toutes les feuilles float sous `property` (SerializedProperty),
     /// à l’instant `time`, sur les courbes de `clip` ciblant `component`.
-    /// - Parcours borné par PROFONDEUR (pas d’évasion hors sous-arbre)
-    /// - Batch : un seul SetEditorCurves à la fin
-    /// - Merge : si une clé existe ~au même time, on la REMPLACE proprement
+    /// </summary>
     public static void WriteKeyframes(this AnimationClip clip, in Component component, in SerializedProperty property, float time, bool write_all_curves = false, float epsilon = 1e-5f)
     {
         if (!clip || !component || property == null)
