@@ -4,10 +4,6 @@ using UnityEngine;
 
 public static partial class Util
 {
-    public static DirectoryInfo GetSreamingAssetsDir() => Application.streamingAssetsPath.GetDir(true);
-
-    //----------------------------------------------------------------------------------------------------------
-
     public static bool Equals_path(this string path1, string path2) => Path.GetFullPath(path1).Equals(Path.GetFullPath(path2), StringComparison.OrdinalIgnoreCase);
 
     public static FileInfo GetFile(this string path) => new(path);
