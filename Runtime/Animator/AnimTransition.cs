@@ -36,6 +36,15 @@ namespace _UTIL_
             _current = Current;
         }
 #endif
+
+        public void Apply(in T value, in float fade = 0, in float offset = 0, in bool nfade = false)
+        {
+            Target = value;
+            this.fade = fade;
+            this.offset = offset;
+            this.nfade = nfade;
+            Apply(true);
+        }
     }
 
     [Serializable]
