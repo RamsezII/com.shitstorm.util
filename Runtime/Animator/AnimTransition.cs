@@ -89,6 +89,12 @@ namespace _UTIL_
         {
             if (force || this.force || TargetChanged && last_apply_frame != Time.frameCount)
             {
+                if (animator.IsInTransition(layerIndex))
+                    if (force)
+                        fade = 0;
+                    else
+                        return;
+
                 last_apply_frame = Time.frameCount;
                 int state = Convert.ToInt32(target);
                 if (nfade)
