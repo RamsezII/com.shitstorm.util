@@ -53,7 +53,7 @@ namespace _UTIL_
         public readonly Animator animator;
         public readonly int layerIndex;
         public int current, target;
-        public bool nfade;
+        public bool nfade, force;
         public float fade, offset, last_scaled, last_unscaled;
         public int last_apply_frame;
         public bool TargetChanged => !current.Equals(target);
@@ -80,13 +80,14 @@ namespace _UTIL_
         {
             target = current;
             nfade = false;
+            force = false;
             fade = .2f;
             offset = 0;
         }
 
         public void Apply(in bool force)
         {
-            if (force || TargetChanged && last_apply_frame != Time.frameCount)
+            if (force || this.force || TargetChanged && last_apply_frame != Time.frameCount)
             {
                 last_apply_frame = Time.frameCount;
                 int state = Convert.ToInt32(target);
