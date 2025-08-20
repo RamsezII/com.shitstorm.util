@@ -97,6 +97,7 @@ namespace _UTIL_
 
                 last_apply_frame = Time.frameCount;
                 int state = Convert.ToInt32(target);
+
                 if (nfade)
                     animator.CrossFade(state, fade, layerIndex, offset);
                 else
