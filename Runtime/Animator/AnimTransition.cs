@@ -86,13 +86,16 @@ namespace _UTIL_
             offset = 0;
         }
 
-        public void Apply()
+        public void Apply(in bool no_fade_when_forced = true)
         {
             if (force || TargetChanged && last_apply_frame != Time.frameCount)
             {
                 if (animator.IsInTransition(layerIndex))
                     if (force)
-                        fade = 0;
+                    {
+                        if (no_fade_when_forced)
+                            fade = 0;
+                    }
                     else
                         return;
 
