@@ -37,12 +37,11 @@ namespace _UTIL_
         }
 #endif
 
-        public void Apply(in T value) => Apply(value, options);
+        public void Apply(in T value) => Apply(value, Options.Default);
         public void Apply(in T value, in Options options)
         {
             Target = value;
-            this.options = options;
-            Apply();
+            Apply(options);
         }
     }
 
@@ -63,11 +62,12 @@ namespace _UTIL_
         public readonly Animator animator;
         public readonly int layerIndex;
         public int current, target;
-        public Options options;
+        [SerializeField] Options last_options;
         public float last_scaled, last_unscaled;
         public int last_apply_frame;
         public bool TargetChanged => !current.Equals(target);
         public bool NoChange => current.Equals(target);
+        public Options GetDefaultOptions => Options.Default;
 
         //----------------------------------------------------------------------------------------------------------
 
@@ -89,11 +89,12 @@ namespace _UTIL_
         public void BeforeEval()
         {
             target = current;
-            options = Options.Default;
+            last_options = Options.Default;
         }
 
-        public void Apply(in bool no_fade_when_forced = true)
+        public void Apply(Options options, in bool no_fade_when_forced = true)
         {
+            last_options = options;
             if (options.force || TargetChanged && last_apply_frame != Time.frameCount)
             {
                 if (animator.IsInTransition(layerIndex))
@@ -119,22 +120,22 @@ namespace _UTIL_
         {
             writer.Write((byte)layerIndex);
             writer.Write(current);
-            writer.Write(options.nfade);
-            writer.Write_f16(options.fade);
-            writer.Write_f16(options.offset);
+            writer.Write(last_options.nfade);
+            writer.Write_f16(last_options.fade);
+            writer.Write_f16(last_options.offset);
         }
 
         public void OnReadBytes(in BinaryReader reader, in Animator animator)
         {
             target = current = reader.ReadInt32();
-            options = new()
+            Options options = new()
             {
                 nfade = reader.ReadBoolean(),
                 fade = reader.Read_f16(),
                 offset = reader.Read_f16(),
                 force = true,
             };
-            Apply();
+            Apply(options);
         }
     }
 }
