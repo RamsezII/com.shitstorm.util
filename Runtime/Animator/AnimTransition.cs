@@ -37,13 +37,14 @@ namespace _UTIL_
         }
 #endif
 
-        public void Apply(in T value, in float fade = 0, in float offset = 0, in bool nfade = false)
+        public void Apply(in T value, in float fade = 0, in float offset = 0, in bool nfade = false, in bool force = true)
         {
             Target = value;
+            this.force = force;
             this.fade = fade;
             this.offset = offset;
             this.nfade = nfade;
-            Apply(true);
+            Apply();
         }
     }
 
@@ -85,9 +86,9 @@ namespace _UTIL_
             offset = 0;
         }
 
-        public void Apply(in bool force)
+        public void Apply()
         {
-            if (force || this.force || TargetChanged && last_apply_frame != Time.frameCount)
+            if (force || TargetChanged && last_apply_frame != Time.frameCount)
             {
                 if (animator.IsInTransition(layerIndex))
                     if (force)
@@ -120,7 +121,8 @@ namespace _UTIL_
             nfade = reader.ReadBoolean();
             fade = reader.Read_f16();
             offset = reader.Read_f16();
-            Apply(true);
+            force = true;
+            Apply();
         }
     }
 }
