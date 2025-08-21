@@ -37,13 +37,11 @@ namespace _UTIL_
         }
 #endif
 
-        public void Apply(in T value, in float fade = 0, in float offset = 0, in bool nfade = false, in bool force = true)
+        public void Apply(in T value) => Apply(value, options);
+        public void Apply(in T value, in Options options)
         {
             Target = value;
-            this.force = force;
-            this.fade = fade;
-            this.offset = offset;
-            this.nfade = nfade;
+            this.options = options;
             Apply();
         }
     }
@@ -51,11 +49,22 @@ namespace _UTIL_
     [Serializable]
     public class AnimTransition
     {
+        [Serializable]
+        public struct Options
+        {
+            public bool nfade, force;
+            public float fade, offset;
+            public static readonly Options Default = new()
+            {
+                fade = .2f,
+            };
+        }
+
         public readonly Animator animator;
         public readonly int layerIndex;
         public int current, target;
-        public bool nfade, force;
-        public float fade, offset, last_scaled, last_unscaled;
+        public Options options;
+        public float last_scaled, last_unscaled;
         public int last_apply_frame;
         public bool TargetChanged => !current.Equals(target);
         public bool NoChange => current.Equals(target);
@@ -80,21 +89,18 @@ namespace _UTIL_
         public void BeforeEval()
         {
             target = current;
-            nfade = false;
-            force = false;
-            fade = .2f;
-            offset = 0;
+            options = Options.Default;
         }
 
         public void Apply(in bool no_fade_when_forced = true)
         {
-            if (force || TargetChanged && last_apply_frame != Time.frameCount)
+            if (options.force || TargetChanged && last_apply_frame != Time.frameCount)
             {
                 if (animator.IsInTransition(layerIndex))
-                    if (force)
+                    if (options.force)
                     {
                         if (no_fade_when_forced)
-                            fade = 0;
+                            options.fade = 0;
                     }
                     else
                         return;
@@ -102,10 +108,10 @@ namespace _UTIL_
                 last_apply_frame = Time.frameCount;
                 int state = Convert.ToInt32(target);
 
-                if (nfade)
-                    animator.CrossFade(state, fade, layerIndex, offset);
+                if (options.nfade)
+                    animator.CrossFade(state, options.fade, layerIndex, options.offset);
                 else
-                    animator.CrossFadeInFixedTime(state, fade, layerIndex, offset);
+                    animator.CrossFadeInFixedTime(state, options.fade, layerIndex, options.offset);
             }
         }
 
@@ -113,18 +119,21 @@ namespace _UTIL_
         {
             writer.Write((byte)layerIndex);
             writer.Write(current);
-            writer.Write(nfade);
-            writer.Write_f16(fade);
-            writer.Write_f16(offset);
+            writer.Write(options.nfade);
+            writer.Write_f16(options.fade);
+            writer.Write_f16(options.offset);
         }
 
         public void OnReadBytes(in BinaryReader reader, in Animator animator)
         {
             target = current = reader.ReadInt32();
-            nfade = reader.ReadBoolean();
-            fade = reader.Read_f16();
-            offset = reader.Read_f16();
-            force = true;
+            options = new()
+            {
+                nfade = reader.ReadBoolean(),
+                fade = reader.Read_f16(),
+                offset = reader.Read_f16(),
+                force = true,
+            };
             Apply();
         }
     }
