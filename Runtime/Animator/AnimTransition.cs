@@ -92,7 +92,7 @@ namespace _UTIL_
             last_options = Options.Default;
         }
 
-        public void Apply(Options options, in bool no_fade_when_forced = true)
+        public void Apply(Options options, in bool no_fade_when_forced = false)
         {
             last_options = options;
             if (options.force || TargetChanged && last_apply_frame != Time.frameCount)
