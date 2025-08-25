@@ -92,19 +92,16 @@ namespace _UTIL_
             last_options = Options.Default;
         }
 
-        public void Apply(Options options, in bool no_fade_when_forced = false)
+        public void Apply(Options options, in bool no_fade_when_forced = true)
         {
             last_options = options;
             if (options.force || TargetChanged && last_apply_frame != Time.frameCount)
             {
                 if (animator.IsInTransition(layerIndex))
-                    if (options.force)
-                    {
-                        if (no_fade_when_forced)
-                            options.fade = 0;
-                    }
-                    else
+                    if (!options.force)
                         return;
+                    else if (no_fade_when_forced)
+                        options.fade = 0;
 
                 last_apply_frame = Time.frameCount;
                 int state = Convert.ToInt32(target);
