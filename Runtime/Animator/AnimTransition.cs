@@ -10,9 +10,7 @@ namespace _UTIL_
         public T Target
         {
             set => target = Convert.ToInt32(value);
-#if UNITY_EDITOR
             get => target.ToEnum<T>();
-#endif
         }
 
         public T Current => (T)Enum.ToObject(typeof(T), current);
