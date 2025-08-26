@@ -9,7 +9,7 @@ namespace _UTIL_
         public bool _disposed;
 
         static ushort _id;
-        public readonly ushort id = _id++;
+        public readonly ushort disposable_id = _id++;
 
 #if UNITY_EDITOR
         string _ToString => ToString();
@@ -28,7 +28,7 @@ namespace _UTIL_
         public override string ToString()
         {
             lock (this)
-                return $"{GetType()}[{id}]";
+                return $"{GetType()}[{disposable_id}]";
         }
 
         public bool Disposed
