@@ -7,10 +7,12 @@
         foreach (string attr in attributes)
             setting += " " + attr;
 
+        string name = RichText(style);
+
         if (close)
-            return "<" + RichText(style) + setting + ">" + text + "</" + RichText(style) + ">";
+            return $"<{name}{setting}>{text}</{name}>";
         else
-            return "<" + RichText(style) + setting + ">" + text;
+            return $"<{name}{setting}>{text}";
     }
 
     static string RichText(in TextB style) => style switch
