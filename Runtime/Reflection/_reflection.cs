@@ -11,8 +11,9 @@ partial class Util
         {
             Assembly assembly = assemblies[i];
             foreach (Type type in assembly.GetTypes())
-                if (type.IsSubclassOf(typeof(T)) && (include_abstracts || !type.IsAbstract))
-                    yield return type;
+                if (include_abstracts || !type.IsAbstract)
+                    if (typeof(T).IsAssignableFrom(type))
+                        yield return type;
         }
     }
 
