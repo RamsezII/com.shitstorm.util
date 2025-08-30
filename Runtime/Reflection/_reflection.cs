@@ -17,45 +17,33 @@ partial class Util
         }
     }
 
-    static bool CheckType(this Type type) => type != null && !type.IsAbstract;
-    static bool CheckType<T>(this Type type) where T : class => CheckType(type) && type.IsSubclassOf(typeof(T));
-
-    public static bool TryGetType(this string typeName, out Type type)
+    public static bool TryGetType(this string typeName, out Type type, in bool include_abstracts = false)
     {
         type = Type.GetType(typeName);
-        if (CheckType(type))
-            return true;
+        if (type != null)
+            if (include_abstracts || !type.IsAbstract)
+                return true;
 
         foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
             type = assembly.GetType(typeName);
-            if (CheckType(type))
-                return true;
+            if (type != null)
+                if (include_abstracts || !type.IsAbstract)
+                    return true;
         }
 
+        type = null;
         return false;
     }
 
-    public static Type GetTypeOrNull(this string typeName)
+    public static bool TryGetType<T>(this string typeName, out Type type, in bool include_abstracts = false) where T : class
     {
-        if (TryGetType(typeName, out Type type))
-            return type;
-        return null;
-    }
+        if (TryGetType(typeName, out type))
+            if (include_abstracts || !type.IsAbstract)
+                if (typeof(T).IsAssignableFrom(type))
+                    return true;
 
-    public static bool TryGetType<T>(this string typeName, out Type type) where T : class
-    {
-        type = Type.GetType(typeName);
-        if (CheckType<T>(type))
-            return true;
-
-        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-        {
-            type = assembly.GetType(typeName);
-            if (CheckType<T>(type))
-                return true;
-        }
-
+        type = null;
         return false;
     }
 }
