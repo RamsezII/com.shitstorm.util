@@ -7,7 +7,7 @@ namespace _UTIL_
     {
         public class Operation : Disposable
         {
-            public readonly float time;
+            public float time;
             public readonly bool play_once;
             public float timer;
             public readonly Action<float> action;
