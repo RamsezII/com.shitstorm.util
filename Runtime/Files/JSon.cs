@@ -10,9 +10,6 @@ public abstract class JSon
         txt = ".txt",
         json = ".json" + txt;
 
-    public virtual string GetFileName() => GetType().FullName + json;
-    public string GetExtension() => "." + GetFileName();
-
     //----------------------------------------------------------------------------------------------------------
 
     public static string GetJSonName(in Type type) => type.FullName + json;
