@@ -20,6 +20,7 @@ namespace _UTIL_e
                 for (int i = 0; i < min; ++i)
                     Rename(self.GetChild(i), target.GetChild(i));
             }
+            DestroyImmediate(this);
         }
     }
 }
