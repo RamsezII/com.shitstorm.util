@@ -1,14 +1,25 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace _UTIL_
 {
-    public static class Util_smooths
-    {
-        public static bool NO_SMOOTH;
-    }
-
     public abstract class Smooth<T> : OnValue<T> where T : struct
     {
+        [Serializable]
+        public struct Damp
+        {
+            public float up, down;
+            public Damp(in float up, in float down)
+            {
+                this.up = up;
+                this.down = down;
+            }
+            public readonly float Get(in bool isUp) => isUp ? up : down;
+            public static implicit operator Damp(in float v) => new(v, v);
+            public static implicit operator Vector2(in Damp d) => new(d.up, d.down);
+            public static implicit operator Damp(in Vector2 v) => new(v.x, v.y);
+        }
+
         public T velocity;
         public T target, delta;
 
@@ -45,13 +56,17 @@ namespace _UTIL_
             return base.Update(value, true);
         }
 
-        public bool SmoothDamp(in float damp, in float deltaTime) => Update(Util_smooths.NO_SMOOTH ? target : Mathf.SmoothDamp(_value, target, ref velocity, damp, Mathf.Infinity, deltaTime));
+        public bool SmoothDamp(in float damp, in float deltaTime) => Update(Mathf.SmoothDamp(_value, target, ref velocity, damp, Mathf.Infinity, deltaTime));
 
-        public bool SmoothDamp(in float up, in float down, in float deltaTime) => Update(Util_smooths.NO_SMOOTH ? target : Mathf.SmoothDamp(_value, target, ref velocity, IsTargetHigher ? up : down, Mathf.Infinity, deltaTime));
+        [Obsolete]
+        public bool SmoothDamp(in float up, in float down, in float deltaTime) => SmoothDamp(new Damp(up, down), deltaTime);
+        public bool SmoothDamp(in Damp damp, in float deltaTime) => Update(Mathf.SmoothDamp(_value, target, ref velocity, damp.Get(IsTargetHigher), Mathf.Infinity, deltaTime));
 
-        public bool SmoothDamp(in float up, in float down, in float limit, in float deltaTime) => Update(Util_smooths.NO_SMOOTH ? target : Mathf.SmoothDamp(_value, target, ref velocity, IsTargetHigher ? up : down, limit, deltaTime));
+        [Obsolete]
+        public bool SmoothDamp(in float up, in float down, in float limit, in float deltaTime) => SmoothDamp(new Damp(up, down), limit, deltaTime);
+        public bool SmoothDamp(in Damp damp, in float limit, in float deltaTime) => Update(Mathf.SmoothDamp(_value, target, ref velocity, damp.Get(IsTargetHigher), limit, deltaTime));
 
-        public bool SmoothDampAngle(in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity) => Update(Util_smooths.NO_SMOOTH ? target : Mathf.SmoothDampAngle(_value, target, ref velocity, damp, maxSpeed, deltaTime));
+        public bool SmoothDampAngle(in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity) => Update(Mathf.SmoothDampAngle(_value, target, ref velocity, damp, maxSpeed, deltaTime));
     }
 
     public abstract class SmoothVector<T> : Smooth<T> where T : struct
@@ -81,14 +96,14 @@ namespace _UTIL_
 
         public bool SmoothDamp(in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity)
         {
-            Vector2 val = Util_smooths.NO_SMOOTH ? target : Vector2.SmoothDamp(_value, target, ref velocity, damp, maxSpeed, deltaTime);
+            Vector2 val = Vector2.SmoothDamp(_value, target, ref velocity, damp, maxSpeed, deltaTime);
             sqr = val.sqrMagnitude;
             return Update(val);
         }
 
         public bool SmoothDamp(in float spring, in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity)
         {
-            Vector2 val = Util_smooths.NO_SMOOTH ? target : Vector2.SmoothDamp(_value, target * spring - _value * (spring - 1), ref velocity, damp, maxSpeed, deltaTime);
+            Vector2 val = Vector2.SmoothDamp(_value, target * spring - _value * (spring - 1), ref velocity, damp, maxSpeed, deltaTime);
             sqr = val.sqrMagnitude;
             return Update(val);
         }
@@ -118,8 +133,6 @@ namespace _UTIL_
                 val = target;
                 velocity = Vector3.zero;
             }
-            else if (Util_smooths.NO_SMOOTH)
-                val = target;
             else
                 val = Vector3.SmoothDamp(_value, target, ref velocity, damp, maxSpeed, deltaTime);
             sqr = val.sqrMagnitude;
@@ -134,8 +147,6 @@ namespace _UTIL_
                 val = target;
                 velocity = Vector3.zero;
             }
-            else if (Util_smooths.NO_SMOOTH)
-                val = target;
             else
             {
                 val.x = Mathf.SmoothDampAngle(_value.x, target.x, ref velocity.x, damp, maxSpeed, deltaTime);
@@ -148,7 +159,7 @@ namespace _UTIL_
 
         public bool SmoothDamp(in float spring, in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity)
         {
-            Vector3 val = Util_smooths.NO_SMOOTH ? target : Vector3.SmoothDamp(_value, target * spring - _value * (spring - 1), ref velocity, damp, maxSpeed, deltaTime);
+            Vector3 val = Vector3.SmoothDamp(_value, target * spring - _value * (spring - 1), ref velocity, damp, maxSpeed, deltaTime);
             sqr = val.sqrMagnitude;
             return Update(val);
         }
