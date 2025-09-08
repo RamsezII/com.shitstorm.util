@@ -120,7 +120,7 @@ namespace _UTIL_
             writer.Write_f16(last_options.offset);
         }
 
-        public void OnReadBytes(in BinaryReader reader, in Animator animator)
+        public void OnReadBytes(in BinaryReader reader)
         {
             target = current = reader.ReadInt32();
             Options options = new()
