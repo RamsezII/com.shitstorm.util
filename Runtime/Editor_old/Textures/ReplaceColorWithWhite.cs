@@ -21,7 +21,6 @@ partial class Util_e_OLD
             string path = AssetDatabase.GetAssetPath(originalTexture);
             string directory = Path.GetDirectoryName(path);
             string filename = Path.GetFileNameWithoutExtension(path);
-            string extension = Path.GetExtension(path);
 
             // Charge l'importeur de texture pour modifier les paramètres
             TextureImporter textureImporter = AssetImporter.GetAtPath(path) as TextureImporter;
