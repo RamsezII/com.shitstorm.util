@@ -27,12 +27,6 @@ public static partial class Util
             return string.Empty;
     }
 
-    public static bool DirectoryExists(this string path, out DirectoryInfo dir)
-    {
-        dir = new(path);
-        return dir.Exists;
-    }
-
     public static void CheckParentDirectory(this string path) => CheckDirectory(Directory.GetParent(path).FullName);
     public static void CheckDirectory(this string path)
     {
