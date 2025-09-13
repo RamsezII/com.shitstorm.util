@@ -6,7 +6,6 @@ using UnityEngine;
 
 public static partial class Util
 {
-    public static BinaryWriter NewWriter() => new(new MemoryStream(), Encoding.UTF8);
     public static byte[] GetBuffer(this BinaryWriter writer) => ((MemoryStream)writer.BaseStream).GetBuffer();
     public static byte[] GetBuffer(this BinaryReader reader) => ((MemoryStream)reader.BaseStream).GetBuffer();
 

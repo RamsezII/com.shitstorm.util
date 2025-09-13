@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Text;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public static partial class Util
 {
@@ -19,9 +18,7 @@ public static partial class Util
     public static string FileSizeLog(this in uint fileSize) => ((long)fileSize).LogDataSize();
     public static string LogDataSize(this in long data_size)
     {
-        if (data_size == 0)
-            return "0";
-        else if (data_size < 1024)
+        if (data_size < 1024)
             return $"{data_size}B";
         else if (data_size < 1024 * 1024)
             return $"{Math.Round(data_size / 1024f, 2)}Ko";
