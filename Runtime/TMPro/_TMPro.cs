@@ -29,4 +29,11 @@ partial class Util
         output = null;
         return false;
     }
+
+    public static string GetSelectedValue(this TMP_Dropdown dropdown)
+    {
+        if (TryGetSelectedValue(dropdown, out string output))
+            return output;
+        return string.Empty;
+    }
 }
