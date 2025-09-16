@@ -3,6 +3,7 @@ using System;
 
 partial class Util
 {
+    public static void Toggle(this OnValue<bool> self, bool value) => self.Update(value);
     public static void Toggle(this OnValue<bool> self) => self.Update(!self.Value);
 }
 
