@@ -3,8 +3,8 @@ using System;
 
 partial class Util
 {
-    public static void Toggle(this OnValue<bool> self, bool value) => self.Update(value);
-    public static void Toggle(this OnValue<bool> self) => self.Update(!self.Value);
+    public static void Toggle(this OnValue<bool> self, bool value) => self.Value = value;
+    public static void Toggle(this OnValue<bool> self) => self.Value = !self.Value;
 }
 
 namespace _UTIL_
@@ -52,6 +52,7 @@ namespace _UTIL_
                 lock (this)
                     return _value;
             }
+            set => Update(value, false);
         }
 
         public bool TryPullValue(out T value)
@@ -71,7 +72,7 @@ namespace _UTIL_
             lock (this)
             {
                 T temp = _value;
-                Update(default);
+                Value = default;
                 return temp;
             }
         }
@@ -118,12 +119,11 @@ namespace _UTIL_
             lock (this)
             {
                 this.processor += processor;
-                Update(_value);
+                Value = _value;
             }
         }
 
-        public virtual void ForceUpdate() => Update(Value, true);
-        public virtual bool Update(T value, in bool force = false)
+        public virtual bool Update(T value, in bool force)
         {
             lock (this)
             {
