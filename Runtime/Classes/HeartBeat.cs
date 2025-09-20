@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace _UTIL_
 {
@@ -7,16 +8,16 @@ namespace _UTIL_
     {
         public class Operation : Disposable
         {
-            public float time;
+            public float timeStep;
             public readonly bool play_once;
-            public float timer;
+            [SerializeField, Range(0, 1)] internal float timer;
             public readonly Action<float> action;
 
             //----------------------------------------------------------------------------------------------------------
 
-            public Operation(in float time, in bool play_once, in Action<float> action)
+            public Operation(in float timeStep, in bool play_once, in Action<float> action)
             {
-                this.time = time;
+                this.timeStep = timeStep;
                 this.play_once = play_once;
                 this.action = action;
             }
@@ -33,9 +34,9 @@ namespace _UTIL_
                 Operation op = operations[i];
                 op.timer += deltaTime;
 
-                if (op.timer >= op.time)
+                if (op.timer >= op.timeStep)
                 {
-                    op.timer %= op.time;
+                    op.timer %= op.timeStep;
                     op.action(op.timer);
 
                     if (op.play_once)
