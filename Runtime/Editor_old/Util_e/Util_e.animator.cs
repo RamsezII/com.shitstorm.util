@@ -15,6 +15,9 @@ public static partial class Util_e_OLD
     [MenuItem("CONTEXT/" + nameof(Animator) + "/" + nameof(_EDITOR_) + "/" + nameof(LogSpeed))]
     static void LogSpeed(MenuCommand command) => Debug.Log(((Animator)command.context).speed);
 
+    [MenuItem("CONTEXT/" + nameof(Animator) + "/" + nameof(_EDITOR_) + "/" + nameof(RebindAnimator))]
+    static void RebindAnimator(MenuCommand command) => ((Animator)command.context).Rebind();
+
     public static void LogAnimatorClips(this Animator animator)
     {
         string log = "";
