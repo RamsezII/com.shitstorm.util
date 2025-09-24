@@ -11,15 +11,25 @@ namespace _UTIL_
             public float timeStep;
             public readonly bool play_once;
             [SerializeField, Range(0, 1)] internal float timer;
-            public readonly Action<float> action;
+            public readonly Action action;
+            public readonly Action<float> action_f;
 
             //----------------------------------------------------------------------------------------------------------
 
-            public Operation(in float timeStep, in bool play_once, in Action<float> action)
+            Operation(in float timeStep, in bool play_once)
             {
                 this.timeStep = timeStep;
                 this.play_once = play_once;
-                this.action = action;
+            }
+
+            public Operation(in float timeStep, in bool play_once, in Action action) : this(timeStep, play_once)
+            {
+                this.action = action ?? throw new ArgumentNullException(nameof(action));
+            }
+
+            public Operation(in float timeStep, in bool play_once, in Action<float> action_f) : this(timeStep, play_once)
+            {
+                this.action_f = action_f ?? throw new ArgumentNullException(nameof(action_f));
             }
         }
 
@@ -30,22 +40,30 @@ namespace _UTIL_
         public void Tick(in float deltaTime)
         {
             for (int i = 0; i < operations.Count; i++)
-            {
-                Operation op = operations[i];
-                op.timer += deltaTime;
-
-                if (op.timer >= op.timeStep)
+                if (operations[i]._disposed)
+                    operations.RemoveAt(i--);
+                else
                 {
-                    op.timer %= op.timeStep;
-                    op.action(op.timer);
+                    Operation op = operations[i];
+                    op.timer += deltaTime;
 
-                    if (op.play_once)
+                    if (op.timer >= op.timeStep)
                     {
-                        op.Dispose();
-                        operations.RemoveAt(i--);
+                        if (op.timeStep > 0)
+                            op.timer %= op.timeStep;
+                        else
+                            op.timer = deltaTime;
+
+                        op.action?.Invoke();
+                        op.action_f?.Invoke(op.timer);
+
+                        if (op.play_once)
+                        {
+                            op.Dispose();
+                            operations.RemoveAt(i--);
+                        }
                     }
                 }
-            }
         }
 
         //----------------------------------------------------------------------------------------------------------

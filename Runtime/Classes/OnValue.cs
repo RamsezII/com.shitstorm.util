@@ -3,8 +3,6 @@ using System;
 
 partial class Util
 {
-    public static void Toggle(this OnValue<bool> self, bool value) => self.Value = value;
-    public static void Toggle(this OnValue<bool> self) => self.Value = !self.Value;
 }
 
 namespace _UTIL_
@@ -12,6 +10,13 @@ namespace _UTIL_
     [Serializable]
     public class OnValue : OnValue<object>
     {
+    }
+
+    [Serializable]
+    public class OnValue_bool : OnValue<bool>
+    {
+        public void Toggle(bool value) => Value = value;
+        public void Toggle() => Value = !Value;
     }
 
     [Serializable]
