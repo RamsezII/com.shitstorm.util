@@ -2,14 +2,21 @@
 
 partial class Util
 {
-    public static void AddTorqueAt(this Rigidbody rigidbody, in Vector3 torque, in Vector3 pivot, in ForceMode mode)
+    public static void AddVelocityTorqueAt(this Rigidbody rigidbody, in Vector3 torque, in Vector3 pivot)
     {
+        if (torque == default)
+            return;
+
         Vector3 wcog = rigidbody.worldCenterOfMass;
+        Quaternion rot = rigidbody.rotation;
 
-        Vector3 local = Quaternion.Inverse(rigidbody.rotation) * (pivot - wcog);
-        Vector3 wpos2 = wcog + Quaternion.Euler(Mathf.Rad2Deg * Time.fixedDeltaTime * torque) * rigidbody.rotation * local;
+        Vector3 local = Quaternion.Inverse(rot) * (pivot - wcog);
+        Vector3 wpos2 = wcog + Quaternion.Euler(Mathf.Rad2Deg * torque) * rot * local;
+        Vector3 error = pivot - wpos2;
 
-        rigidbody.AddTorque(torque, mode);
-        rigidbody.AddForce((pivot - wpos2) / Time.fixedDeltaTime, mode);
+        rigidbody.AddTorque(torque, ForceMode.VelocityChange);
+
+        if (error != default)
+            rigidbody.AddForce(error, ForceMode.VelocityChange);
     }
 }
