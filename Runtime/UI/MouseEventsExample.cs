@@ -4,19 +4,19 @@ using UnityEngine.EventSystems; // N'oubliez pas d'inclure cet espace de noms
 public class MouseEventsExample : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     // Cette fonction est appelée lorsqu'on survole l'élément avec la souris
-    public void OnPointerEnter(PointerEventData eventData)
+    void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
     {
         Debug.Log("La souris est entrée sur " + gameObject.name);
     }
 
     // Cette fonction est appelée lorsque la souris quitte l'élément
-    public void OnPointerExit(PointerEventData eventData)
+    void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
     {
         Debug.Log("La souris a quitté " + gameObject.name);
     }
 
     // Cette fonction est appelée lorsque l'élément est cliqué
-    public void OnPointerClick(PointerEventData eventData)
+    void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
     {
         Debug.Log("L'élément " + gameObject.name + " a été cliqué");
     }
