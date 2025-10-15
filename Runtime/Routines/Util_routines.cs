@@ -18,6 +18,16 @@ public static partial class Util
         action();
     }
 
+    public static IEnumerator<float> ESequence(params Action[] actions)
+    {
+        yield return 0;
+        for (int i = 0; i < actions.Length; i++)
+        {
+            actions[i].Invoke();
+            yield return (float)(1 + i) / actions.Length;
+        }
+    }
+
     public static IEnumerator<float> EWaitForSeconds(this float seconds, bool scaled, Action action)
     {
         float timer = seconds;
@@ -39,7 +49,7 @@ public static partial class Util
                 yield return get_progress?.Invoke() ?? 0;
         on_while_done();
     }
-    
+
     public static IEnumerator<float> EWaitUntil(this Func<bool> condition, Func<float> progression, Action action)
     {
         while (!condition())
