@@ -18,4 +18,8 @@ public static partial class Util
 
         return value;
     }
+
+    public static Vector2 GetAbsoluteValue(this in Vector2 value) => new(Mathf.Abs(value.x), Mathf.Abs(value.y));
+    public static Vector3 GetAbsoluteValue(this in Vector3 value) => new(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
+    public static Vector4 GetAbsoluteValue(this in Vector4 value) => new(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z), Mathf.Abs(value.w));
 }

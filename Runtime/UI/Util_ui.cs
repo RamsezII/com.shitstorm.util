@@ -7,6 +7,21 @@ partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
+    public static Vector2 CanvasLocalPos(this RectTransform rt, in Vector3 position, in Canvas canvas)
+    {
+        Camera cam = (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            ? null
+            : canvas.worldCamera;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            rt,
+            RectTransformUtility.WorldToScreenPoint(cam, position),
+            cam,
+            out Vector2 lp);
+
+        return lp;
+    }
+
     public static void SetSprite(this Image image, in Sprite sprite, in bool toggle = true)
     {
         if (toggle)
