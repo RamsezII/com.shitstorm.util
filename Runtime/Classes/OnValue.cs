@@ -1,5 +1,4 @@
-﻿using _UTIL_;
-using System;
+﻿using System;
 
 partial class Util
 {
@@ -8,19 +7,19 @@ partial class Util
 namespace _UTIL_
 {
     [Serializable]
-    public class OnValue : OnValue<object>
-    {
-    }
-
-    [Serializable]
     public class OnValue_bool : OnValue<bool>
     {
         public void Toggle(bool value) => Value = value;
         public void Toggle() => Value = !Value;
     }
 
+    public class OnValue
+    {
+        public virtual Type Type { get; }
+    }
+
     [Serializable]
-    public class OnValue<T>
+    public class OnValue<T> : OnValue
     {
         public bool changed;
         public T _value, old;
@@ -28,10 +27,17 @@ namespace _UTIL_
         public EventPropagator<T> _propagator;
         public Func<T, T> processor;
         [Obsolete] public Action<T> onUpdate;
+        public readonly Type type;
+        public override Type Type => type;
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public OnValue(in T init = default)
+        OnValue()
+        {
+            type = typeof(T);
+        }
+
+        public OnValue(in T init = default) : this()
         {
             _value = old = init;
         }
