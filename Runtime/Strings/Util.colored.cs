@@ -18,6 +18,7 @@ public static partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
+    public static string SetSize_percent(this string text, in int percent) => $"<size={percent}%>{text}</size>";
     public static string SetColor(this string text, in Color color) => $"<color=#{ColorUtility.ToHtmlStringRGBA(color)}>{text}</color>";
     public static string SetColor(this string text, in Colors color) => $"<color=#{(uint)color:X8}>{text}</color>";
     public static string SetColor(this string text, in string value) => $"<color={value}>{text}</color>";

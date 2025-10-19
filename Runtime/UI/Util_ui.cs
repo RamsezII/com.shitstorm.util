@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 partial class Util
@@ -31,12 +34,33 @@ partial class Util
             image.SetNativeSize();
     }
 
+    [Obsolete]
     public static (Vector2 min, Vector2 max) GetWorldCorners(this RectTransform rT)
     {
         lock (rt_corners)
         {
             rT.GetWorldCorners(rt_corners);
             return (rt_corners[0], rt_corners[2]);
+        }
+    }
+
+    public static void GetWorldCorners(this RectTransform rT, out Vector2 min, out Vector2 max)
+    {
+        lock (rt_corners)
+        {
+            rT.GetWorldCorners(rt_corners);
+            min = rt_corners[0];
+            max = rt_corners[2];
+        }
+    }
+
+    public static void GetWorldCorners(this RectTransform rT, out Vector3 min, out Vector3 max)
+    {
+        lock (rt_corners)
+        {
+            rT.GetWorldCorners(rt_corners);
+            min = rt_corners[0];
+            max = rt_corners[2];
         }
     }
 
@@ -53,5 +77,13 @@ partial class Util
         if (index == -1)
             return name;
         return name[(index + 2)..];
+    }
+
+    public static bool IsInputFieldFocused()
+    {
+        GameObject obj = EventSystem.current.currentSelectedGameObject;
+        if (obj == null)
+            return false;
+        return obj.GetComponent<TMP_InputField>() != null;
     }
 }
