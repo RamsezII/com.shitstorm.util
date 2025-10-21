@@ -8,26 +8,26 @@ namespace _UTIL_
     {
         public class Operation : Disposable
         {
-            public float timeStep;
-            public readonly bool play_once;
-            [SerializeField, Range(0, 1)] internal float timer;
+            public float delay;
+            public readonly bool loop;
+            [Range(0, 1)] public float timer;
             public readonly Action action;
             public readonly Action<float> action_f;
 
             //----------------------------------------------------------------------------------------------------------
 
-            Operation(in float timeStep, in bool play_once)
+            Operation(in float delay, in bool loop)
             {
-                this.timeStep = timeStep;
-                this.play_once = play_once;
+                this.delay = delay;
+                this.loop = loop;
             }
 
-            public Operation(in float timeStep, in bool play_once, in Action action) : this(timeStep, play_once)
+            public Operation(in float delay, in bool loop, in Action action) : this(delay, loop)
             {
                 this.action = action ?? throw new ArgumentNullException(nameof(action));
             }
 
-            public Operation(in float timeStep, in bool play_once, in Action<float> action_f) : this(timeStep, play_once)
+            public Operation(in float delay, in bool loop, in Action<float> action_f) : this(delay, loop)
             {
                 this.action_f = action_f ?? throw new ArgumentNullException(nameof(action_f));
             }
@@ -47,17 +47,17 @@ namespace _UTIL_
                     Operation op = operations[i];
                     op.timer += deltaTime;
 
-                    if (op.timer >= op.timeStep)
+                    if (op.timer >= op.delay)
                     {
-                        if (op.timeStep > 0)
-                            op.timer %= op.timeStep;
+                        if (op.delay > 0)
+                            op.timer %= op.delay;
                         else
                             op.timer = deltaTime;
 
                         op.action?.Invoke();
                         op.action_f?.Invoke(op.timer);
 
-                        if (op.play_once)
+                        if (!op.loop)
                         {
                             op.Dispose();
                             operations.RemoveAt(i--);
