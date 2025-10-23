@@ -3,25 +3,15 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class OnPointerHover : PointerHandler, IPointerEnterHandler, IPointerExitHandler
+    public sealed class OnPointerHover : PointerHandler, IPointerMoveHandler
     {
-        public Action<PointerEventData> onEnter, onExit;
-        public Action<PointerEventData, bool> onEnterExit;
+        public Action<PointerEventData> onMove;
 
         //--------------------------------------------------------------------------------------------------------------
 
-        void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
+        void IPointerMoveHandler.OnPointerMove(PointerEventData eventData)
         {
-            onEnter?.Invoke(eventData);
-            onEnterExit?.Invoke(eventData, true);
-            if (propagateToParent)
-                transform.parent.GetComponentInParent<IPointerEnterHandler>()?.OnPointerEnter(eventData);
-        }
-
-        void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
-        {
-            onExit?.Invoke(eventData);
-            onEnterExit?.Invoke(eventData, false);
+            onMove?.Invoke(eventData);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<IPointerExitHandler>()?.OnPointerExit(eventData);
         }
