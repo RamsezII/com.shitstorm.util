@@ -1,23 +1,19 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace _UTIL_
 {
-    public abstract class CollectionListener<T> where T : ICollection, new()
+    public abstract class CollectionListener<TCollection, TItem> where TCollection : ICollection<TItem>, new()
     {
-        public readonly T _collection;
+        public readonly TCollection _collection;
         public readonly EventPropagator<bool> _listeners1 = new();
-        public readonly EventPropagator<T> _listeners2 = new(), _listeners2_once = new();
+        public readonly EventPropagator<TCollection> _listeners2 = new(), _listeners2_once = new();
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public CollectionListener(in T collection)
+        public CollectionListener()
         {
-            _collection = collection;
-        }
-
-        public CollectionListener() : this(new T())
-        {
+            _collection = new();
         }
 
         //------------------------------------------------------------------------------------------------------------------------------
@@ -56,21 +52,21 @@ namespace _UTIL_
                 _listeners1.AddListener(IsNotEmpty, user, action);
         }
 
-        public void AddListener2(in object user, in Action<T> action)
+        public void AddListener2(in object user, in Action<TCollection> action)
         {
             RemoveZombies();
             lock (this)
                 _listeners2.AddListener(_collection, user, action);
         }
 
-        public void AddListener2_once(in object user, in Action<T> action)
+        public void AddListener2_once(in object user, in Action<TCollection> action)
         {
             RemoveZombies();
             lock (this)
                 _listeners2_once.AddListener(_collection, user, action);
         }
 
-        public void Modify(in Action<T> onCollection)
+        public void Modify(in Action<TCollection> onCollection)
         {
             lock (this)
             {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace _UTIL_
 {
@@ -7,14 +6,8 @@ namespace _UTIL_
     {
     }
 
-    public class ListListener<T> : CollectionListener<List<T>>
+    public class ListListener<T> : CollectionListener<List<T>, T>
     {
-        public ListListener(params T[] list) : base(list.ToList())
-        {
-        }
-
-        //------------------------------------------------------------------------------------------------------------------------------
-
         public bool IsLast(in T element)
         {
             RemoveZombies();
@@ -36,7 +29,7 @@ namespace _UTIL_
                     Modify(list => list.RemoveAt(i--));
         }
 
-        public bool ToggleElement(T element, bool toggle)
+        public bool ToggleElement(T element, in bool toggle)
         {
             lock (this)
             {

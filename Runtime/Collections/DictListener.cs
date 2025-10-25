@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace _UTIL_
 {
-    public class DictListener<Key, Value> : CollectionListener<Dictionary<Key, Value>>
+    public class DictListener<Key, Value> : CollectionListener<Dictionary<Key, Value>, KeyValuePair<Key, Value>>
     {
         public Type
             key_type = typeof(Key),
