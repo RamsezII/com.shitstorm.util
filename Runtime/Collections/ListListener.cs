@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace _UTIL_
 {
@@ -8,18 +9,20 @@ namespace _UTIL_
 
     public class ListListener<T> : CollectionListener<List<T>, T>
     {
-        public bool IsLast(in T element)
+        public bool IsFirst(in T element) => IsAtIndex(element, 0);
+        public bool IsLast(in T element) => IsAtIndex(element, ^1);
+        public bool IsAtIndex(in T element, in Index index)
         {
             RemoveZombies();
             lock (this)
-                return element != null && _collection.Count > 0 && _collection[^1].Equals(element);
+                return element != null && _collection.Count > 0 && _collection[index].Equals(element);
         }
 
         public bool IsEmptyOrLast(in T element)
         {
             RemoveZombies();
             lock (this)
-                return IsEmpty || element != null && IsLast(element);
+                return IsEmpty || element != null && IsAtIndex(element, ^1);
         }
 
         protected override void OnRemoveZombies()

@@ -44,4 +44,16 @@ partial class Util
         Vector3.SmoothDamp(rigidbody.position, target, ref velocity, damp, maxSpeed, Time.fixedDeltaTime);
         rigidbody.AddForce(control * (velocity - rigidbody.linearVelocity), ForceMode.VelocityChange);
     }
+
+    public static Bounds GetCollisionBounds(this Rigidbody rigidbody, in bool includeTriggers = false)
+    {
+        Bounds totalBounds = new(rigidbody.position, Vector3.zero);
+
+        Collider[] colliders = rigidbody.GetComponentsInChildren<Collider>();
+        for (int i = 1; i < colliders.Length; i++)
+            if (includeTriggers || !colliders[i].isTrigger)
+                totalBounds.Encapsulate(colliders[i].bounds);
+
+        return totalBounds;
+    }
 }
