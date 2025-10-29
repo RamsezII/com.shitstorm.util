@@ -22,7 +22,7 @@ namespace _UTIL_
         {
             RemoveZombies();
             lock (this)
-                return IsEmpty || element != null && IsAtIndex(element, ^1);
+                return IsEmpty || IsAtIndex(element, ^1);
         }
 
         protected override void OnRemoveZombies()
