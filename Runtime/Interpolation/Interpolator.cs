@@ -34,30 +34,7 @@ namespace _UTIL_
 
         protected abstract T Lerp(in float lerp);
 
-        public T InterpAround(in float time, in Vector3 pivot)
-        {
-            tlast = time;
-
-            float lerp = Mathf.InverseLerp(ta, tb, time);
-            if (lerp >= 1)
-                return last = b;
-
-            return last = SlerpAround(lerp, pivot);
-        }
-
         protected abstract T SlerpAround(in float lerp, in Vector3 pivot);
-    }
-
-    [Serializable]
-    public class PosDirInterpolator3D : Interpolator<PosDir3D>
-    {
-        protected override PosDir3D Lerp(in float lerp) => PosDir3D.Slerp(a, b, lerp);
-        protected override PosDir3D SlerpAround(in float lerp, in Vector3 pivot)
-        {
-            Vector3 position = pivot + Vector3.Slerp(a.position - pivot, b.position - pivot, lerp);
-            Vector3 direction = Vector3.Slerp(a.direction, b.direction, lerp);
-            return (position, direction);
-        }
     }
 
     [Serializable]
@@ -72,13 +49,6 @@ namespace _UTIL_
     {
         protected override Quaternion Lerp(in float lerp) => Quaternion.Slerp(a, b, lerp);
         protected override Quaternion SlerpAround(in float lerp, in Vector3 pivot) => throw new NotImplementedException();
-    }
-
-    [Serializable]
-    public class InterpolatorPosRot : Interpolator<PosRot>
-    {
-        protected override PosRot Lerp(in float lerp) => PosRot.Slerp(a, b, lerp);
-        protected override PosRot SlerpAround(in float lerp, in Vector3 pivot) => throw new NotImplementedException();
     }
 
     [Serializable]

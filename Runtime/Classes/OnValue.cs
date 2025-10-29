@@ -13,9 +13,24 @@ namespace _UTIL_
         public void Toggle() => Value = !Value;
     }
 
-    public class OnValue
+    public class OnValue : IDisposable
     {
-        public virtual Type Type { get; }
+        public bool _disposed;
+
+        public void Dispose()
+        {
+            lock (this)
+            {
+                if (_disposed)
+                    return;
+                _disposed = true;
+                OnDispose();
+            }
+        }
+
+        protected virtual void OnDispose()
+        {
+        }
     }
 
     [Serializable]
@@ -27,17 +42,10 @@ namespace _UTIL_
         public EventPropagator<T> _propagator;
         public Func<T, T> processor;
         [Obsolete] public Action<T> onUpdate;
-        public readonly Type type;
-        public override Type Type => type;
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        OnValue()
-        {
-            type = typeof(T);
-        }
-
-        public OnValue(in T init = default) : this()
+        public OnValue(in T init = default)
         {
             _value = old = init;
         }

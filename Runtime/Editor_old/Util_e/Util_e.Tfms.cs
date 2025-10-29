@@ -12,7 +12,7 @@ static partial class Util_e_OLD
     internal static void LogTypes(this Transform T)
     {
         foreach (var c in T.GetComponents<Component>())
-            Debug.Log(c.GetType().FullName);
+            Debug.Log($"{c.GetType().FullName} ({c.GetType().Assembly})");
     }
 
     [MenuItem("CONTEXT/" + nameof(Transform) + "/" + nameof(_EDITOR_) + "/" + nameof(AddSceneSorter))]

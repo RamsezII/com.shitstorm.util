@@ -8,39 +8,6 @@ namespace _UTIL_
 
     public class HashSetListener<T> : CollectionListener<HashSet<T>, T>
     {
-        public bool ToggleElement(T element, bool toggle)
-        {
-            lock (this)
-            {
-                bool contained = _collection.Contains(element);
-                if (contained)
-                {
-                    if (!toggle)
-                        Modify(set => set.Remove(element));
-                }
-                else
-                {
-                    if (toggle)
-                        Modify(set => set.Add(element));
-                }
-                return contained;
-            }
-        }
-
-        public bool ToggleElement(T element)
-        {
-            lock (this)
-            {
-                if (_collection.Contains(element))
-                {
-                    Modify(set => set.Remove(element));
-                    return false;
-                }
-                Modify(set => set.Add(element));
-                return true;
-            }
-        }
-
         public void AddElement(T element)
         {
             lock (this)
@@ -52,12 +19,9 @@ namespace _UTIL_
         {
             lock (this)
             {
-                if (_collection.Contains(element))
-                {
-                    Modify(set => set.Remove(element));
-                    return true;
-                }
-                return false;
+                bool contained = false;
+                Modify(set => contained = set.Remove(element));
+                return contained;
             }
         }
 
