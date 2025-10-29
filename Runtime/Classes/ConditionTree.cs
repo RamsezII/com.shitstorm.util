@@ -8,6 +8,9 @@ namespace _UTIL_
         public Condition_not As_NOT => this as Condition_not;
         public Condition_and As_AND => this as Condition_and;
         public Condition_or As_OR => this as Condition_or;
+
+        //--------------------------------------------------------------------------------------------------------------
+
         protected abstract void PropagateValue(bool value);
     }
 
@@ -35,12 +38,29 @@ namespace _UTIL_
                 node.AddListener(PropagateValue);
             }
         }
+
+        public void RemoveNode(in OnValue_bool node)
+        {
+            if (nodes.Remove(node))
+                node.RemoveListener(PropagateValue);
+        }
     }
 
     [Serializable]
     public sealed class Condition_not : Condition_tree
     {
-        public Condition_not(in OnValue_bool node) => node.AddListener(PropagateValue);
+        public readonly OnValue_bool node;
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public Condition_not(in OnValue_bool node)
+        {
+            this.node = node;
+            node.AddListener(PropagateValue);
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
         protected override void PropagateValue(bool value) => Value = !value;
     }
 
@@ -48,6 +68,9 @@ namespace _UTIL_
     public sealed class Condition_or : Condition_nodes
     {
         public Condition_or(params OnValue_bool[] nodes) : base(nodes) { }
+
+        //--------------------------------------------------------------------------------------------------------------
+
         protected override void PropagateValue(bool value)
         {
             value = false;
@@ -65,6 +88,9 @@ namespace _UTIL_
     public sealed class Condition_and : Condition_nodes
     {
         public Condition_and(params OnValue_bool[] nodes) : base(nodes) { }
+
+        //--------------------------------------------------------------------------------------------------------------
+
         protected override void PropagateValue(bool value)
         {
             value = true;
