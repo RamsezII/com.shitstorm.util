@@ -4,6 +4,9 @@ namespace _UTIL_
 {
     public abstract class Condition_tree : OnValue_bool
     {
+        public Condition_not as_not => this as Condition_not;
+        public Condition_and as_and => this as Condition_and;
+        public Condition_or as_or => this as Condition_or;
         protected abstract void PropagateValue(bool value);
     }
 
