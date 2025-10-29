@@ -10,7 +10,15 @@ namespace _UTIL_
     public class OnValue_bool : OnValue<bool>
     {
         public void Toggle(bool value) => Value = value;
+        public void Toggle_inv(bool value) => Value = !value;
         public void Toggle() => Value = !Value;
+        public void AddListener(Action onTrue, Action onFalse) => AddListener(value =>
+        {
+            if (value)
+                onTrue?.Invoke();
+            else
+                onFalse?.Invoke();
+        });
     }
 
     public class OnValue : IDisposable

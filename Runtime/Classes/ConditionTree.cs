@@ -36,13 +36,13 @@ namespace _UTIL_
         }
     }
 
-    public abstract class Condition_not : Condition_tree
+    public class Condition_not : Condition_tree
     {
         protected readonly OnValue_bool node;
 
         //--------------------------------------------------------------------------------------------------------------
 
-        protected Condition_not(in OnValue_bool node)
+        public Condition_not(in OnValue_bool node)
         {
             this.node = node;
             node.AddListener(PropagateValue);
