@@ -14,6 +14,36 @@ namespace _UTIL_
         protected abstract void PropagateValue(bool value);
     }
 
+    [Serializable]
+    public sealed class Condition_not : Condition_tree
+    {
+        public OnValue_bool node;
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public Condition_not(in OnValue_bool node)
+        {
+            AssignNode(node);
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public void AssignNode(in OnValue_bool node)
+        {
+            this.node?.RemoveListener(PropagateValue);
+            this.node = node;
+            this.node?.AddListener(PropagateValue);
+        }
+
+        public void UnassignNode()
+        {
+            node?.RemoveListener(PropagateValue);
+            node = null;
+        }
+
+        protected override void PropagateValue(bool value) => Value = !value;
+    }
+
     public abstract class Condition_nodes : Condition_tree
     {
         protected readonly HashSet<OnValue_bool> nodes;
@@ -24,7 +54,7 @@ namespace _UTIL_
         {
             this.nodes = new(nodes);
             for (int i = 0; i < nodes.Length; i++)
-                nodes[i].onChange += PropagateValue;
+                nodes[i].AddListener(PropagateValue, stopCallback: true);
             PropagateValue(default);
         }
 
@@ -32,11 +62,8 @@ namespace _UTIL_
 
         public void AddNode(in OnValue_bool node)
         {
-            if (!nodes.Contains(node))
-            {
-                nodes.Add(node);
+            if (nodes.Add(node))
                 node.AddListener(PropagateValue);
-            }
         }
 
         public void RemoveNode(in OnValue_bool node)
@@ -44,24 +71,6 @@ namespace _UTIL_
             if (nodes.Remove(node))
                 node.RemoveListener(PropagateValue);
         }
-    }
-
-    [Serializable]
-    public sealed class Condition_not : Condition_tree
-    {
-        public readonly OnValue_bool node;
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        public Condition_not(in OnValue_bool node)
-        {
-            this.node = node;
-            node.AddListener(PropagateValue);
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        protected override void PropagateValue(bool value) => Value = !value;
     }
 
     [Serializable]
