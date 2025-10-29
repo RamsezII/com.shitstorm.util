@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace _UTIL_
 {
     public abstract class Condition_tree : OnValue_bool
     {
-        public Condition_not as_not => this as Condition_not;
-        public Condition_and as_and => this as Condition_and;
-        public Condition_or as_or => this as Condition_or;
+        public Condition_not As_NOT => this as Condition_not;
+        public Condition_and As_AND => this as Condition_and;
+        public Condition_or As_OR => this as Condition_or;
         protected abstract void PropagateValue(bool value);
     }
 
@@ -36,23 +37,14 @@ namespace _UTIL_
         }
     }
 
-    public class Condition_not : Condition_tree
+    [Serializable]
+    public sealed class Condition_not : Condition_tree
     {
-        protected readonly OnValue_bool node;
-
-        //--------------------------------------------------------------------------------------------------------------
-
-        public Condition_not(in OnValue_bool node)
-        {
-            this.node = node;
-            node.AddListener(PropagateValue);
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
-
+        public Condition_not(in OnValue_bool node) => node.AddListener(PropagateValue);
         protected override void PropagateValue(bool value) => Value = !value;
     }
 
+    [Serializable]
     public sealed class Condition_or : Condition_nodes
     {
         public Condition_or(params OnValue_bool[] nodes) : base(nodes) { }
@@ -69,6 +61,7 @@ namespace _UTIL_
         }
     }
 
+    [Serializable]
     public sealed class Condition_and : Condition_nodes
     {
         public Condition_and(params OnValue_bool[] nodes) : base(nodes) { }
