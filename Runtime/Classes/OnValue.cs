@@ -49,7 +49,6 @@ namespace _UTIL_
         public Action<T> onChange;
         public EventPropagator<T> _propagator;
         public Func<T, T> processor;
-        [Obsolete] public Action<T> onUpdate;
 
         //------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,7 +67,6 @@ namespace _UTIL_
             onChange = null;
             _propagator?.ClearListeners();
             processor = null;
-            onUpdate = null;
             Update(value, true);
         }
 
@@ -163,7 +161,6 @@ namespace _UTIL_
                 changed = !Util.Equals2(value, _value);
                 _value = value;
 
-                onUpdate?.Invoke(value);
                 if (force || changed)
                 {
                     onChange?.Invoke(value);
