@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace _UTIL_
 {
-    public abstract class Smooth<T> : OnValue<T> where T : struct
+    public abstract class Smooth<T> : ValueHandler<T> where T : struct
     {
         [Serializable]
         public struct Damp

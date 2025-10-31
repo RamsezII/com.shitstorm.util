@@ -1,27 +1,23 @@
-﻿using System;
+﻿using _UTIL_;
+using System;
 
 partial class Util
 {
+    public static void Toggle(this ValueHandler<bool> onValue) => onValue.Value = !onValue.Value;
+    public static void Toggle(this ValueHandler<bool> onValue, bool value) => onValue.Value = value;
+    public static void Toggle_inv(this ValueHandler<bool> onValue, bool value) => onValue.Value = !value;
+    public static void AddListener(this ValueHandler<bool> onValue, Action onTrue, Action onFalse) => onValue.AddListener(value =>
+    {
+        if (value)
+            onTrue?.Invoke();
+        else
+            onFalse?.Invoke();
+    });
 }
 
 namespace _UTIL_
 {
-    [Serializable]
-    public class OnValue_bool : OnValue<bool>
-    {
-        public void Toggle(bool value) => Value = value;
-        public void Toggle_inv(bool value) => Value = !value;
-        public void Toggle() => Value = !Value;
-        public void AddListener(Action onTrue, Action onFalse) => AddListener(value =>
-        {
-            if (value)
-                onTrue?.Invoke();
-            else
-                onFalse?.Invoke();
-        });
-    }
-
-    public class OnValue : IDisposable
+    public class ValueHandler : IDisposable
     {
         public bool _disposed;
 
@@ -42,7 +38,7 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public class OnValue<T> : OnValue
+    public class ValueHandler<T> : ValueHandler
     {
         public bool changed;
         public T _value, old;
@@ -52,7 +48,7 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public OnValue(in T init = default)
+        public ValueHandler(in T init = default)
         {
             _value = old = init;
         }
