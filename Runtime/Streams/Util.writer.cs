@@ -11,26 +11,26 @@ public static partial class Util
 
     public static bool LengthPrefixedWrite(this BinaryWriter writer, in Action<BinaryWriter> onWriter)
     {
-        ushort len1 = (ushort)writer.BaseStream.Length;
-        ushort pos1 = (ushort)writer.BaseStream.Position;
+        ushort streamLength = (ushort)writer.BaseStream.Length;
+        ushort startPos = (ushort)writer.BaseStream.Position;
         writer.Write((ushort)0);
 
         onWriter(writer);
 
-        ushort pos2 = (ushort)writer.BaseStream.Position;
-        ushort length = (ushort)(pos2 - pos1 - sizeof(ushort));
+        ushort endPos = (ushort)writer.BaseStream.Position;
+        ushort dataSize = (ushort)(endPos - startPos - sizeof(ushort));
 
-        if (length == 0)
+        if (dataSize == 0)
         {
-            writer.BaseStream.Position = pos1;
-            writer.BaseStream.SetLength(len1);
+            writer.BaseStream.Position = startPos;
+            writer.BaseStream.SetLength(streamLength);
             return false;
         }
         else
         {
-            writer.BaseStream.Position = pos1;
-            writer.Write(length);
-            writer.BaseStream.Position = pos2;
+            writer.BaseStream.Position = startPos;
+            writer.Write(dataSize);
+            writer.BaseStream.Position = endPos;
             return true;
         }
     }
@@ -86,10 +86,17 @@ public static partial class Util
         writer.Write(value.z);
     }
 
+    public static void WriteV2_2f16(this BinaryWriter writer, in Vector2 value)
+    {
+        writer.Write_f16(value.x);
+        writer.Write_f16(value.y);
+    }
+
     public static void WriteV3_3f16(this BinaryWriter writer, in Vector3 value)
     {
-        for (int i = 0; i < 3; ++i)
-            writer.Write_f16(value[i]);
+        writer.Write_f16(value.x);
+        writer.Write_f16(value.y);
+        writer.Write_f16(value.z);
     }
 
     public static void WriteQ_3u8(this BinaryWriter writer, in Quaternion value)
