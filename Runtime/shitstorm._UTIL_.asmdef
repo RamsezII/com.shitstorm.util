@@ -20,6 +20,11 @@
             "name": "com.unity.render-pipelines.universal",
             "expression": "",
             "define": "HAS_URP"
+        },
+        {
+            "name": "com.unity.ai.navigation",
+            "expression": "",
+            "define": "HAS_AI"
         }
     ],
     "noEngineReferences": false
