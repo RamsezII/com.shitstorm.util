@@ -14,8 +14,8 @@ partial class Util
             on_stdout($"[CMD_start] {work_dir}$ {command_line}");
 
         using var process = new System.Diagnostics.Process();
-        process.StartInfo.FileName = IsWindows() ? "powershell" : "/bin/bash";
-        process.StartInfo.Arguments = IsWindows() ? $"/C {command_line}" : $"-c \"{command_line}\"";
+        process.StartInfo.FileName = is_windows ? "powershell" : "/bin/bash";
+        process.StartInfo.Arguments = is_windows ? $"/C {command_line}" : $"-c \"{command_line}\"";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.UseShellExecute = false;

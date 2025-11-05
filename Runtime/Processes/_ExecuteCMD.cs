@@ -14,8 +14,8 @@ partial class Util
         {
             StartInfo = new()
             {
-                FileName = IsWindows() ? "powershell.exe" : "/bin/bash",
-                Arguments = IsWindows() ? $"/C {command}" : $"-c \"{command}\"",
+                FileName = is_windows ? "powershell.exe" : "/bin/bash",
+                Arguments = is_windows ? $"/C {command}" : $"-c \"{command}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

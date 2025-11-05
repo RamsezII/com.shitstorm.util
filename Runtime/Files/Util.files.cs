@@ -18,6 +18,4 @@ public static partial class Util
         }
         return dir;
     }
-
-    public static string TypeToPath(this Type type) => type.FullName.Replace('.', Path.PathSeparator);
 }
