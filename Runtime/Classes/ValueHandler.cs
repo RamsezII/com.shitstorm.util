@@ -110,13 +110,13 @@ namespace _UTIL_
                     return false;
         }
 
-        public void AddListener(in Action<T> action, in bool stopCallback = false)
+        public void AddListener(in Action<T> action, in bool doNotCallThisTime = false)
         {
             lock (this)
             {
                 onChange -= action;
                 onChange += action;
-                if (!stopCallback)
+                if (!doNotCallThisTime)
                     action(Value);
             }
         }

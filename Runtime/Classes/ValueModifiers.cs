@@ -49,7 +49,7 @@ namespace _UTIL_
         {
             _nodes = new(nodes);
             for (int i = 0; i < nodes.Length; i++)
-                nodes[i].AddListener(PropagateValue, stopCallback: true);
+                nodes[i].AddListener(PropagateValue, doNotCallThisTime: true);
             PropagateValue(default);
         }
 
