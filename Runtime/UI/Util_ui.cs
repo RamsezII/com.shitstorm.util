@@ -10,7 +10,7 @@ partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
-    public static Vector2 CanvasLocalPos(this RectTransform rt, in Vector3 position, in Canvas canvas)
+    public static Vector2 WorldToLocalPosition(this RectTransform rt, in Vector3 worldPos, in Canvas canvas)
     {
         Camera cam = (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
             ? null
@@ -18,7 +18,7 @@ partial class Util
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             rt,
-            RectTransformUtility.WorldToScreenPoint(cam, position),
+            RectTransformUtility.WorldToScreenPoint(cam, worldPos),
             cam,
             out Vector2 lp);
 
