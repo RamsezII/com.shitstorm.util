@@ -58,10 +58,24 @@ public abstract class JSon
         json ??= new T();
         if (File.Exists(filepath))
         {
-            json = JsonUtility.FromJson<T>(File.ReadAllText(filepath));
+            string text = File.ReadAllText(filepath);
+
+            try
+            {
+                json = JsonUtility.FromJson<T>(text);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"READ_JSON_ERROR: \"{e.TrimmedExceptionMessage()}\" ({filepath})");
+                json = new();
+                json.Save(filepath, true);
+            }
+
             json.OnRead();
+
             if (log)
                 Debug.Log($"{typeof(JSon).FullName}.{nameof(Read)}<{typeof(T)}>({filepath.SetColor(color_paths)})".ToSubLog());
+
             return true;
         }
         else

@@ -14,7 +14,7 @@ namespace _UTIL_
 
         //----------------------------------------------------------------------------------------------------------
 
-        public T ThreadLockedValue
+        public T SafeValue
         {
             get
             {
@@ -23,15 +23,15 @@ namespace _UTIL_
             }
         }
 
-        public T GetValue(in bool force_refresh = false)
+        public T GetValue(in bool force_reload = false)
         {
             lock (this)
-                if (force_refresh || !_ready)
-                    Refresh();
+                if (force_reload || !_ready)
+                    Load();
             return _value;
         }
 
-        public void Refresh()
+        void Load()
         {
             lock (this)
             {
