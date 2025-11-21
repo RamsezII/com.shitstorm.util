@@ -14,23 +14,41 @@ namespace _UTIL_
 
         //----------------------------------------------------------------------------------------------------------
 
-        public T GetValue()
+        public T ThreadLockedValue
+        {
+            get
+            {
+                lock (this)
+                    return _value;
+            }
+        }
+
+        public T GetValue(in bool force_refresh = false)
         {
             lock (this)
-                if (!_ready)
-                {
-                    _value = _factory();
-                    _ready = true;
-                }
+                if (force_refresh || !_ready)
+                    Refresh();
             return _value;
+        }
+
+        public void Refresh()
+        {
+            lock (this)
+            {
+                _value = _factory();
+                _ready = true;
+            }
         }
 
         public void Reset() => Reset(_factory);
         public void Reset(in Func<T> factory)
         {
-            this._factory = factory;
-            _value = default;
-            _ready = false;
+            lock (this)
+            {
+                _factory = factory;
+                _value = default;
+                _ready = false;
+            }
         }
     }
 }
