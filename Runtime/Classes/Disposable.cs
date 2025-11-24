@@ -11,10 +11,6 @@ namespace _UTIL_
         static ushort _id;
         public readonly ushort disposable_id = _id++;
 
-#if UNITY_EDITOR
-        string _ToString => ToString();
-#endif
-
         //----------------------------------------------------------------------------------------------------------
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
