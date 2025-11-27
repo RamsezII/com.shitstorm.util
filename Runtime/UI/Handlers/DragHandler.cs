@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class OnDragEvent : PointerHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public sealed class DragHandler : PointerHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public Action<PointerEventData> onBeginDrag, onDrag, onEndDrag;
 

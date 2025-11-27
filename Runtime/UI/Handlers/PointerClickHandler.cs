@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class OnPointerClick : PointerHandler, IPointerClickHandler
+    public sealed class PointerClickHandler : PointerHandler, IPointerClickHandler
     {
         public Action<PointerEventData> onClick;
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)

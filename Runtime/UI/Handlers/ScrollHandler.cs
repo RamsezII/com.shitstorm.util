@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class OnScrollEvent : PointerHandler, IScrollHandler
+    public sealed class ScrollHandler : PointerHandler, IScrollHandler
     {
         public Action<PointerEventData> onScroll;
         void IScrollHandler.OnScroll(PointerEventData eventData)

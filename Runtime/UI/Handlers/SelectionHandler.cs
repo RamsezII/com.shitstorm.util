@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class OnSelectionHandler : PointerHandler, ISelectHandler, IDeselectHandler
+    public sealed class SelectionHandler : PointerHandler, ISelectHandler, IDeselectHandler
     {
         public Action<BaseEventData> onEnter, onExit;
         public Action<BaseEventData, bool> onEnterExit;

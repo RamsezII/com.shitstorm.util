@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class OnPointerEnterExit : PointerHandler, IPointerEnterHandler, IPointerExitHandler
+    public sealed class PointerEnterExitHandler : PointerHandler, IPointerEnterHandler, IPointerExitHandler
     {
         public Action<PointerEventData> onEnter, onExit;
         public Action<PointerEventData, bool> onEnterExit;
