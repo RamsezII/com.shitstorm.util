@@ -86,4 +86,30 @@ partial class Util
             return false;
         return obj.GetComponent<TMP_InputField>() != null;
     }
+
+    /// <summary>
+    /// Renvoie la position de la souris normalisée (0..1, 0..1) dans le RectTransform.
+    /// (0,0) = bas-gauche du rect, (1,1) = haut-droite.
+    /// Peut sortir [0,1] si la souris est hors du rect.
+    /// </summary>
+    public static bool GetMouseUVInRect(this RectTransform rect, in Vector2 mousePos, in Camera uiCamera, out Vector2 uv)
+    {
+        // 1) Écran → local dans le rect
+        bool inside = RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            rect,
+            mousePos,
+            uiCamera,
+            out Vector2 local
+        );
+
+        // 2) On normalise dans le rect
+        // rect.rect.x/y = coin bas-gauche du rect dans l'espace local
+        Rect r = rect.rect;
+
+        float u = (local.x - r.x) / r.width;
+        float v = (local.y - r.y) / r.height;
+
+        uv = new Vector2(u, v);
+        return inside;
+    }
 }
