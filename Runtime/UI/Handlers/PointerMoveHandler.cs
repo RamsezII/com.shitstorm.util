@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace _UTIL_
 {
-    public sealed class PointerHoverHandler : PointerHandler, IPointerMoveHandler
+    public sealed class PointerMoveHandler : PointerHandler, IPointerMoveHandler
     {
         public Action<PointerEventData> onMove;
 

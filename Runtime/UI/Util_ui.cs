@@ -34,16 +34,6 @@ partial class Util
             image.SetNativeSize();
     }
 
-    [Obsolete]
-    public static (Vector2 min, Vector2 max) GetWorldCorners(this RectTransform rT)
-    {
-        lock (rt_corners)
-        {
-            rT.GetWorldCorners(rt_corners);
-            return (rt_corners[0], rt_corners[2]);
-        }
-    }
-
     public static void GetWorldCorners(this RectTransform rT, out Vector2 min, out Vector2 max)
     {
         lock (rt_corners)
@@ -64,10 +54,28 @@ partial class Util
         }
     }
 
-    public static Vector2 GetWorldSize(this RectTransform rT)
+    public static bool BoundsClamp(
+        in Vector3 current_min, in Vector3 current_max,
+        in Vector3 parent_min, in Vector3 parent_max,
+        out Vector3 correction)
     {
-        (Vector2 min, Vector2 max) = rT.GetWorldCorners();
-        return max - min;
+        correction = Vector3.zero;
+
+        for (int i = 0; i < 3; ++i)
+        {
+            float _cmin = current_min[i];
+            float _cmax = current_max[i];
+            float _pmin = parent_min[i];
+            float _pmax = parent_max[i];
+
+            if (_cmin < _pmin)
+                correction[i] -= _cmin - _pmin;
+
+            if (_cmax > _pmax)
+                correction[i] -= _cmax - _pmax;
+        }
+
+        return correction != Vector3.zero;
     }
 
     public static string Get_ItemName_From_DropdownToggle(this Toggle toggle)
