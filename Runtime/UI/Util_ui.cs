@@ -118,6 +118,7 @@ partial class Util
         float v = (local.y - r.y) / r.height;
 
         uv = new Vector2(u, v);
-        return inside;
+
+        return u >= 0 && u <= 1 && v >= 0 && v <= 1;
     }
 }
