@@ -1,8 +1,4 @@
-﻿using System;
-using TMPro;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 partial class Util
 {
@@ -23,15 +19,6 @@ partial class Util
             out Vector2 lp);
 
         return lp;
-    }
-
-    public static void SetSprite(this Image image, in Sprite sprite, in bool toggle = true)
-    {
-        if (toggle)
-            image.gameObject.SetActive(sprite != null);
-        image.sprite = sprite;
-        if (sprite != null)
-            image.SetNativeSize();
     }
 
     public static void GetWorldCorners(this RectTransform rT, out Vector2 min, out Vector2 max)
@@ -76,23 +63,6 @@ partial class Util
         }
 
         return correction != Vector3.zero;
-    }
-
-    public static string Get_ItemName_From_DropdownToggle(this Toggle toggle)
-    {
-        string name = toggle.name;
-        int index = name.IndexOf(':');
-        if (index == -1)
-            return name;
-        return name[(index + 2)..];
-    }
-
-    public static bool IsInputFieldFocused()
-    {
-        GameObject obj = EventSystem.current.currentSelectedGameObject;
-        if (obj == null)
-            return false;
-        return obj.GetComponent<TMP_InputField>() != null;
     }
 
     /// <summary>

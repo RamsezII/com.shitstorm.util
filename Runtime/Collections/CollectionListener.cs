@@ -71,7 +71,7 @@ namespace _UTIL_
             lock (this)
             {
                 int count1 = _collection.Count;
-                onCollection(_collection);
+                onCollection?.Invoke(_collection);
                 RemoveZombies();
                 int count2 = _collection.Count;
 
