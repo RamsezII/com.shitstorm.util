@@ -4,8 +4,6 @@ using UnityEngine;
 
 public abstract class JSon
 {
-    public const Colors color_paths = Colors.light_yellow;
-
     public const string
         txt = ".txt",
         json = ".json" + txt;
@@ -19,9 +17,7 @@ public abstract class JSon
     public void Save(in string filepath, in bool log)
     {
         OnSave();
-        if (log)
-            Debug.Log($"{typeof(JSon).FullName}.{nameof(Save)}<{GetType()}>({filepath.SetColor(color_paths)})".ToSubLog());
-        Save(filepath, JsonUtility.ToJson(this, true), false);
+        Save(filepath, JsonUtility.ToJson(this, true), log);
     }
 
     public static void Save(in string filepath, in string text, in bool log)
@@ -35,7 +31,7 @@ public abstract class JSon
         File.SetAttributes(filepath, FileAttributes.Normal);
 
         if (log)
-            Debug.Log($"{typeof(JSon).FullName}.{nameof(Save)}({filepath.SetColor(color_paths)})".ToSubLog());
+            Debug.Log($"saved : \"{filepath}\"".ToSubLog());
     }
 
     public virtual void OnRead() => OnApply();
@@ -74,7 +70,7 @@ public abstract class JSon
             json.OnRead();
 
             if (log)
-                Debug.Log($"{typeof(JSon).FullName}.{nameof(Read)}<{typeof(T)}>({filepath.SetColor(color_paths)})".ToSubLog());
+                Debug.Log($"read: \"{filepath}\"".ToSubLog());
 
             return true;
         }
@@ -87,7 +83,7 @@ public abstract class JSon
                 return false;
             }
             else
-                Debug.LogWarning($"can not read or find file at path: {filepath.SetColor(color_paths)}");
+                Debug.LogWarning($"no json at: \"{filepath}\"");
             return false;
         }
     }
