@@ -1,9 +1,12 @@
 ﻿#if UNITY_EDITOR
-using UnityEngine;
+using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Animations;
-using System.Collections.Generic;
-using System;
+using UnityEngine;
+using UnityEngine.InputSystem.XR;
+using static UnityEditor.Experimental.GraphView.GraphView;
+using static UnityEditor.VersionControl.Asset;
 
 [CustomEditor(typeof(BlendTree))]
 public class BlendTreeEditor : Editor
@@ -45,7 +48,7 @@ public class BlendTreeEditor : Editor
             base.OnInspectorGUI();
         }
 
-        if (target is not BlendTree blendTree)
+        if (target is not BlendTree btree)
             return;
 
         AnimatorController controller = null;
@@ -54,6 +57,8 @@ public class BlendTreeEditor : Editor
         foreach (var obj in Selection.objects)
             if (obj is AnimatorState state)
                 states.Add(state);
+
+        HashSet<int> possible_layers = new();
 
         if (states.Count == 0)
             return;
@@ -68,58 +73,67 @@ public class BlendTreeEditor : Editor
 
             var ctrl = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
             if (controller == null || ctrl == controller)
+            {
                 controller = ctrl;
+                for (int j = 0; j < controller.layers.Length; j++)
+                    if (controller.layers[j].syncedLayerIndex < 0)
+                    {
+                        if (!possible_layers.Contains(j))
+                            if (StateMachineContainsState(controller.layers[j].stateMachine, state))
+                                possible_layers.Add(j);
+                    }
+                    else
+                    {
+                        int base_layer = controller.layers[j].syncedLayerIndex;
+                        if (possible_layers.Contains(base_layer))
+                            possible_layers.Add(j);
+                        else if (StateMachineContainsState(controller.layers[base_layer].stateMachine, state))
+                        {
+                            possible_layers.Add(base_layer);
+                            possible_layers.Add(j);
+                        }
+                    }
+            }
             else
                 return;
         }
 
-        bool swap = false;
-
-        for (int i = 0; i < controller.layers.Length; ++i)
-        {
-            AnimatorControllerLayer layer = controller.layers[i];
-            string action_name = $"Assign states (layer {i} \"{layer.name}\")";
-
-            if (GUILayout.Button(action_name))
-            {
-                Undo.RecordObjects(states.ToArray(), action_name);
-
-                for (int j = 0; j < states.Count; j++)
-                {
-                    AnimatorState state = states[j];
-
-                    if (swap)
-                        if (layer.syncedLayerIndex < 0)
-                            state.motion = blendTree;
-                        else
-                            layer.SetOverrideMotion(state, blendTree);
-                }
-
-                if (swap)
-                    if (layer.syncedLayerIndex < 0)
-                        controller.layers[i] = layer;
-
-                if (swap)
-                {
-                    EditorUtility.SetDirty(controller);
-                    AssetDatabase.SaveAssets();
-                }
-
-                Debug.Log($"Assigned BlendTree '{blendTree.name}' to {states.Count} state(s).");
-            }
-        }
+        foreach (var layer_i in possible_layers)
+            ShowButton(controller, states.ToArray(), btree, layer_i);
     }
 
-    static bool TryGetLayerIndex(in AnimatorController controller, in AnimatorState target, out int layerIndex)
+    static void ShowButton(in AnimatorController controller, in AnimatorState[] states, in BlendTree btree, in int layer_i)
     {
-        for (int i = 0; i < controller.layers.Length; i++)
-            if (StateMachineContainsState(controller.layers[i].stateMachine, target))
+        string action_name = $"Assign {states.Length} states on layer \"{controller.layers[layer_i].name}\" ({layer_i})";
+
+        if (GUILayout.Button(action_name))
+        {
+            Undo.RecordObjects(states, action_name);
+
+            AnimatorControllerLayer[] layers = controller.layers;
+            AnimatorControllerLayer layer = layers[layer_i];
+
+            for (int j = 0; j < states.Length; j++)
             {
-                layerIndex = i;
-                return true;
+                AnimatorState state = states[j];
+
+                if (layer.syncedLayerIndex >= 0)
+                    layer.SetOverrideMotion(state, btree);
+                else
+                    state.motion = btree;
             }
-        layerIndex = -1; // pas trouvé
-        return false;
+
+            if (layer.syncedLayerIndex >= 0)
+            {
+                layers[layer_i] = layer;
+                controller.layers = layers;
+            }
+
+            EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+
+            Debug.Log($"Assigned BlendTree '{btree.name}' to {states.Length} state(s).");
+        }
     }
 
     static bool StateMachineContainsState(in AnimatorStateMachine stateMachine, in AnimatorState target)
