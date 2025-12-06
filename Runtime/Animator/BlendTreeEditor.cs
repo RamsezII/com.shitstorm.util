@@ -45,55 +45,100 @@ public class BlendTreeEditor : Editor
             base.OnInspectorGUI();
         }
 
-        if (GUILayout.Button("Apply to selected Animator States"))
+        if (target is not BlendTree blendTree)
+            return;
+
+        AnimatorController controller = null;
+
+        List<AnimatorState> states = new();
+        foreach (var obj in Selection.objects)
+            if (obj is AnimatorState state)
+                states.Add(state);
+
+        if (states.Count == 0)
+            return;
+
+        for (int i = 0; i < states.Count; i++)
         {
-            if (target is not BlendTree blendTree)
-            {
-                Debug.LogError($"{target} is not {typeof(BlendTree).FullName}");
+            AnimatorState state = states[i];
+            string path = AssetDatabase.GetAssetPath(state);
+
+            if (string.IsNullOrWhiteSpace(path))
                 return;
-            }
 
-            List<AnimatorState> states = new();
-            foreach (var obj in Selection.objects)
-                if (obj is AnimatorState state)
-                    states.Add(state);
-
-            if (states.Count == 0)
-            {
-                EditorUtility.DisplayDialog(
-                    title: "No Animator State selected",
-                    message: "Select one or more Animator States in the Animator window, then click the button again.",
-                    ok: "Ok"
-                );
+            var ctrl = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+            if (controller == null || ctrl == controller)
+                controller = ctrl;
+            else
                 return;
-            }
-
-            Undo.RecordObjects(states.ToArray(), "Assign BlendTree to States");
-
-            // On prépare à marquer les controllers comme dirty
-            var dirty_controllers = new HashSet<AnimatorController>();
-
-            for (int i = 0; i < states.Count; i++)
-            {
-                AnimatorState state = states[i];
-                state.motion = blendTree;
-
-                string path = AssetDatabase.GetAssetPath(state);
-                if (!string.IsNullOrEmpty(path))
-                {
-                    var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
-                    if (controller != null)
-                        dirty_controllers.Add(controller);
-                }
-            }
-
-            foreach (var ctrl in dirty_controllers)
-                EditorUtility.SetDirty(ctrl);
-
-            AssetDatabase.SaveAssets();
-
-            Debug.Log($"Assigned BlendTree '{blendTree.name}' to {states.Count} state(s).");
         }
+
+        bool swap = false;
+
+        for (int i = 0; i < controller.layers.Length; ++i)
+        {
+            AnimatorControllerLayer layer = controller.layers[i];
+            string action_name = $"Assign states (layer {i} \"{layer.name}\")";
+
+            if (GUILayout.Button(action_name))
+            {
+                Undo.RecordObjects(states.ToArray(), action_name);
+
+                for (int j = 0; j < states.Count; j++)
+                {
+                    AnimatorState state = states[j];
+
+                    if (swap)
+                        if (layer.syncedLayerIndex < 0)
+                            state.motion = blendTree;
+                        else
+                            layer.SetOverrideMotion(state, blendTree);
+                }
+
+                if (swap)
+                    if (layer.syncedLayerIndex < 0)
+                        controller.layers[i] = layer;
+
+                if (swap)
+                {
+                    EditorUtility.SetDirty(controller);
+                    AssetDatabase.SaveAssets();
+                }
+
+                Debug.Log($"Assigned BlendTree '{blendTree.name}' to {states.Count} state(s).");
+            }
+        }
+    }
+
+    static bool TryGetLayerIndex(in AnimatorController controller, in AnimatorState target, out int layerIndex)
+    {
+        for (int i = 0; i < controller.layers.Length; i++)
+            if (StateMachineContainsState(controller.layers[i].stateMachine, target))
+            {
+                layerIndex = i;
+                return true;
+            }
+        layerIndex = -1; // pas trouvé
+        return false;
+    }
+
+    static bool StateMachineContainsState(in AnimatorStateMachine stateMachine, in AnimatorState target)
+    {
+        for (int i = 0; i < stateMachine.states.Length; i++)
+        {
+            ChildAnimatorState subState = stateMachine.states[i];
+            if (subState.state == target)
+                return true;
+        }
+
+        for (int i = 0; i < stateMachine.stateMachines.Length; i++)
+        {
+            ChildAnimatorStateMachine subStateMachine = stateMachine.stateMachines[i];
+            if (StateMachineContainsState(subStateMachine.stateMachine, target))
+                return true;
+        }
+
+        return false;
     }
 }
 #endif
