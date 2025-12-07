@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
-using UnityEngine.InputSystem.XR;
-using static UnityEditor.Experimental.GraphView.GraphView;
-using static UnityEditor.VersionControl.Asset;
 
 [CustomEditor(typeof(BlendTree))]
 public class BlendTreeEditor : Editor
@@ -25,7 +22,7 @@ public class BlendTreeEditor : Editor
                     editorType = t;
 
         if (editorType != null)
-            _editor = CreateEditor(targets, editorType);
+            _editor = CreateEditor(target, editorType);
         else
             Debug.LogError("Impossible de trouver BlendTreeInspector in UnityEditor");
     }
@@ -40,6 +37,9 @@ public class BlendTreeEditor : Editor
 
     public override void OnInspectorGUI()
     {
+        if (target is not BlendTree btree)
+            return;
+
         if (_editor != null)
             _editor.OnInspectorGUI();
         else
@@ -48,8 +48,14 @@ public class BlendTreeEditor : Editor
             base.OnInspectorGUI();
         }
 
-        if (target is not BlendTree btree)
-            return;
+        EditorGUI.BeginChangeCheck();
+        var newType = (BlendTreeType)EditorGUILayout.EnumPopup("Blend Type", btree.blendType);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(btree, "Change Blend Tree Type");
+            btree.blendType = newType;
+            EditorUtility.SetDirty(btree);
+        }
 
         AnimatorController controller = null;
 
