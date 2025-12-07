@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
 
@@ -10,6 +11,12 @@ partial class Util_e
         string path = AssetDatabase.GetAssetPath(Selection.activeObject);
         if (string.IsNullOrWhiteSpace(path))
             return;
+
+        if (File.Exists(path))
+            path = Directory.GetParent(path).FullName;
+
+        if (Directory.Exists(path))
+            path = Path.Combine(path, "BlendTree.asset");
 
         BlendTree bt = new();
 
