@@ -41,7 +41,7 @@ partial class Util
 
     public static string NormalizePath(this string full_path)
     {
-        full_path = Path.GetFullPath(full_path).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        full_path = Path.GetFullPath(full_path).Replace('\\', '/');
 
         string root = Path.GetPathRoot(full_path);
 

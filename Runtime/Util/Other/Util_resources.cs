@@ -33,6 +33,9 @@ public static partial class Util
     public static T InstantiateOrCreate<T>(in Transform parent = null) where T : Component => (T)InstantiateOrCreate(typeof(T), parent);
     public static Component InstantiateOrCreate(in System.Type type, in Transform parent = null)
     {
+        if (type.IsAbstract)
+            throw new System.ArgumentException($"Can not instantiate abstract type: \"{type}\"");
+
         string name = type.FullName;
         Component resource = (Component)Resources.Load(name, type);
         Component clone;
