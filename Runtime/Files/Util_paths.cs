@@ -41,7 +41,7 @@ partial class Util
 
     public static string NormalizePath(this string full_path)
     {
-        full_path = Path.GetFullPath(full_path).Replace('\\', '/');
+        full_path = Path.GetFullPath(full_path).ForceLinuxPathSeparators();
 
         string root = Path.GetPathRoot(full_path);
 
@@ -51,6 +51,8 @@ partial class Util
 
         return full_path;
     }
+
+    public static string ForceLinuxPathSeparators(this string path) => path.Replace('\\', '/');
 
     public static string CombinePaths(params string[] paths) => Path.Combine(paths).NormalizePath();
 
