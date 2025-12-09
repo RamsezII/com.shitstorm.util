@@ -11,22 +11,6 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        protected override void OnRemoveZombies()
-        {
-            HashSet<Key> keys = null;
-
-            foreach (var pair in _collection)
-                if (pair.Value == null)
-                    (keys ??= new()).Add(pair.Key);
-
-            if (keys != null && keys.Count > 0)
-                Modify(dict =>
-                {
-                    foreach (var key in keys)
-                        dict.Remove(key);
-                });
-        }
-
         public void AddElement(Key key, Value value, bool force = false) => Modify(dict =>
         {
             if (force)
@@ -56,7 +40,7 @@ namespace _UTIL_
             return false;
         }
 
-        public override void _Clear()
+        protected override void OnClear()
         {
             _collection.Clear();
         }

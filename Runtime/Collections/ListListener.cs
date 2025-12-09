@@ -13,23 +13,14 @@ namespace _UTIL_
         public bool IsLast(in T element) => IsAtIndex(element, ^1);
         public bool IsAtIndex(in T element, in Index index)
         {
-            RemoveZombies();
             lock (this)
                 return element != null && _collection.Count > 0 && _collection[index].Equals(element);
         }
 
         public bool IsEmptyOrLast(in T element)
         {
-            RemoveZombies();
             lock (this)
                 return IsEmpty || IsAtIndex(element, ^1);
-        }
-
-        protected override void OnRemoveZombies()
-        {
-            for (int i = 0; i < _collection.Count; i++)
-                if (_collection[i] == null || _collection[i] is UnityEngine.Object ue && ue == null)
-                    Modify(list => list.RemoveAt(i--));
         }
 
         public bool ToggleElement(T element, in bool toggle)
@@ -104,7 +95,7 @@ namespace _UTIL_
                 Modify(list => list.RemoveAt(index));
         }
 
-        public override void _Clear()
+        protected override void OnClear()
         {
             _collection.Clear();
         }

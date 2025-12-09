@@ -25,23 +25,9 @@ namespace _UTIL_
             }
         }
 
-        public override void _Clear()
+        protected override void OnClear()
         {
             _collection.Clear();
-        }
-
-        protected override void OnRemoveZombies()
-        {
-            HashSet<T> copies = new();
-
-            foreach (T item in _collection)
-                if (item != null && (item is not UnityEngine.Object ue || ue != null))
-                    copies.Add(item);
-
-            _collection.Clear();
-
-            foreach (T item in copies)
-                _collection.Add(item);
         }
     }
 }

@@ -42,8 +42,7 @@ namespace _UTIL_
     {
         public bool changed;
         public T _value, old;
-        public Action<T> onChange;
-        public EventPropagator<T> _propagator;
+        Action<T> onChange;
         public Func<T, T> processor;
 
         //------------------------------------------------------------------------------------------------------------------------------
@@ -61,7 +60,6 @@ namespace _UTIL_
             _value = default;
             old = default;
             onChange = null;
-            _propagator?.ClearListeners();
             processor = null;
             Update(value, true);
         }
@@ -121,19 +119,10 @@ namespace _UTIL_
             }
         }
 
-        public void AddListener(in object user, in Action<T> action)
-        {
-            lock (this)
-                (_propagator ??= new()).AddListener(Value, user, action);
-        }
-
         public void RemoveListener(in Action<T> action)
         {
             lock (this)
-            {
                 onChange -= action;
-                _propagator?.RemoveListener_action(action);
-            }
         }
 
         public void AddProcessor(in Func<T, T> processor)
@@ -158,10 +147,7 @@ namespace _UTIL_
                 _value = value;
 
                 if (force || changed)
-                {
                     onChange?.Invoke(value);
-                    _propagator?.NotifyListeners(value);
-                }
 
                 return changed;
             }

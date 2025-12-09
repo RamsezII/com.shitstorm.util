@@ -6,8 +6,13 @@ namespace _UTIL_
     public abstract class CollectionListener<TCollection, TItem> where TCollection : ICollection<TItem>, new()
     {
         public readonly TCollection _collection;
-        public readonly EventPropagator<bool> _listeners1 = new();
-        public readonly EventPropagator<TCollection> _listeners2 = new(), _listeners2_once = new();
+
+        public Action<bool>
+            _listeners1;
+
+        public Action<TCollection>
+            _listeners2,
+            _listeners2_once;
 
         //------------------------------------------------------------------------------------------------------------------------------
 
@@ -22,7 +27,6 @@ namespace _UTIL_
         {
             get
             {
-                RemoveZombies();
                 lock (this)
                     return _collection.Count == 0;
             }
@@ -32,38 +36,31 @@ namespace _UTIL_
         {
             get
             {
-                RemoveZombies();
                 lock (this)
                     return _collection.Count > 0;
             }
         }
 
-        protected abstract void OnRemoveZombies();
-        protected void RemoveZombies()
+        public void AddListener1(in Action<bool> action, in bool doNotCallThisTime = false)
         {
-            if (_collection.Count > 0)
-                OnRemoveZombies();
+            lock (this)
+            {
+                _listeners1 -= action;
+                _listeners1 += action;
+                if (!doNotCallThisTime)
+                    action(IsNotEmpty);
+            }
         }
 
-        public void AddListener1(in object user, in Action<bool> action)
+        public void AddListener2(in Action<TCollection> action, in bool doNotCallThisTime = false)
         {
-            RemoveZombies();
             lock (this)
-                _listeners1.AddListener(IsNotEmpty, user, action);
-        }
-
-        public void AddListener2(in object user, in Action<TCollection> action)
-        {
-            RemoveZombies();
-            lock (this)
-                _listeners2.AddListener(_collection, user, action);
-        }
-
-        public void AddListener2_once(in object user, in Action<TCollection> action)
-        {
-            RemoveZombies();
-            lock (this)
-                _listeners2_once.AddListener(_collection, user, action);
+            {
+                _listeners2 -= action;
+                _listeners2 += action;
+                if (!doNotCallThisTime)
+                    action(_collection);
+            }
         }
 
         public void Modify(in Action<TCollection> onCollection)
@@ -72,22 +69,22 @@ namespace _UTIL_
             {
                 int count1 = _collection.Count;
                 onCollection?.Invoke(_collection);
-                RemoveZombies();
                 int count2 = _collection.Count;
 
-                _listeners2.NotifyListeners(_collection);
+                _listeners2?.Invoke(_collection);
 
-                if (count1 != count2)
+                if (_listeners1 != null)
                     if (count1 == 0 || count2 == 0)
-                        _listeners1.NotifyListeners(IsNotEmpty);
+                        if (count1 != count2)
+                            _listeners1(IsNotEmpty);
 
-                _listeners2_once.NotifyListeners(_collection);
-                _listeners2_once._listeners.Clear();
+                _listeners2_once?.Invoke(_collection);
+                _listeners2_once = null;
             }
         }
 
-        public abstract void _Clear();
-        public void Clear() => Modify(collection => _Clear());
+        protected abstract void OnClear();
+        public void Clear() => Modify(collection => OnClear());
 
         //------------------------------------------------------------------------------------------------------------------------------
 
@@ -95,10 +92,10 @@ namespace _UTIL_
         {
             lock (this)
             {
-                _listeners1.Dispose();
-                _listeners2.Dispose();
-                _listeners2_once.Dispose();
-                _Clear();
+                _listeners1 = null;
+                _listeners2 = null;
+                _listeners2_once = null;
+                OnClear();
             }
         }
     }
