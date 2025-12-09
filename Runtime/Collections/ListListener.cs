@@ -17,6 +17,28 @@ namespace _UTIL_
                 return element != null && _collection.Count > 0 && _collection[index].Equals(element);
         }
 
+        public bool TryPeek(out T element)
+        {
+            lock (this)
+            {
+                if (IsNotEmpty)
+                {
+                    element = _collection[^1];
+                    return true;
+                }
+                element = default;
+                return false;
+            }
+        }
+
+        public IEnumerable<(int index, T element)> ReversedOrderIteration()
+        {
+            lock (this)
+                if (_collection != null && _collection.Count > 0)
+                    for (int i = _collection.Count - 1; i >= 0; i--)
+                        yield return (i, _collection[i]);
+        }
+
         public bool IsEmptyOrLast(in T element)
         {
             lock (this)
@@ -60,7 +82,6 @@ namespace _UTIL_
         {
             lock (this)
             {
-                bool empty = IsEmpty;
                 if (IsNotEmpty)
                     if (element.Equals(_collection[^1]))
                         return;
