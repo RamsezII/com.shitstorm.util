@@ -11,9 +11,13 @@ partial class Util
 
     public static bool IsZSpaced(this string text)
     {
+        if (text.Length % 2 != 0)
+            return false;
+
         for (int i = 0; i < text.Length; i += 2)
             if (text[i] == ZSPACE_CHAR)
                 return true;
+
         return false;
     }
 
@@ -47,8 +51,8 @@ partial class Util
         StringBuilder sb = new();
         for (int i = 0; i < unzspaced.Length; i++)
         {
-            sb.Append(unzspaced[i]);
             sb.Append(ZSPACE_CHAR);
+            sb.Append(unzspaced[i]);
         }
         zspaced = sb.ToString();
 
