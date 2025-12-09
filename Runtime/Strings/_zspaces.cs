@@ -38,6 +38,14 @@ partial class Util
         return true;
     }
 
+    public static string ZSpaced(this string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+        text.ZSpaced(out text);
+        return text;
+    }
+
     public static bool ZSpaced(this string text, out string zspaced)
     {
         if (IsZSpaced(text))
