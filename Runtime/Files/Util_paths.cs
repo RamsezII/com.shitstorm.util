@@ -54,6 +54,8 @@ partial class Util
 
     public static string ForceLinuxPathSeparators(this string path) => path.Replace('\\', '/');
 
+    public static string Dos2Unix(this string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
+
     public static string CombinePaths(params string[] paths) => Path.Combine(paths).NormalizePath();
 
     public static bool IsParentDirectoryOf(this string parent, string candidate)

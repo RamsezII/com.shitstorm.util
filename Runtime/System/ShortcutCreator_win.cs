@@ -25,7 +25,7 @@ public static partial class Util_system
 #endif
     }
 
-    public static bool CreateDesktopShortcut(in string path_to_shortcut, in string path_to_target, in string path_to_icon = null, in string args = null, in string workingDir = null)
+    public static bool CreateShortcut(in string path_to_shortcut, in string path_to_target, in string path_to_icon = null, in string args = null, in string workingDir = null)
     {
         try
         {
@@ -49,7 +49,7 @@ public static partial class Util_system
             if (!string.IsNullOrEmpty(args))
                 sb.AppendLine($"Arguments={args}");
 
-#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX
+#else
 
             sb.AppendLine("[Desktop Entry]");
             sb.AppendLine("Version=1.0");

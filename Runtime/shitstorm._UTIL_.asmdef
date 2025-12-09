@@ -25,6 +25,11 @@
             "name": "com.unity.ai.navigation",
             "expression": "",
             "define": "HAS_AI"
+        },
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "HAS_INPUTS"
         }
     ],
     "noEngineReferences": false
