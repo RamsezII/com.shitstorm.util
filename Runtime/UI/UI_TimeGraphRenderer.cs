@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,24 +8,31 @@ namespace _UTIL_
     [ExecuteAlways, RequireComponent(typeof(CanvasRenderer))]
     public class UI_TimeGraphRenderer : MaskableGraphic
     {
-        public readonly List<float> values = new();
+        [System.Serializable]
+        public class DrawPass
+        {
+            public bool drawFillTop = true;
+            public Color fillColorTop = new Color(0, 0, 0, .5f);
 
+            public bool drawFillBottom = true;
+            public Color fillColorBottom = new Color(0, 0, 0, .8f);
+
+            public bool drawLine = true;
+            public Color lineColor = new Color(0, 0, 0, 1);
+
+            [Min(0.5f)] public float lineThickness = 1;
+
+            public readonly List<float> values = new();
+        }
+
+        [Range(0, 1)] public float time_offset;
         public bool drawGrid = true;
         [Min(1)] public int gridColumns = 8;
         [Min(1)] public int gridRows = 4;
         public float gridThickness = 1f;
         public Color gridColor = new Color(0, 0, 0, 0.15f);
 
-        public bool drawFillTop = true;
-        public Color fillColorTop = new Color(0, 0, 0, .5f);
-
-        public bool drawFillBottom = true;
-        public Color fillColorBottom = new Color(0, 0, 0, .8f);
-
-        public bool drawLine = true;
-        public Color lineColor = new Color(0, 0, 0, 1);
-
-        [Min(0.5f)] public float lineThickness = 2f;
+        public List<DrawPass> passes = new();
 
         //--------------------------------------------------------------------------------------------------------------
 
@@ -32,9 +40,11 @@ namespace _UTIL_
         [ContextMenu(nameof(TestContent))]
         public void TestContent()
         {
-            values.Clear();
-            for (int i = 0; i < 25; i++)
-                values.Add(Random.Range(0f, 1f));
+            passes.Clear();
+            DrawPass pass = new();
+            pass.values.AddRange(Enumerable.Range(0, 25).Select(_ => Random.Range(0f, 1f)));
+            passes.Add(pass);
+
             OnValidate();
         }
 
@@ -52,12 +62,20 @@ namespace _UTIL_
         {
             vh.Clear();
 
-            if (values.Count == 0)
-                return;
-
             Rect r = rectTransform.rect;
             float width = r.width;
             float height = r.height;
+
+            if (color.a > 0)
+            {
+                vh.AddVert(new(r.xMin, r.yMin), color, Vector2.zero);
+                vh.AddVert(new(r.xMin, r.yMax), color, Vector2.zero);
+                vh.AddVert(new(r.xMax, r.yMax), color, Vector2.zero);
+                vh.AddVert(new(r.xMax, r.yMin), color, Vector2.zero);
+
+                vh.AddTriangle(0, 1, 2);
+                vh.AddTriangle(2, 3, 0);
+            }
 
             // ---------------- GRID ----------------
             if (drawGrid)
@@ -89,110 +107,118 @@ namespace _UTIL_
                 }
             }
 
-            // --- convertit les valeurs en points locaux ---
-            int count = values.Count;
-            Vector2[] pts = new Vector2[count];
-            for (int i = 0; i < count; ++i)
-            {
-                float t = (count == 1) ? 0f : i / (float)(count - 1);
-                float x = r.xMin + t * width;
-                float y = r.yMin + Mathf.Clamp01(values[i]) * height;
-                pts[i] = new Vector2(x, y);
-            }
+            if (passes != null)
+                for (int i = 0; i < passes.Count; ++i)
+                    if (passes[i].values != null)
+                        if (passes[i].values.Count > 0)
+                        {
+                            DrawPass pass = passes[i];
 
-            // =====================
-            // 1) FILL AU-DESSUS LA COURBE
-            // =====================
-            if (drawFillTop)
-            {
-                int baseIndex = vh.currentVertCount;
+                            // --- convertit les valeurs en points locaux ---
+                            int count = pass.values.Count;
+                            Vector2[] pts = new Vector2[count];
+                            for (int j = 0; j < count; ++j)
+                            {
+                                float t = (count == 1) ? 0f : j / (float)(count - 1);
+                                float x = r.xMin + t * width;
+                                float y = r.yMin + Mathf.Clamp01(pass.values[j]) * height;
+                                pts[j] = new Vector2(x, y);
+                            }
 
-                for (int i = 0; i < count; ++i)
-                {
-                    vh.AddVert(new Vector2(pts[i].x, r.yMax), fillColorTop, Vector2.zero);
-                    vh.AddVert(pts[i], fillColorTop, Vector2.zero);
-                }
+                            // =====================
+                            // 1) FILL AU-DESSUS LA COURBE
+                            // =====================
+                            if (pass.drawFillTop)
+                            {
+                                int baseIndex = vh.currentVertCount;
 
-                // chaque segment = 2 triangles formant un quad (haut/bas)
-                for (int i = 0; i < count - 1; ++i)
-                {
-                    int i0 = baseIndex + 2 * i;
-                    int i1 = baseIndex + 2 * i + 1;
-                    int i2 = baseIndex + 2 * (i + 1);
-                    int i3 = baseIndex + 2 * (i + 1) + 1;
+                                for (int j = 0; j < count; ++j)
+                                {
+                                    vh.AddVert(new Vector2(pts[j].x, r.yMax), pass.fillColorTop, Vector2.zero);
+                                    vh.AddVert(pts[j], pass.fillColorTop, Vector2.zero);
+                                }
 
-                    vh.AddTriangle(i0, i1, i2);
-                    vh.AddTriangle(i2, i1, i3);
-                }
-            }
+                                // chaque segment = 2 triangles formant un quad (haut/bas)
+                                for (int j = 0; j < count - 1; ++j)
+                                {
+                                    int i0 = baseIndex + 2 * j;
+                                    int i1 = baseIndex + 2 * j + 1;
+                                    int i2 = baseIndex + 2 * (j + 1);
+                                    int i3 = baseIndex + 2 * (j + 1) + 1;
 
-            // =====================
-            // 1) FILL SOUS LA COURBE
-            // =====================
-            if (drawFillBottom)
-            {
-                int baseIndex = vh.currentVertCount;
+                                    vh.AddTriangle(i0, i1, i2);
+                                    vh.AddTriangle(i2, i1, i3);
+                                }
+                            }
 
-                for (int i = 0; i < count; ++i)
-                {
-                    // haut (courbe)
-                    vh.AddVert(pts[i], fillColorBottom, Vector2.zero);
-                    // bas (ligne de base)
-                    vh.AddVert(new Vector2(pts[i].x, r.yMin), fillColorBottom, Vector2.zero);
-                }
+                            // =====================
+                            // 1) FILL SOUS LA COURBE
+                            // =====================
+                            if (pass.drawFillBottom)
+                            {
+                                int baseIndex = vh.currentVertCount;
 
-                // chaque segment = 2 triangles formant un quad (haut/bas)
-                for (int i = 0; i < count - 1; ++i)
-                {
-                    int i0 = baseIndex + 2 * i;
-                    int i1 = baseIndex + 2 * i + 1;
-                    int i2 = baseIndex + 2 * (i + 1);
-                    int i3 = baseIndex + 2 * (i + 1) + 1;
+                                for (int j = 0; j < count; ++j)
+                                {
+                                    // haut (courbe)
+                                    vh.AddVert(pts[j], pass.fillColorBottom, Vector2.zero);
+                                    // bas (ligne de base)
+                                    vh.AddVert(new Vector2(pts[j].x, r.yMin), pass.fillColorBottom, Vector2.zero);
+                                }
 
-                    vh.AddTriangle(i0, i1, i2);
-                    vh.AddTriangle(i2, i1, i3);
-                }
-            }
+                                // chaque segment = 2 triangles formant un quad (haut/bas)
+                                for (int j = 0; j < count - 1; ++j)
+                                {
+                                    int i0 = baseIndex + 2 * j;
+                                    int i1 = baseIndex + 2 * j + 1;
+                                    int i2 = baseIndex + 2 * (j + 1);
+                                    int i3 = baseIndex + 2 * (j + 1) + 1;
 
-            // =====================
-            // 3) TRAIT PAR-DESSUS
-            // =====================
-            if (drawLine)
-            {
-                float half = lineThickness * 0.5f;
+                                    vh.AddTriangle(i0, i1, i2);
+                                    vh.AddTriangle(i2, i1, i3);
+                                }
+                            }
 
-                for (int i = 0; i < count - 1; ++i)
-                {
-                    Vector2 p1 = pts[i];
-                    Vector2 p2 = pts[i + 1];
+                            // =====================
+                            // 3) TRAIT PAR-DESSUS
+                            // =====================
+                            if (pass.drawLine)
+                            {
+                                float half = pass.lineThickness * 0.5f;
 
-                    Vector2 dir = (p2 - p1).normalized;
-                    if (dir.sqrMagnitude <= 0.000001f)
-                        continue;
+                                for (int j = 0; j < count - 1; ++j)
+                                {
+                                    Vector2 p1 = pts[j];
+                                    Vector2 p2 = pts[j + 1];
 
-                    Vector2 normal = new Vector2(-dir.y, dir.x);
-                    Vector2 off = normal * half;
+                                    Vector2 dir = (p2 - p1).normalized;
+                                    if (dir.sqrMagnitude <= 0.000001f)
+                                        continue;
 
-                    // 4 sommets pour le segment [p1,p2]
-                    Vector2 v0 = p1 + off;
-                    Vector2 v1 = p1 - off;
-                    Vector2 v2 = p2 + off;
-                    Vector2 v3 = p2 - off;
+                                    Vector2 normal = new Vector2(-dir.y, dir.x);
+                                    Vector2 off = normal * half;
 
-                    int i0 = vh.currentVertCount;
-                    vh.AddVert(v0, lineColor, Vector2.zero); // 0
-                    vh.AddVert(v1, lineColor, Vector2.zero); // 1
-                    vh.AddVert(v2, lineColor, Vector2.zero); // 2
-                    vh.AddVert(v3, lineColor, Vector2.zero); // 3
+                                    // 4 sommets pour le segment [p1,p2]
+                                    Vector2 v0 = p1 + off;
+                                    Vector2 v1 = p1 - off;
+                                    Vector2 v2 = p2 + off;
+                                    Vector2 v3 = p2 - off;
 
-                    // deux triangles pour le quad du trait
-                    vh.AddTriangle(i0, i0 + 1, i0 + 2);
-                    vh.AddTriangle(i0 + 2, i0 + 1, i0 + 3);
-                }
-            }
+                                    int i0 = vh.currentVertCount;
+                                    vh.AddVert(v0, pass.lineColor, Vector2.zero); // 0
+                                    vh.AddVert(v1, pass.lineColor, Vector2.zero); // 1
+                                    vh.AddVert(v2, pass.lineColor, Vector2.zero); // 2
+                                    vh.AddVert(v3, pass.lineColor, Vector2.zero); // 3
+
+                                    // deux triangles pour le quad du trait
+                                    vh.AddTriangle(i0, i0 + 1, i0 + 2);
+                                    vh.AddTriangle(i0 + 2, i0 + 1, i0 + 3);
+                                }
+                            }
+                        }
         }
 
-        void AddQuadLine(VertexHelper vh, Vector2 p1, Vector2 p2, Color col, float half)
+        void AddQuadLine(in VertexHelper vh, in Vector2 p1, in Vector2 p2, in Color col, in float half)
         {
             Vector2 dir = p2 - p1;
             if (dir.sqrMagnitude < 0.000001f)
