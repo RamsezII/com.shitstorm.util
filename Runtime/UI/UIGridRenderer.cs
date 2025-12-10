@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 namespace _UTIL_
 {
+    [ExecuteAlways, RequireComponent(typeof(CanvasRenderer))]
     public sealed class UIGridRenderer : Graphic
     {
         public float
@@ -11,13 +12,19 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        [ContextMenu(nameof(SetVerticesDirty))]
-        public override void SetVerticesDirty() => base.SetVerticesDirty();
+#if UNITY_EDITOR
+        [ContextMenu(nameof(OnValidate))]
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            SetVerticesDirty();
+        }
+#endif
+
+        //--------------------------------------------------------------------------------------------------------------
 
         protected override void OnPopulateMesh(VertexHelper vh)
         {
-            //base.OnPopulateMesh(vh);
-
             vh.Clear();
 
             Rect r = rectTransform.rect;

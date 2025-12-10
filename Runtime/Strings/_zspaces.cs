@@ -21,6 +21,12 @@ partial class Util
         return false;
     }
 
+    public static string UnZSpaced(this string text)
+    {
+        UnZSpaced(text, out text);
+        return text;
+    }
+
     public static bool UnZSpaced(this string text, out string unzspaced)
     {
         if (!text.Contains(ZSPACE_CHAR, StringComparison.OrdinalIgnoreCase))
