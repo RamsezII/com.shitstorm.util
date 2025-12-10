@@ -11,52 +11,116 @@ namespace _UTIL_
         [System.Serializable]
         public class TimeCurve
         {
-            public readonly struct CurvePoint
+            [System.Serializable]
+            public struct CurvePoint
             {
-                public readonly float unscaledTime, value;
+                public float time, value;
                 public CurvePoint(in float value)
                 {
-                    unscaledTime = Time.unscaledTime;
+                    time = Time.unscaledTime;
                     this.value = value;
                 }
+#if UNITY_EDITOR
+                public override readonly string ToString() => $"{{ {nameof(time)}: {System.Math.Round(time, 1)} ; {nameof(value)}: {System.Math.Round(value, 1)} }}";
+                public CurvePoint(in float time, in float value)
+                {
+                    this.time = time;
+                    this.value = value;
+                }
+#endif
             }
 
-            public bool drawFillTop = true;
-            public Color fillColorTop = new Color(0, 0, 0, .5f);
+            [System.Serializable]
+            public struct Options
+            {
+                public float min, max;
 
-            public bool drawFillBottom = true;
-            public Color fillColorBottom = new Color(0, 0, 0, .8f);
+                public bool drawFillTop;
+                public Color fillColorTop;
 
-            public bool drawLine = true;
-            public Color lineColor = new Color(0, 0, 0, 1);
+                public bool drawFillBottom;
+                public Color fillColorBottom;
 
-            [Min(0.5f)] public float lineThickness = 1;
+                public bool drawLine;
+                public Color lineColor;
 
-            public readonly List<CurvePoint> points = new();
+                [Min(0.5f)] public float lineThickness;
+            }
+
+            public float accumulatedValue;
+
+            public Options options = new()
+            {
+                min = 1,
+                max = 1,
+
+                drawFillTop = true,
+                fillColorTop = new Color(0, 0, 0, .5f),
+
+                drawFillBottom = true,
+                fillColorBottom = new Color(0, 0, 0, .8f),
+
+                drawLine = true,
+                lineColor = new Color(0, 0, 0, 1),
+
+                lineThickness = 1,
+            };
+
+            public List<CurvePoint> points = new();
+
+            //--------------------------------------------------------------------------------------------------------------
+
+            internal TimeCurve()
+            {
+            }
+
+            //--------------------------------------------------------------------------------------------------------------
+
+            public void Accumulate(in float value)
+            {
+                lock (this)
+                    accumulatedValue += value;
+            }
+
+            public void AddPoint(in float value = 0)
+            {
+                lock (this)
+                {
+                    accumulatedValue += value;
+                    points.Add(new CurvePoint(accumulatedValue));
+                    accumulatedValue = 0;
+                }
+            }
         }
 
-        [Range(0, 1)] public float time_offset;
+        public float timeLate = 1, timeSpan = 5;
+
         public bool drawGrid = true;
         [Min(1)] public int gridColumns = 8;
         [Min(1)] public int gridRows = 4;
         public float gridThickness = 1f;
         public Color gridColor = new Color(0, 0, 0, 0.15f);
 
-        public List<TimeCurve> passes = new();
+#if UNITY_EDITOR
+        [SerializeField] int _drawFrame;
+        [SerializeField] float _testTime_current;
+#endif
 
-        readonly List<Vector2> draw_buffer = new();
+        public List<TimeCurve> curves = new();
+
+        readonly List<Vector2> positions_buffer = new();
 
         //--------------------------------------------------------------------------------------------------------------
 
 #if UNITY_EDITOR
-        [ContextMenu(nameof(TestContent))]
-        public void TestContent()
+        [ContextMenu(nameof(AddRandomPass))]
+        public TimeCurve AddRandomPass()
         {
             TimeCurve pass = new();
-            pass.points.AddRange(Enumerable.Range(0, 25).Select(_ => new TimeCurve.CurvePoint(Random.Range(0f, 1f))));
-            passes.Add(pass);
-
+            pass.points.AddRange(Enumerable.Range(0, 10).Select(i => new TimeCurve.CurvePoint(i, Random.Range(0f, 1f))));
+            curves.Add(pass);
             OnValidate();
+            return pass;
         }
 
         [ContextMenu(nameof(OnValidate))]
@@ -69,13 +133,26 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
+        public TimeCurve AddCurve()
+        {
+            TimeCurve pass = new();
+            curves.Add(pass);
+            return pass;
+        }
+
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
 
+            float time = Time.unscaledTime;
+
+#if UNITY_EDITOR
+            ++_drawFrame;
+            if (!Application.isPlaying)
+                time = _testTime_current;
+#endif
+
             Rect r = rectTransform.rect;
-            float width = r.width;
-            float height = r.height;
 
             if (color.a > 0)
             {
@@ -97,10 +174,10 @@ namespace _UTIL_
                 for (int c = 0; c <= gridColumns; ++c)
                 {
                     float t = c / (float)gridColumns;
-                    float x = r.xMin + t * width;
+                    float x = r.xMin + r.width * t;
 
-                    Vector2 p1 = new Vector2(x, r.yMin);
-                    Vector2 p2 = new Vector2(x, r.yMax);
+                    Vector2 p1 = new(x, r.yMin);
+                    Vector2 p2 = new(x, r.yMax);
 
                     AddQuadLine(vh, p1, p2, gridColor, half);
                 }
@@ -109,49 +186,62 @@ namespace _UTIL_
                 for (int rIdx = 0; rIdx <= gridRows; ++rIdx)
                 {
                     float t = rIdx / (float)gridRows;
-                    float y = r.yMin + t * height;
+                    float y = r.yMin + r.height * t;
 
-                    Vector2 p1 = new Vector2(r.xMin, y);
-                    Vector2 p2 = new Vector2(r.xMax, y);
+                    Vector2 p1 = new(r.xMin, y);
+                    Vector2 p2 = new(r.xMax, y);
 
                     AddQuadLine(vh, p1, p2, gridColor, half);
                 }
             }
 
-            if (passes != null)
-                for (int i = 0; i < passes.Count; ++i)
-                    if (passes[i].points != null)
-                        if (passes[i].points.Count > 0)
+            if (curves != null)
+            {
+                float time_b = time - timeLate;
+                float time_a = time_b - timeSpan;
+
+                for (int i = 0; i < curves.Count; ++i)
+                    if (curves[i].points != null)
+                        if (curves[i].points.Count > 0)
                         {
-                            TimeCurve pass = passes[i];
+                            positions_buffer.Clear();
+
+                            TimeCurve curve = curves[i];
 
                             // --- convertit les valeurs en points locaux ---
-                            int count = pass.points.Count;
-                            Vector2[] draw_buffer = new Vector2[count];
-                            for (int j = 0; j < count; ++j)
+                            for (int j = 0; j < curve.points.Count - 1; ++j)
                             {
-                                var point = pass.points[j];
-                                float t = (count == 1) ? 0f : j / (float)(count - 1);
-                                float x = r.xMin + t * width;
-                                float y = r.yMin + Mathf.Clamp01(point.value) * height;
-                                draw_buffer[j] = new Vector2(x, y);
+                                var point1 = curve.points[j];
+                                var point2 = curve.points[j + 1];
+
+                                if (point2.time <= time_a)
+                                    curve.points.RemoveAt(j--);
+
+                                float lerp = Util.InverseLerpUnclamped(time_a, time_b, point1.time);
+                                float x = r.xMin + r.width * lerp;
+                                float y = r.yMin + r.height * point1.value;
+
+                                positions_buffer.Add(new Vector2(x, y));
                             }
+
+                            if (positions_buffer.Count == 0)
+                                continue;
 
                             // =====================
                             // 1) FILL AU-DESSUS LA COURBE
                             // =====================
-                            if (pass.drawFillTop)
+                            if (curve.options.drawFillTop)
                             {
                                 int baseIndex = vh.currentVertCount;
 
-                                for (int j = 0; j < count; ++j)
+                                for (int j = 0; j < positions_buffer.Count; ++j)
                                 {
-                                    vh.AddVert(new Vector2(draw_buffer[j].x, r.yMax), pass.fillColorTop, Vector2.zero);
-                                    vh.AddVert(draw_buffer[j], pass.fillColorTop, Vector2.zero);
+                                    vh.AddVert(new Vector2(positions_buffer[j].x, r.yMax), curve.options.fillColorTop, Vector2.zero);
+                                    vh.AddVert(positions_buffer[j], curve.options.fillColorTop, Vector2.zero);
                                 }
 
                                 // chaque segment = 2 triangles formant un quad (haut/bas)
-                                for (int j = 0; j < count - 1; ++j)
+                                for (int j = 0; j < positions_buffer.Count - 1; ++j)
                                 {
                                     int i0 = baseIndex + 2 * j;
                                     int i1 = baseIndex + 2 * j + 1;
@@ -166,20 +256,20 @@ namespace _UTIL_
                             // =====================
                             // 1) FILL SOUS LA COURBE
                             // =====================
-                            if (pass.drawFillBottom)
+                            if (curve.options.drawFillBottom)
                             {
                                 int baseIndex = vh.currentVertCount;
 
-                                for (int j = 0; j < count; ++j)
+                                for (int j = 0; j < positions_buffer.Count; ++j)
                                 {
                                     // haut (courbe)
-                                    vh.AddVert(draw_buffer[j], pass.fillColorBottom, Vector2.zero);
+                                    vh.AddVert(positions_buffer[j], curve.options.fillColorBottom, Vector2.zero);
                                     // bas (ligne de base)
-                                    vh.AddVert(new Vector2(draw_buffer[j].x, r.yMin), pass.fillColorBottom, Vector2.zero);
+                                    vh.AddVert(new Vector2(positions_buffer[j].x, r.yMin), curve.options.fillColorBottom, Vector2.zero);
                                 }
 
                                 // chaque segment = 2 triangles formant un quad (haut/bas)
-                                for (int j = 0; j < count - 1; ++j)
+                                for (int j = 0; j < positions_buffer.Count - 1; ++j)
                                 {
                                     int i0 = baseIndex + 2 * j;
                                     int i1 = baseIndex + 2 * j + 1;
@@ -194,14 +284,14 @@ namespace _UTIL_
                             // =====================
                             // 3) TRAIT PAR-DESSUS
                             // =====================
-                            if (pass.drawLine)
+                            if (curve.options.drawLine)
                             {
-                                float half = pass.lineThickness * 0.5f;
+                                float half = curve.options.lineThickness * 0.5f;
 
-                                for (int j = 0; j < count - 1; ++j)
+                                for (int j = 0; j < positions_buffer.Count - 1; ++j)
                                 {
-                                    Vector2 p1 = draw_buffer[j];
-                                    Vector2 p2 = draw_buffer[j + 1];
+                                    Vector2 p1 = positions_buffer[j];
+                                    Vector2 p2 = positions_buffer[j + 1];
 
                                     Vector2 dir = (p2 - p1).normalized;
                                     if (dir.sqrMagnitude <= 0.000001f)
@@ -217,10 +307,10 @@ namespace _UTIL_
                                     Vector2 v3 = p2 - off;
 
                                     int i0 = vh.currentVertCount;
-                                    vh.AddVert(v0, pass.lineColor, Vector2.zero); // 0
-                                    vh.AddVert(v1, pass.lineColor, Vector2.zero); // 1
-                                    vh.AddVert(v2, pass.lineColor, Vector2.zero); // 2
-                                    vh.AddVert(v3, pass.lineColor, Vector2.zero); // 3
+                                    vh.AddVert(v0, curve.options.lineColor, Vector2.zero); // 0
+                                    vh.AddVert(v1, curve.options.lineColor, Vector2.zero); // 1
+                                    vh.AddVert(v2, curve.options.lineColor, Vector2.zero); // 2
+                                    vh.AddVert(v3, curve.options.lineColor, Vector2.zero); // 3
 
                                     // deux triangles pour le quad du trait
                                     vh.AddTriangle(i0, i0 + 1, i0 + 2);
@@ -228,6 +318,7 @@ namespace _UTIL_
                                 }
                             }
                         }
+            }
         }
 
         void AddQuadLine(in VertexHelper vh, in Vector2 p1, in Vector2 p2, in Color col, in float half)

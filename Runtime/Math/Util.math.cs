@@ -28,4 +28,5 @@ public static partial class Util
                 return value % max;
         }
     }
+    public static float InverseLerpUnclamped(in float a, in float b, in float value) => a == b ? 0f : (value - a) / (b - a);
 }

@@ -2,7 +2,7 @@
 
 partial class Util
 {
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN
     // https://learn.microsoft.com/windows/win32/api/shellapi/nf-shellapi-shellexecutew
     [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
     private static extern IntPtr ShellExecuteW(
@@ -28,8 +28,8 @@ partial class Util
     {
         throw new InvalidOperationException($"Can only use ShellExecute on Windows (trying to open '{file}' with args '{args}' in dir '{working_dir}').");
     }
-#endif
 
     [System.Runtime.InteropServices.DllImport("libc")]
     public static extern int system(string cmd);
+#endif
 }
