@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace _UTIL_
 {
-    public sealed class UIDiskRenderer : Graphic
+    public sealed class UI_DiskRenderer : Graphic
     {
         public float radius = 50f;
         public int segments = 16;

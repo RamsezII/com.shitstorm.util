@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace _UTIL_
 {
     [ExecuteAlways, RequireComponent(typeof(CanvasRenderer))]
-    public sealed class UIGridRenderer : Graphic
+    public sealed class UI_GridRenderer : MaskableGraphic
     {
         public float
             tickness = 10f,
@@ -28,8 +28,6 @@ namespace _UTIL_
             vh.Clear();
 
             Rect r = rectTransform.rect;
-            UIVertex vertex = UIVertex.simpleVert;
-            vertex.color = color;
 
             int count_h = (int)(r.width / spacing);
             int count_v = (int)(r.height / spacing);
@@ -37,14 +35,10 @@ namespace _UTIL_
 
             for (int i = 1; i <= count_h; i++)
             {
-                vertex.position = new(i * spacing - ht, 0);
-                vh.AddVert(vertex);
-                vertex.position = new(i * spacing + ht, 0);
-                vh.AddVert(vertex);
-                vertex.position = new(i * spacing - ht, r.height);
-                vh.AddVert(vertex);
-                vertex.position = new(i * spacing + ht, r.height);
-                vh.AddVert(vertex);
+                vh.AddVert(new(i * spacing - ht, 0), color, Vector4.zero);
+                vh.AddVert(new(i * spacing + ht, 0), color, Vector4.zero);
+                vh.AddVert(new(i * spacing - ht, r.height), color, Vector4.zero);
+                vh.AddVert(new(i * spacing + ht, r.height), color, Vector4.zero);
 
                 vh.AddTriangle(
                     vh.currentVertCount - 4,
@@ -61,14 +55,10 @@ namespace _UTIL_
 
             for (int j = 1; j <= count_v; j++)
             {
-                vertex.position = new(0, j * spacing - ht);
-                vh.AddVert(vertex);
-                vertex.position = new(r.width, j * spacing - ht);
-                vh.AddVert(vertex);
-                vertex.position = new(0, j * spacing + ht);
-                vh.AddVert(vertex);
-                vertex.position = new(r.width, j * spacing + ht);
-                vh.AddVert(vertex);
+                vh.AddVert(new(0, j * spacing - ht), color, Vector4.zero);
+                vh.AddVert(new(r.width, j * spacing - ht), color, Vector4.zero);
+                vh.AddVert(new(0, j * spacing + ht), color, Vector4.zero);
+                vh.AddVert(new(r.width, j * spacing + ht), color, Vector4.zero);
 
                 vh.AddTriangle(
                     vh.currentVertCount - 4,

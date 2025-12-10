@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace _UTIL_
 {
-    public sealed class UIOutlineRenderer : Graphic
+    public sealed class UI_OutlineRenderer : Graphic
     {
         public float tickness = 10f;
 

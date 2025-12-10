@@ -3,12 +3,8 @@ using UnityEngine.UI;
 
 namespace _UTIL_
 {
-    public sealed class UIRoundRectRenderer : Graphic
+    public sealed class UI_RectRenderer : Graphic
     {
-        public float tickness = .1f;
-
-        //----------------------------------------------------------------------------------------------------------
-
         [ContextMenu(nameof(SetVerticesDirty))]
         public override void SetVerticesDirty() => base.SetVerticesDirty();
 
