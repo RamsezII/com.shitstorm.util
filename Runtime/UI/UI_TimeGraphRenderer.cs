@@ -9,8 +9,18 @@ namespace _UTIL_
     public class UI_TimeGraphRenderer : MaskableGraphic
     {
         [System.Serializable]
-        public class DrawPass
+        public class TimeCurve
         {
+            public readonly struct CurvePoint
+            {
+                public readonly float unscaledTime, value;
+                public CurvePoint(in float value)
+                {
+                    unscaledTime = Time.unscaledTime;
+                    this.value = value;
+                }
+            }
+
             public bool drawFillTop = true;
             public Color fillColorTop = new Color(0, 0, 0, .5f);
 
@@ -22,7 +32,7 @@ namespace _UTIL_
 
             [Min(0.5f)] public float lineThickness = 1;
 
-            public readonly List<float> values = new();
+            public readonly List<CurvePoint> points = new();
         }
 
         [Range(0, 1)] public float time_offset;
@@ -32,7 +42,9 @@ namespace _UTIL_
         public float gridThickness = 1f;
         public Color gridColor = new Color(0, 0, 0, 0.15f);
 
-        public List<DrawPass> passes = new();
+        public List<TimeCurve> passes = new();
+
+        readonly List<Vector2> draw_buffer = new();
 
         //--------------------------------------------------------------------------------------------------------------
 
@@ -40,9 +52,8 @@ namespace _UTIL_
         [ContextMenu(nameof(TestContent))]
         public void TestContent()
         {
-            passes.Clear();
-            DrawPass pass = new();
-            pass.values.AddRange(Enumerable.Range(0, 25).Select(_ => Random.Range(0f, 1f)));
+            TimeCurve pass = new();
+            pass.points.AddRange(Enumerable.Range(0, 25).Select(_ => new TimeCurve.CurvePoint(Random.Range(0f, 1f))));
             passes.Add(pass);
 
             OnValidate();
@@ -109,20 +120,21 @@ namespace _UTIL_
 
             if (passes != null)
                 for (int i = 0; i < passes.Count; ++i)
-                    if (passes[i].values != null)
-                        if (passes[i].values.Count > 0)
+                    if (passes[i].points != null)
+                        if (passes[i].points.Count > 0)
                         {
-                            DrawPass pass = passes[i];
+                            TimeCurve pass = passes[i];
 
                             // --- convertit les valeurs en points locaux ---
-                            int count = pass.values.Count;
-                            Vector2[] pts = new Vector2[count];
+                            int count = pass.points.Count;
+                            Vector2[] draw_buffer = new Vector2[count];
                             for (int j = 0; j < count; ++j)
                             {
+                                var point = pass.points[j];
                                 float t = (count == 1) ? 0f : j / (float)(count - 1);
                                 float x = r.xMin + t * width;
-                                float y = r.yMin + Mathf.Clamp01(pass.values[j]) * height;
-                                pts[j] = new Vector2(x, y);
+                                float y = r.yMin + Mathf.Clamp01(point.value) * height;
+                                draw_buffer[j] = new Vector2(x, y);
                             }
 
                             // =====================
@@ -134,8 +146,8 @@ namespace _UTIL_
 
                                 for (int j = 0; j < count; ++j)
                                 {
-                                    vh.AddVert(new Vector2(pts[j].x, r.yMax), pass.fillColorTop, Vector2.zero);
-                                    vh.AddVert(pts[j], pass.fillColorTop, Vector2.zero);
+                                    vh.AddVert(new Vector2(draw_buffer[j].x, r.yMax), pass.fillColorTop, Vector2.zero);
+                                    vh.AddVert(draw_buffer[j], pass.fillColorTop, Vector2.zero);
                                 }
 
                                 // chaque segment = 2 triangles formant un quad (haut/bas)
@@ -161,9 +173,9 @@ namespace _UTIL_
                                 for (int j = 0; j < count; ++j)
                                 {
                                     // haut (courbe)
-                                    vh.AddVert(pts[j], pass.fillColorBottom, Vector2.zero);
+                                    vh.AddVert(draw_buffer[j], pass.fillColorBottom, Vector2.zero);
                                     // bas (ligne de base)
-                                    vh.AddVert(new Vector2(pts[j].x, r.yMin), pass.fillColorBottom, Vector2.zero);
+                                    vh.AddVert(new Vector2(draw_buffer[j].x, r.yMin), pass.fillColorBottom, Vector2.zero);
                                 }
 
                                 // chaque segment = 2 triangles formant un quad (haut/bas)
@@ -188,8 +200,8 @@ namespace _UTIL_
 
                                 for (int j = 0; j < count - 1; ++j)
                                 {
-                                    Vector2 p1 = pts[j];
-                                    Vector2 p2 = pts[j + 1];
+                                    Vector2 p1 = draw_buffer[j];
+                                    Vector2 p2 = draw_buffer[j + 1];
 
                                     Vector2 dir = (p2 - p1).normalized;
                                     if (dir.sqrMagnitude <= 0.000001f)
