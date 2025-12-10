@@ -30,7 +30,7 @@ namespace _UTIL_
 
 #if UNITY_EDITOR
         [ContextMenu(nameof(TestContent))]
-        void TestContent()
+        public void TestContent()
         {
             values.Clear();
             for (int i = 0; i < 25; i++)
