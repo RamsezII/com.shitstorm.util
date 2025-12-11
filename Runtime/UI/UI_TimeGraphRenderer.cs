@@ -240,8 +240,8 @@ namespace _UTIL_
                                         value: point.value,
                                         a1: _h_min,
                                         b1: _h_max,
-                                        a2: .1f,
-                                        b2: .9f
+                                        a2: .15f,
+                                        b2: .85f
                                     );
 
                                     float y = r.yMin + r.height * remap;
