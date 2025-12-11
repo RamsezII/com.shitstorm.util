@@ -109,6 +109,7 @@ namespace _UTIL_
         public List<TimeCurve> curves = new();
 
         readonly List<Vector2> positions_buffer = new();
+        float h_min, h_max;
 
         //--------------------------------------------------------------------------------------------------------------
 
@@ -145,14 +146,27 @@ namespace _UTIL_
             vh.Clear();
 
             float time = Time.unscaledTime;
+            float _h_min = h_min;
+            float _h_max = h_max;
+            Rect r = rectTransform.rect;
+
+            h_min = h_max = 0;
+
+            if (_h_min == _h_max)
+            {
+                _h_min = 0;
+                _h_max = 1;
+            }
 
 #if UNITY_EDITOR
             ++_drawFrame;
             if (!Application.isPlaying)
+            {
                 time = _testTime_current;
+                _h_min = 0;
+                _h_max = 1;
+            }
 #endif
-
-            Rect r = rectTransform.rect;
 
             if (color.a > 0)
             {
@@ -210,19 +224,30 @@ namespace _UTIL_
 
                             // --- convertit les valeurs en points locaux ---
                             for (int j = 0; j < curve.points.Count - 1; ++j)
-                            {
-                                var point1 = curve.points[j];
-                                var point2 = curve.points[j + 1];
-
-                                if (point2.time <= time_a)
+                                if (curve.points[j + 1].time <= time_a)
                                     curve.points.RemoveAt(j--);
+                                else
+                                {
+                                    var point = curve.points[j];
 
-                                float lerp = Util.InverseLerpUnclamped(time_a, time_b, point1.time);
-                                float x = r.xMin + r.width * lerp;
-                                float y = r.yMin + r.height * point1.value;
+                                    h_min = Mathf.Min(h_min, point.value);
+                                    h_max = Mathf.Max(h_max, point.value);
 
-                                positions_buffer.Add(new Vector2(x, y));
-                            }
+                                    float lerp = Util.InverseLerpUnclamped(time_a, time_b, point.time);
+                                    float x = r.xMin + r.width * lerp;
+
+                                    float remap = Util.RemapUnclamped(
+                                        value: point.value,
+                                        a1: _h_min,
+                                        b1: _h_max,
+                                        a2: .1f,
+                                        b2: .9f
+                                    );
+
+                                    float y = r.yMin + r.height * remap;
+
+                                    positions_buffer.Add(new Vector2(x, y));
+                                }
 
                             if (positions_buffer.Count == 0)
                                 continue;
