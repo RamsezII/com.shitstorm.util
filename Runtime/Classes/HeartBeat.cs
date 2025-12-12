@@ -33,9 +33,15 @@ namespace _UTIL_
             }
         }
 
-        public readonly List<Operation> operations = new();
+        readonly List<Operation> operations = new();
 
         //----------------------------------------------------------------------------------------------------------
+
+        public Operation AddOperation(in Operation operation)
+        {
+            operations.Add(operation);
+            return operation;
+        }
 
         public void Tick(in float deltaTime)
         {

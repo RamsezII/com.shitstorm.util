@@ -23,6 +23,15 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
+        public TCollection Collection
+        {
+            get
+            {
+                lock (this)
+                    return _collection;
+            }
+        }
+
         public bool IsEmpty
         {
             get
