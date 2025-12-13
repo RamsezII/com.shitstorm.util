@@ -6,6 +6,25 @@ partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
+    public static bool IsNotInside(in Rect r_child, in Rect r_parent, out Vector2 error)
+    {
+        error = Vector2.zero;
+
+        error.x = Mathf.Clamp(
+            value: 0,
+            min: Mathf.Max(0, r_parent.xMin - r_child.xMin),
+            max: Mathf.Min(0, r_parent.xMax - r_child.xMax)
+        );
+
+        error.y = Mathf.Clamp(
+            value: 0,
+            min: Mathf.Max(0, r_parent.yMin - r_child.yMin),
+            max: Mathf.Min(0, r_parent.yMax - r_child.yMax)
+        );
+
+        return error.sqrMagnitude > 0;
+    }
+
     public static Vector2 WorldToLocalPosition(this RectTransform rt, in Vector3 worldPos, in Canvas canvas)
     {
         Camera cam = (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
