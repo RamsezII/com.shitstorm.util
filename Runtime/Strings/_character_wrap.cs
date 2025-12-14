@@ -6,26 +6,31 @@
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static string AllSpaceToNowrap(this string text) => HasSpaces(text) ? text.Replace(' ', NOWRAP_CHAR) : text;
-    public static string AllNowrapToSpace(this string text) => text.Contains(NOWRAP_CHAR) ? text.Replace(NOWRAP_CHAR, ' ') : text;
+    public static string ForceCharacterWrap(this string text) => HasSpaces(text) ? text.Replace(' ', NOWRAP_CHAR) : text;
+    public static string ReplaceCharacterWraps(this string text) => text.Contains(NOWRAP_CHAR) ? text.Replace(NOWRAP_CHAR, ' ') : text;
 
-    public static bool HasSpaces(this string text) => text.Contains2("\t ");
+    public static bool HasSpaces(this string text) => !string.IsNullOrEmpty(text) && text.Contains2("\t ");
 
-    public static bool ForceUnwrappable(ref string text)
+    public static bool ForceCharacterWrap(ref string text)
     {
         if (!HasSpaces(text))
             return true;
+
         text = text.Replace(' ', NOWRAP_CHAR);
         return false;
     }
 
-    public static bool RemoveNowraps(ref string text)
+    public static bool RemoveCharacterWrap(ref string text)
     {
+        if (string.IsNullOrEmpty(text))
+            return false;
+
         if (text.Contains(NOWRAP_CHAR))
         {
-            text = text.Remove(NOWRAP_CHAR, ' ');
+            text = text.Replace(NOWRAP_CHAR, ' ');
             return true;
         }
+
         return false;
     }
 }

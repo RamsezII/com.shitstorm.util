@@ -12,7 +12,7 @@ static partial class Util_zspaces_e
     static void AllSpaceToNowrap(MenuCommand command)
     {
         var inputfield = (TMP_InputField)command.context;
-        string new_text = inputfield.text.AllSpaceToNowrap();
+        string new_text = inputfield.text.ForceCharacterWrap();
         inputfield.text = new_text;
     }
 
@@ -20,7 +20,7 @@ static partial class Util_zspaces_e
     static void AllNowrapToSpace(MenuCommand command)
     {
         var inputfield = (TMP_InputField)command.context;
-        string new_text = inputfield.text.AllNowrapToSpace();
+        string new_text = inputfield.text.ReplaceCharacterWraps();
         inputfield.text = new_text;
     }
 }

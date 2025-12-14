@@ -36,4 +36,21 @@ partial class Util
             return output;
         return string.Empty;
     }
+
+    public static bool TryGetSelectedString(this TMP_InputField inputField, out string selectedString, out int start, out int end)
+    {
+        selectedString = GetSelectedString(inputField, out start, out end);
+        return !string.IsNullOrEmpty(selectedString);
+    }
+
+    public static string GetSelectedString(this TMP_InputField inputField, out int start, out int end)
+    {
+        start = Mathf.Min(inputField.selectionStringFocusPosition, inputField.selectionStringAnchorPosition);
+        end = Mathf.Max(inputField.selectionStringFocusPosition, inputField.selectionStringAnchorPosition);
+
+        if (inputField.selectionStringFocusPosition == inputField.selectionStringAnchorPosition)
+            return string.Empty;
+
+        return inputField.text[start..end];
+    }
 }
