@@ -19,6 +19,7 @@ namespace _UTIL_
             sub_contracts = Color.darkSlateBlue,
             functions = Color.deepSkyBlue,
             variables = Color.mediumPurple,
+            attributes = Color.lightYellow,
             paths = Color.ivory,
             fpaths = Color.ivory,
             dpaths = Color.ivory,
