@@ -3,11 +3,33 @@ using System.Collections.Generic;
 
 partial class Util
 {
-    public static T Pop<T>(this List<T> list)
+    public static T PopLast<T>(this List<T> list)
     {
         T last = list[^1];
         list.RemoveAt(list.Count - 1);
         return last;
+    }
+
+    public static bool TryPeekLast<T>(this List<T> list, out T last)
+    {
+        if (list == null || list.Count == 0)
+        {
+            last = default;
+            return false;
+        }
+        last = list[^1];
+        return true;
+    }
+
+    public static bool TryPopLast<T>(this List<T> list, out T last)
+    {
+        if (TryPeekLast(list, out last))
+        {
+            list.RemoveAt(list.Count - 1);
+            return true;
+        }
+        last = default;
+        return false;
     }
 
     public static Dictionary<string, T> EnumToDict<T>(in IEqualityComparer<string> comparer) where T : struct, Enum
