@@ -18,7 +18,6 @@ namespace _UTIL_
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
-            onDrag?.Invoke(eventData);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<IDragHandler>()?.OnDrag(eventData);
         }
