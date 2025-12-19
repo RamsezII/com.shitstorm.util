@@ -39,8 +39,17 @@ namespace _UTIL_
 
         public Operation AddOperation(in Operation operation)
         {
-            operations.Add(operation);
+            operations.Remove(operation);
+            if (operation == null)
+                Debug.LogWarning($"trying to add empty operation ({GetType()}");
+            else
+                operations.Add(operation);
             return operation;
+        }
+
+        public void RemoveOperation(in Operation operation)
+        {
+            operations.Remove(operation);
         }
 
         public void Tick(in float deltaTime)
