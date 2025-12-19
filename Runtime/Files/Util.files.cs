@@ -14,7 +14,7 @@ public static partial class Util
         if (force && !dir.Exists)
         {
             dir.Create();
-            Debug.Log($"Created directory: \"{dir.FullName}\"".ToSubLog());
+            Debug.Log($"new dir: \"{dir.FullName}\"".ToSubLog());
         }
         return dir;
     }
