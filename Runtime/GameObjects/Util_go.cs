@@ -11,10 +11,9 @@ partial class Util
         return clone;
     }
 
-    public static T Clone<T>(this T prefab) where T : MonoBehaviour => Object.Instantiate(prefab, prefab.transform.parent);
-    public static T Clone<T>(this T prefab, in bool set_active) where T : MonoBehaviour
+    public static T Clone<T>(this T prefab, in bool set_active = false, in Transform parent = null) where T : MonoBehaviour
     {
-        T clone = Object.Instantiate(prefab, prefab.transform.parent);
+        T clone = Object.Instantiate(prefab, parent != null ? parent : prefab.transform.parent);
         if (set_active)
             clone.gameObject.SetActive(true);
         return clone;
