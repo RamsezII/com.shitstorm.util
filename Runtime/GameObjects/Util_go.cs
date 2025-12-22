@@ -11,7 +11,7 @@ partial class Util
         return clone;
     }
 
-    public static T Clone<T>(this T prefab, in bool set_active = false, in Transform parent = null) where T : MonoBehaviour
+    public static T Clone<T>(this T prefab, in bool set_active = false, in Transform parent = null) where T : Component
     {
         T clone = Object.Instantiate(prefab, parent != null ? parent : prefab.transform.parent);
         if (set_active)
