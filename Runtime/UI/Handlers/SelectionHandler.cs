@@ -1,4 +1,6 @@
 ﻿using System;
+using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 namespace _UTIL_
@@ -7,6 +9,7 @@ namespace _UTIL_
     {
         public Action<BaseEventData> onEnter, onExit;
         public Action<BaseEventData, bool> onEnterExit;
+        [SerializeField] UnityEvent<bool> onSelection;
 
         //--------------------------------------------------------------------------------------------------------------
 
@@ -14,6 +17,7 @@ namespace _UTIL_
         {
             onEnter?.Invoke(eventData);
             onEnterExit?.Invoke(eventData, true);
+            onSelection.Invoke(true);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<ISelectHandler>()?.OnSelect(eventData);
         }
@@ -22,6 +26,7 @@ namespace _UTIL_
         {
             onExit?.Invoke(eventData);
             onEnterExit?.Invoke(eventData, false);
+            onSelection.Invoke(false);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<IDeselectHandler>()?.OnDeselect(eventData);
         }
