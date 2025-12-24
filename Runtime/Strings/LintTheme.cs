@@ -26,6 +26,7 @@ namespace _UTIL_
             comments = Color.darkOliveGreen,
             command_separators = Color.softYellow,
             keywords = Color.magenta,
+            types = Color.peachPuff,
             bracket_0 = Color.yellow,
             bracket_1 = Color.rebeccaPurple,
             bracket_2 = Color.navyBlue,
