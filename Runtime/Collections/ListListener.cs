@@ -9,6 +9,7 @@ namespace _UTIL_
 
     public class ListListener<T> : CollectionListener<List<T>, T>
     {
+        public T LastOrDefault => _collection.Count == 0 ? default : _collection[^1];
         public bool IsFirst(in T element) => IsAtIndex(element, 0);
         public bool IsLast(in T element) => IsAtIndex(element, ^1);
         public bool IsAtIndex(in T element, in Index index)
