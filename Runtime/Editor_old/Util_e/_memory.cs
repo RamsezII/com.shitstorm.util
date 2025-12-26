@@ -1,14 +1,22 @@
 ﻿#if UNITY_EDITOR
+using System;
+using UnityEditor;
 using UnityEngine;
 
 partial class Util_e_OLD
 {
-    [UnityEditor.MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(CleanupEditorMemory))]
-    static void CleanupEditorMemory()
+    [MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(UnloadUnusedAssetsInResources))]
+    static void UnloadUnusedAssetsInResources()
     {
         Resources.UnloadUnusedAssets();
-        System.GC.Collect();
-        Debug.Log("🧼 Mémoire nettoyée !");
+        Debug.Log("🧼 Resources unloaded");
+    }
+
+    [MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(ForceGarbageCollection))]
+    static void ForceGarbageCollection()
+    {
+        GC.Collect();
+        Debug.Log("🧼 GarbageCollection");
     }
 }
 #endif

@@ -16,18 +16,18 @@ namespace _UTIL_
 
             //----------------------------------------------------------------------------------------------------------
 
-            Operation(in float delay, in bool loop)
+            Operation(in string name, in float delay, in bool loop) : base(name)
             {
                 this.delay = delay;
                 this.loop = loop;
             }
 
-            public Operation(in float delay, in bool loop, in Action action) : this(delay, loop)
+            public Operation(in string name, in float delay, in bool loop, in Action action) : this(name, delay, loop)
             {
                 this.action = action ?? throw new ArgumentNullException(nameof(action));
             }
 
-            public Operation(in float delay, in bool loop, in Action<Operation> action_f) : this(delay, loop)
+            public Operation(in string name, in float delay, in bool loop, in Action<Operation> action_f) : this(name, delay, loop)
             {
                 this.action_f = action_f ?? throw new ArgumentNullException(nameof(action_f));
             }

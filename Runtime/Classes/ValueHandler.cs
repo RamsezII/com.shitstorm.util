@@ -19,7 +19,17 @@ namespace _UTIL_
 {
     public class ValueHandler : IDisposable
     {
+        public readonly Type type;
         public bool _disposed;
+
+        //------------------------------------------------------------------------------------------------------------------------------
+
+        protected ValueHandler(in Type type)
+        {
+            this.type = type;
+        }
+
+        //------------------------------------------------------------------------------------------------------------------------------
 
         public void Dispose()
         {
@@ -47,7 +57,7 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public ValueHandler(in T init = default)
+        public ValueHandler(in T init = default) : base(typeof(T))
         {
             _value = old = init;
         }

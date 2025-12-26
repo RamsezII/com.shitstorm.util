@@ -5,18 +5,31 @@ namespace _UTIL_
 {
     public class Disposable : IDisposable
     {
+        public readonly string name;
         public Action onDispose;
         public bool _disposed;
+        public bool log_disposed;
 
         static ushort _id;
         public readonly ushort disposable_id = _id++;
 
+        public static readonly HashSetListener<Disposable> all_disposables = new();
+
         //----------------------------------------------------------------------------------------------------------
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void OnBeforeSceneLoad()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
         {
             _id = 0;
+            all_disposables.Reset();
+        }
+
+        //----------------------------------------------------------------------------------------------------------
+
+        public Disposable(in string name)
+        {
+            this.name = name;
+            all_disposables.AddElement(this);
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -24,7 +37,7 @@ namespace _UTIL_
         public override string ToString()
         {
             lock (this)
-                return $"{GetType()}[{disposable_id}]";
+                return $"{{ {name} [{disposable_id}] ({GetType()}) }}";
         }
 
         public bool Disposed
@@ -46,6 +59,8 @@ namespace _UTIL_
                     return;
                 _disposed = true;
             }
+
+            all_disposables.RemoveElement(this);
 
             OnDispose();
 
