@@ -1,51 +1,61 @@
 ﻿using System;
+using UnityEngine;
 
 namespace _UTIL_
 {
     public sealed class LazyValue<T>
     {
-        public Func<T> _factory;
-        public T _value;
+        readonly Func<T> _factory;
         public bool _ready;
 
+#if UNITY_EDITOR
+        public
+#endif
+        T _value;
+
         //----------------------------------------------------------------------------------------------------------
 
-        public LazyValue(in Func<T> factory) => Reset(factory);
+        public LazyValue(in Func<T> factory)
+        {
+            _factory = factory;
+            Reset();
+        }
 
         //----------------------------------------------------------------------------------------------------------
 
-        public T SafeValue
+        public T Value
         {
             get
             {
                 lock (this)
+                {
+                    if (!_ready)
+                        return ForcedValue();
                     return _value;
+                }
+            }
+            set
+            {
+                lock (this)
+                    _value = value;
             }
         }
 
-        public T GetValue(in bool force_reload = false)
-        {
-            lock (this)
-                if (force_reload || !_ready)
-                    Load();
-            return _value;
-        }
-
-        void Load()
+        public T ForcedValue()
         {
             lock (this)
             {
+                Debug.Log($"loading {GetType()}".ToSubLog());
                 _value = _factory();
                 _ready = true;
             }
+            return _value;
         }
 
-        public void Reset() => Reset(_factory);
-        public void Reset(in Func<T> factory)
+        public void Reset()
         {
             lock (this)
             {
-                _factory = factory;
                 _value = default;
                 _ready = false;
             }
