@@ -11,11 +11,20 @@ public static partial class Util
         onT(eT.Current);
     }
 
-    public static IEnumerator<float> EWaitForFrames(this int frames, Action action)
+    public static IEnumerator<float> EWaitForFrames(this int frames, string name, UnityEngine.Object context, Action action)
     {
         for (int i = 0; i < frames; i++)
             yield return (float)i / frames;
-        action();
+
+        try
+        {
+            action();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"ewait \"{name}\" ({frames} frames) failed", context);
+            throw e;
+        }
     }
 
     public static IEnumerator<float> ESequence(params Action[] actions)
