@@ -61,6 +61,30 @@ partial class Util
     }
 
     public static bool BoundsClamp(
+        in Vector2 current_min, in Vector2 current_max,
+        in Vector2 parent_min, in Vector2 parent_max,
+        out Vector2 correction)
+    {
+        correction = Vector2.zero;
+
+        for (int i = 0; i < 2; ++i)
+        {
+            float _cmin = current_min[i];
+            float _cmax = current_max[i];
+            float _pmin = parent_min[i];
+            float _pmax = parent_max[i];
+
+            if (_cmin < _pmin)
+                correction[i] -= _cmin - _pmin;
+
+            if (_cmax > _pmax)
+                correction[i] -= _cmax - _pmax;
+        }
+
+        return correction != Vector2.zero;
+    }
+
+    public static bool BoundsClamp(
         in Vector3 current_min, in Vector3 current_max,
         in Vector3 parent_min, in Vector3 parent_max,
         out Vector3 correction)
