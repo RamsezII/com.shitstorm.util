@@ -30,4 +30,5 @@ public static partial class Util
     }
     public static float InverseLerpUnclamped(in float a, in float b, in float value) => a == b ? 0f : (value - a) / (b - a);
     public static float RemapUnclamped(this float value, in float a1, in float b1, in float a2, in float b2) => Mathf.LerpUnclamped(a2, b2, InverseLerpUnclamped(a1, b1, value));
+    public static float Remap(this float input, in float input_min, in float input_max, in float output_min, in float output_max) => Mathf.Lerp(output_min, output_max, Mathf.InverseLerp(input_min, input_max, input));
 }
