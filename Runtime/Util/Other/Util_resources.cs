@@ -39,7 +39,19 @@ public static partial class Util
             if (parent == null)
                 clone = (T)new GameObject(name).AddComponent(type);
             else
-                clone = (T)parent.ForceFind(name).gameObject.AddComponent(type);
+            {
+                Transform tfm = parent.Find(name);
+                if (tfm == null)
+                    tfm = parent.ForceFind(name);
+                else
+                {
+                    Transform ptfm = tfm.parent;
+                    tfm = new GameObject(name).transform;
+                    tfm.SetParent(ptfm, false);
+                }
+                clone = (T)tfm.gameObject.AddComponent(type);
+            }
+
             clone.transform.SetLocalPositionAndRotation(position, rotation);
         }
 
