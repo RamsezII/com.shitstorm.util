@@ -6,6 +6,13 @@ partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
+    public static Vector2 InverseLerp(this in Rect rect, in Vector2 point)
+    {
+        float u = InverseLerpUnclamped(rect.xMin, rect.xMax, point.x);
+        float v = InverseLerpUnclamped(rect.yMin, rect.yMax, point.y);
+        return new Vector2(u, v);
+    }
+
     public static bool IsNotInside(in Rect r_child, in Rect r_parent, out Vector2 error)
     {
         error = Vector2.zero;
