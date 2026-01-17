@@ -47,6 +47,17 @@ partial class Util
         return lp;
     }
 
+    public static Rect GetScreenRect(this RectTransform rT)
+    {
+        lock (rt_corners)
+        {
+            rT.GetWorldCorners(rt_corners);
+            Vector2 min = rt_corners[0];
+            Vector2 max = rt_corners[2];
+            return new(min, max - min);
+        }
+    }
+
     public static void GetWorldCorners(this RectTransform rT, out Vector2 min, out Vector2 max)
     {
         lock (rt_corners)
