@@ -8,46 +8,33 @@ namespace _EDITOR_
 #if UNITY_EDITOR
         public Transform root;
 
-        public bool memorize, apply, destroy;
-
         Dictionary<Transform, Quaternion> rots;
         Dictionary<Transform, Vector3> pos;
 
-        private void OnValidate()
+        [ContextMenu(nameof(Memorize))]
+        void Memorize()
         {
-            if (memorize)
+            rots = new Dictionary<Transform, Quaternion>();
+            pos = new Dictionary<Transform, Vector3>();
+
+            if (!root)
+                root = transform;
+
+            foreach (Transform bone in root.GetComponentsInChildren<Transform>())
             {
-                memorize = false;
-
-                rots = new Dictionary<Transform, Quaternion>();
-                pos = new Dictionary<Transform, Vector3>();
-
-                if (!root)
-                    root = transform;
-
-                foreach (Transform bone in root.GetComponentsInChildren<Transform>())
-                {
-                    rots[bone] = bone.rotation;
-                    pos[bone] = bone.position;
-                }
+                rots[bone] = bone.rotation;
+                pos[bone] = bone.position;
             }
+        }
 
-            if (apply)
-            {
-                apply = false;
+        [ContextMenu(nameof(Apply))]
+        void Apply()
+        {
+            foreach (KeyValuePair<Transform, Quaternion> bone in rots)
+                bone.Key.rotation = bone.Value;
 
-                foreach (KeyValuePair<Transform, Quaternion> bone in rots)
-                    bone.Key.rotation = bone.Value;
-
-                foreach (KeyValuePair<Transform, Vector3> bone in pos)
-                    bone.Key.position = bone.Value;
-            }
-
-            if (destroy)
-            {
-                destroy = false;
-                this.Destroy();
-            }
+            foreach (KeyValuePair<Transform, Vector3> bone in pos)
+                bone.Key.position = bone.Value;
         }
 #endif
 

@@ -37,7 +37,7 @@ public static partial class Util
     public static void CleanAll(this Transform transform)
     {
         for (int i = 0; i < transform.childCount; ++i)
-            Destroy(transform.GetChild(i).gameObject);
+            Object.Destroy(transform.GetChild(i).gameObject);
     }
 
     public static Transform ForceFindTransform(this string path)

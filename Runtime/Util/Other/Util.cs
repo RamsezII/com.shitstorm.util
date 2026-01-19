@@ -1,7 +1,18 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public static partial class Util
 {
+    public static void Destroy(this UnityEngine.Object obj)
+    {
+        if (Application.isPlaying)
+            UnityEngine.Object.Destroy(obj);
+        else
+            UnityEngine.Object.DestroyImmediate(obj);
+    }
+
+    public static void CallAction<T>(this T self, in Action<T> action) => action(self);
+
     public static bool PullValue(this ref bool flag)
     {
         if (flag)
@@ -17,13 +28,5 @@ public static partial class Util
         if (a == null)
             return b == null;
         return a.Equals(b);
-    }
-
-    public static void Destroy(this Object obj)
-    {
-        if (Application.isPlaying)
-            Object.Destroy(obj);
-        else
-            Object.DestroyImmediate(obj);
     }
 }
