@@ -10,13 +10,15 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        public NamedTree<T> GetOrCreateBranch(in IEnumerable<string> path)
+        public NamedTree<T> GetOrCreateBranch(string branch) => GetOrCreateBranch(new string[] { branch });
+        public NamedTree<T> GetOrCreateBranch(in IEnumerable<string> path, in bool remove_empties = false)
         {
             var node = this;
             foreach (var key in path)
             {
-                if (string.IsNullOrWhiteSpace(key))
-                    continue;
+                if (remove_empties)
+                    if (string.IsNullOrWhiteSpace(key))
+                        continue;
 
                 if (!node._branches.TryGetValue(key, out var child))
                 {

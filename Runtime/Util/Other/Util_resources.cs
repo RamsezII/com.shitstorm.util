@@ -42,7 +42,7 @@ public static partial class Util
             {
                 Transform tfm = parent.Find(name);
                 if (tfm == null)
-                    tfm = parent.ForceFind(name);
+                    tfm = parent.ForceFind(name, true);
                 else
                 {
                     Transform ptfm = tfm.parent;

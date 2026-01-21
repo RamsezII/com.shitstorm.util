@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public static partial class Util
 {
@@ -53,9 +54,8 @@ public static partial class Util
 
         if (splits.Length == 1)
             return root;
-
-        splits = splits[1..];
-        return ForceFind(root, splits);
+        else
+            return ForceFind(root, splits[1..], false);
     }
 
     public static bool TryFind(this Transform root, in string path, out Transform transform)
@@ -67,28 +67,29 @@ public static partial class Util
         return false;
     }
 
-    public static Transform ForceFind(this Transform root, in string path)
+    public static Transform ForceFind(this Transform root, in string path, in bool force_new) => ForceFind(root, path.Split('/'), force_new);
+    public static Transform ForceFind(this Transform root, in IList<string> splits, in bool force_new)
     {
-        Transform T = root.Find(path);
-        if (T != null)
-            return T;
-        return ForceFind(root, path.Split('/'));
-    }
-
-    static Transform ForceFind(this Transform root, params string[] splits)
-    {
-        Transform tfm = root.Find(splits[0]);
-
-        if (tfm == null)
+        Transform t1 = root;
+        for (int i = 0; i < splits.Count - 1; ++i)
         {
-            tfm = new GameObject(splits[0]).transform;
-            tfm.SetParent(root, false);
+            string branch = splits[i];
+            Transform t2 = t1.Find(branch);
+            if (t2 == null)
+            {
+                t2 = new GameObject(branch).transform;
+                t2.SetParent(t1, false);
+                t2.name = branch;
+            }
+            t1 = t2;
         }
-
-        if (splits.Length == 1)
-            return tfm;
-        else
-            return ForceFind(tfm, splits[1..]);
+        Transform t3 = t1.Find(splits[^1]);
+        if (force_new || t3 == null)
+        {
+            t3 = new GameObject(splits[^1]).transform;
+            t3.SetParent(t1, false);
+        }
+        return t3;
     }
 
     public static void DestroyAllByType<ComponentType>(this GameObject gameObject) where ComponentType : Component

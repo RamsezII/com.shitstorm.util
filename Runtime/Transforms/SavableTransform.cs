@@ -22,7 +22,7 @@ namespace _UTIL_
             if (string.IsNullOrWhiteSpace(path))
                 tfm = null;
             else
-                tfm = root.ForceFind(path);
+                tfm = root.ForceFind(path, false);
         }
     }
 }
