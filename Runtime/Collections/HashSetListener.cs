@@ -25,6 +25,31 @@ namespace _UTIL_
             }
         }
 
+        public bool ToggleElement(T element)
+        {
+            lock (this)
+                return ToggleElement(element, !_collection.Contains(element));
+        }
+
+        public bool ToggleElement(T element, in bool toggle)
+        {
+            lock (this)
+            {
+                bool contained = _collection.Contains(element);
+                if (contained)
+                {
+                    if (!toggle)
+                        RemoveElement(element);
+                }
+                else
+                {
+                    if (toggle)
+                        AddElement(element);
+                }
+                return contained;
+            }
+        }
+
         protected override void OnClear()
         {
             _collection.Clear();
