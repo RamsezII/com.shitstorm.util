@@ -5,22 +5,26 @@ using UnityEngine;
 
 namespace _UTIL_e
 {
-    [InitializeOnLoad]
     public static class DrawRigidbodyCenters
     {
         static readonly List<Rigidbody> rigidbodies = new();
 
+        public static readonly bool DRAW = false;
+
         //----------------------------------------------------------------------------------------------------------
 
-        static DrawRigidbodyCenters()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
         {
-            RefreshList();
-
             SceneView.duringSceneGui -= OnSceneGUI;
-            SceneView.duringSceneGui += OnSceneGUI;
-
             EditorApplication.hierarchyChanged -= RefreshList;
-            EditorApplication.hierarchyChanged += RefreshList;
+
+            if (DRAW)
+            {
+                SceneView.duringSceneGui += OnSceneGUI;
+                EditorApplication.hierarchyChanged += RefreshList;
+                RefreshList();
+            }
         }
 
         //----------------------------------------------------------------------------------------------------------
