@@ -2,8 +2,8 @@
 
 partial class Util
 {
-    public static Vector3 TransformPosition(this Rigidbody rigidbody, in Vector3 position) => rigidbody.position + rigidbody.rotation * position;
-    public static Vector3 InverseTransformPosition(this Rigidbody rigidbody, in Vector3 position) => Quaternion.Inverse(rigidbody.rotation) * (position - rigidbody.position);
+    public static Vector3 TransformPoint(this Rigidbody rigidbody, in Vector3 position) => rigidbody.position + rigidbody.rotation * position;
+    public static Vector3 InverseTransformPoint(this Rigidbody rigidbody, in Vector3 position) => Quaternion.Inverse(rigidbody.rotation) * (position - rigidbody.position);
 
     public static Vector3 TransformDirection(this Rigidbody rigidbody, in Vector3 direction) => rigidbody.rotation * direction;
     public static Vector3 InverseTransformDirection(this Rigidbody rigidbody, in Vector3 direction) => Quaternion.Inverse(rigidbody.rotation) * direction;

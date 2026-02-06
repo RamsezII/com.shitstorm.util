@@ -15,13 +15,7 @@ public abstract class JSon
     public static string GetJSonExtension<T>() where T : JSon => GetJSonExtension(typeof(T));
     public static string GetJSonExtension(in Type type) => "." + GetJSonName(type);
 
-    protected virtual void OnSave() { }
-    public void Save(in string filepath, in bool log)
-    {
-        OnSave();
-        Save(filepath, JsonUtility.ToJson(this, true), log);
-    }
-
+    public void Save(in string filepath, in bool log) => Save(filepath, JsonUtility.ToJson(this, prettyPrint: true), log);
     public static void Save(in string filepath, in string text, in bool log)
     {
         filepath.CheckParentDirectory();
@@ -34,19 +28,6 @@ public abstract class JSon
 
         if (log)
             Debug.Log($"saved : \"{filepath}\"".ToSubLog());
-    }
-
-    public virtual void OnRead() => OnApply();
-    protected virtual void OnApply() { }
-
-    public virtual void WriteBytes(in BinaryWriter writer)
-    {
-
-    }
-
-    public virtual void ReadBytes(in BinaryReader reader)
-    {
-
     }
 
     //----------------------------------------------------------------------------------------------------------
@@ -69,8 +50,6 @@ public abstract class JSon
                 json.Save(filepath, true);
             }
 
-            json.OnRead();
-
             if (log)
                 Debug.Log($"read: \"{filepath}\"".ToSubLog());
 
@@ -81,7 +60,6 @@ public abstract class JSon
             if (force)
             {
                 json.Save(filepath, true);
-                json.OnRead();
                 return false;
             }
             else
