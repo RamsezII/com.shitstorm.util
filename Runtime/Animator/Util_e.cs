@@ -5,7 +5,7 @@ using UnityEditor.Animations;
 
 partial class Util_e
 {
-    [MenuItem("Assets/Create/Animation/" + nameof(BlendTree))]
+    [MenuItem("Assets/Create/Animation/Animation BlendTree")]
     static void CreateBlendTreeAsset()
     {
         string path = AssetDatabase.GetAssetPath(Selection.activeObject);
