@@ -14,10 +14,13 @@ namespace _UTIL_
         }
 
         public T Current => (T)Enum.ToObject(typeof(T), current);
+        public T Old => (T)Enum.ToObject(typeof(T), old);
 
 #if UNITY_EDITOR
-        [SerializeField] T _current, _target;
+        [SerializeField] T _old, _current, _target;
 #endif
+
+        public Action<T> onState;
 
         //----------------------------------------------------------------------------------------------------------
 
@@ -31,7 +34,10 @@ namespace _UTIL_
         public override void OnState(in int value)
         {
             base.OnState(value);
+            _target = Target;
             _current = Current;
+            _old = Old;
+            onState?.Invoke(Current);
         }
 #endif
 
@@ -59,7 +65,7 @@ namespace _UTIL_
 
         public readonly Animator animator;
         public readonly int layerIndex;
-        public int current, target;
+        public int old, current, target;
         [SerializeField] Options last_options;
         public float last_scaled, last_unscaled;
         public int last_apply_frame;
@@ -81,6 +87,7 @@ namespace _UTIL_
         {
             last_scaled = Time.time;
             last_unscaled = Time.unscaledTime;
+            old = current;
             current = value;
         }
 
@@ -102,12 +109,11 @@ namespace _UTIL_
                         options.fade = 0;
 
                 last_apply_frame = Time.frameCount;
-                int state = Convert.ToInt32(target);
 
                 if (options.nfade)
-                    animator.CrossFade(state, options.fade, layerIndex, options.offset);
+                    animator.CrossFade(target, options.fade, layerIndex, options.offset);
                 else
-                    animator.CrossFadeInFixedTime(state, options.fade, layerIndex, options.offset);
+                    animator.CrossFadeInFixedTime(target, options.fade, layerIndex, options.offset);
             }
         }
 
