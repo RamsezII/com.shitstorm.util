@@ -55,7 +55,7 @@ namespace _UTIL_
         [Serializable]
         public struct Options
         {
-            public bool nfade, force;
+            public bool nfade, stateForce, frameForce;
             public float fade, offset;
             public static readonly Options Default = new()
             {
@@ -69,7 +69,7 @@ namespace _UTIL_
         [SerializeField] Options last_options;
         public float last_scaled, last_unscaled;
         public int last_apply_frame;
-        public bool TargetChanged => !current.Equals(target);
+        public bool TargetChanged => current != target;
         public bool NoChange => current.Equals(target);
         public Options GetDefaultOptions => Options.Default;
 
@@ -100,10 +100,10 @@ namespace _UTIL_
         public void Apply(Options options, in bool no_fade_when_forced = true)
         {
             last_options = options;
-            if (options.force || TargetChanged && last_apply_frame != Time.frameCount)
+            if ((options.stateForce || TargetChanged) && (options.frameForce || last_apply_frame != Time.frameCount))
             {
                 if (animator.IsInTransition(layerIndex))
-                    if (!options.force)
+                    if (!options.frameForce)
                         return;
                     else if (no_fade_when_forced)
                         options.fade = 0;
@@ -134,7 +134,8 @@ namespace _UTIL_
                 nfade = reader.ReadBoolean(),
                 fade = reader.Read_f16(),
                 offset = reader.Read_f16(),
-                force = true,
+                stateForce = true,
+                frameForce = true,
             };
             Apply(options);
         }
