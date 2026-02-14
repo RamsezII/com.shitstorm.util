@@ -52,7 +52,8 @@ namespace _UTIL_
     {
         public bool changed;
         public T _value, old;
-        Action<T> onChange;
+        Action onChange;
+        Action<T> onChangeT;
         public Func<T, T> processor;
 
         //------------------------------------------------------------------------------------------------------------------------------
@@ -70,6 +71,7 @@ namespace _UTIL_
             _value = default;
             old = default;
             onChange = null;
+            onChangeT = null;
             processor = null;
             Update(value, true);
         }
@@ -118,21 +120,38 @@ namespace _UTIL_
                     return false;
         }
 
-        public void AddListener(in Action<T> action, in bool doNotCallThisTime = false)
+        public void AddListener(in Action action, in bool doNotCallThisTime = false)
         {
             lock (this)
             {
                 onChange -= action;
                 onChange += action;
                 if (!doNotCallThisTime)
+                    action();
+            }
+        }
+
+        public void AddListener(in Action<T> action, in bool doNotCallThisTime = false)
+        {
+            lock (this)
+            {
+                onChangeT -= action;
+                onChangeT += action;
+                if (!doNotCallThisTime)
                     action(Value);
             }
+        }
+
+        public void RemoveListener(in Action action)
+        {
+            lock (this)
+                onChange -= action;
         }
 
         public void RemoveListener(in Action<T> action)
         {
             lock (this)
-                onChange -= action;
+                onChangeT -= action;
         }
 
         public void AddProcessor(in Func<T, T> processor)
@@ -157,7 +176,10 @@ namespace _UTIL_
                 _value = value;
 
                 if (force || changed)
-                    onChange?.Invoke(value);
+                {
+                    onChangeT?.Invoke(value);
+                    onChange?.Invoke();
+                }
 
                 return changed;
             }
