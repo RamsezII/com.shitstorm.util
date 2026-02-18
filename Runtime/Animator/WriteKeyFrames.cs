@@ -200,7 +200,7 @@ partial class Util_e
 
         if (write_rot)
         {
-            Vector3 e = transform.localEulerAngles;
+            Vector3 e = transform.localEulerAngles.SignedEulers();
             AddKey("localEulerAnglesRaw.x", e.x);
             AddKey("localEulerAnglesRaw.y", e.y);
             AddKey("localEulerAnglesRaw.z", e.z);
