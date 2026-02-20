@@ -20,12 +20,12 @@ public static partial class Util
         if (type.IsAbstract)
             throw new System.ArgumentException($"Can not instantiate abstract type: \"{type}\"");
 
-        rotation = rotation == default ? Quaternion.identity : rotation;
-
         string name = type.FullName;
         T resource = (T)Resources.Load(name, type);
         T clone;
         string log;
+
+        rotation = rotation == default ? Quaternion.identity : rotation;
 
         if (resource != null)
         {
@@ -61,5 +61,27 @@ public static partial class Util
         Debug.Log(log.ToSubLog());
 
         return clone;
+    }
+
+    public static bool TryInstantiateByName(in string resource_name, out Object clone, in Vector3 position = default, Quaternion rotation = default, in Transform parent = null)
+    {
+        var resource = Resources.Load(resource_name);
+
+        if (resource != null)
+        {
+            string log = $"instantiated \"{resource_name}\"";
+            rotation = rotation == default ? Quaternion.identity : rotation;
+            clone = Object.Instantiate(resource, position, rotation, parent);
+            clone.name = resource_name;
+
+            if (parent != null && clone is GameObject go)
+                log += $" ({go.transform.GetPath(true)})";
+
+            Debug.Log(log.ToSubLog());
+            return true;
+        }
+
+        clone = null;
+        return false;
     }
 }
