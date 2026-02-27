@@ -3,11 +3,11 @@ using UnityEngine;
 
 public static partial class Util
 {
-    public static float GetNormalizedTime(this Animator animator, in int layerIndex = 0) => animator.GetStateInfo(layerIndex).normalizedTime;
+    public static float GetNormalizedTime(this Animator animator, in int layerIndex = 0) => animator.GetStateInfo_safe(layerIndex).normalizedTime;
 
     public static float GetNormalizedTimeClamped(this Animator animator, in int layerIndex = 0) => Mathf.Clamp01(GetNormalizedTime(animator, layerIndex));
 
-    public static AnimatorStateInfo GetStateInfo(this Animator animator, in int layerIndex) => animator.IsInTransition(layerIndex) ? animator.GetNextAnimatorStateInfo(layerIndex) : animator.GetCurrentAnimatorStateInfo(layerIndex);
+    public static AnimatorStateInfo GetStateInfo_safe(this Animator animator, in int layerIndex) => animator.IsInTransition(layerIndex) ? animator.GetNextAnimatorStateInfo(layerIndex) : animator.GetCurrentAnimatorStateInfo(layerIndex);
 
     public static Transform GetRootBone(this Animator animator)
     {
