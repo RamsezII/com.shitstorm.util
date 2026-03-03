@@ -25,7 +25,8 @@ partial class Util
                 yield return type;
     }
 
-    public static bool TryGetType(this string typeName, out Type type, in bool include_abstracts = false)
+    public static Type CastType(this string typeName, in bool include_abstracts = false) => TryCastType(typeName, out Type type, include_abstracts) ? type : null;
+    public static bool TryCastType(this string typeName, out Type type, in bool include_abstracts = false)
     {
         type = Type.GetType(typeName);
         if (type != null)
@@ -46,7 +47,7 @@ partial class Util
 
     public static bool TryGetType<T>(this string typeName, out Type type, in bool include_abstracts = false) where T : class
     {
-        if (TryGetType(typeName, out type))
+        if (TryCastType(typeName, out type))
             if (include_abstracts || !type.IsAbstract)
                 if (typeof(T).IsAssignableFrom(type))
                     return true;

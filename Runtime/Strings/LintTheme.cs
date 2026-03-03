@@ -72,7 +72,7 @@ namespace _UTIL_
             for (int i = 0; i < pairs.Length; i++)
             {
                 Pair pair = pairs[i];
-                if (pair.type.TryGetType(out Type type, include_abstracts: true))
+                if (pair.type.TryCastType(out Type type, include_abstracts: true))
                     lints[type] = pair.color;
             }
         }
