@@ -3,7 +3,7 @@ using UnityEngine;
 
 partial class Util_njson
 {
-    public static JObject ToJObject(this Transform transform, in Transform root) => new()
+    public static JObject ToJObject(this Transform transform, in Transform root) => transform == null ? null : new()
     {
         ["path"] = root == null ? transform.GetPath(true) : transform.GetRelativePath(root),
         ["position"] = transform.localPosition.ToJObject(),
