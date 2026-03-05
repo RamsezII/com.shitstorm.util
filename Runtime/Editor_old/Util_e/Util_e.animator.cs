@@ -32,7 +32,7 @@ public static partial class Util_e_OLD
     [MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(LogAnimatorHashes))]
     static void LogAnimatorHashes() => LogAnimatorHashes((AnimatorController)Selection.activeObject);
 
-    [MenuItem("CONTEXT/" + nameof(Animator) + "/" + nameof(_EDITOR_) + "." + nameof(LogAnimatorHashes))]
+    [MenuItem("CONTEXT/" + nameof(Animator) + "/" + nameof(_EDITOR_) + "/" + nameof(LogAnimatorHashes))]
     static void LogAnimatorHashes(MenuCommand command) => LogAnimatorHashes(((Animator)command.context).runtimeAnimatorController as AnimatorController);
 
     public static void LogAnimatorHashes(this AnimatorController animator)
