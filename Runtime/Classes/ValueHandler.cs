@@ -1,5 +1,6 @@
 ﻿using _UTIL_;
 using System;
+using UnityEngine;
 
 partial class Util
 {
@@ -51,6 +52,7 @@ namespace _UTIL_
     public class ValueHandler<T> : ValueHandler
     {
         public bool changed;
+        public int last_frame;
         public T _value, old;
         Action onChange;
         Action<T> onChangeT;
@@ -67,6 +69,7 @@ namespace _UTIL_
 
         public void Reset(in T value = default)
         {
+            last_frame = Time.frameCount;
             changed = false;
             _value = default;
             old = default;
@@ -180,6 +183,9 @@ namespace _UTIL_
                     onChangeT?.Invoke(value);
                     onChange?.Invoke();
                 }
+
+                if (changed)
+                    last_frame = Time.frameCount;
 
                 return changed;
             }

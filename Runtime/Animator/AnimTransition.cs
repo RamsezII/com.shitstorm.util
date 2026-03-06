@@ -10,7 +10,7 @@ namespace _UTIL_
         [Serializable]
         public struct Options
         {
-            public bool nfade, stateForce, frameForce;
+            public bool log, nfade, stateForce, frameForce;
             public float fade, offset;
             public static readonly Options Default = new()
             {
@@ -55,14 +55,14 @@ namespace _UTIL_
             last_options = Options.Default;
         }
 
-        public void Apply(Options options, in bool no_fade_when_forced = true)
+        public bool Apply(Options options, in bool no_fade_when_forced = true)
         {
             last_options = options;
             if ((options.stateForce || TargetChanged) && (options.frameForce || last_apply_frame != Time.frameCount))
             {
                 if (animator.IsInTransition(layerIndex))
                     if (!options.frameForce)
-                        return;
+                        return false;
                     else if (no_fade_when_forced)
                         options.fade = 0;
 
@@ -70,11 +70,17 @@ namespace _UTIL_
                 last_apply_utime = Time.unscaledTime;
                 last_apply_frame = Time.frameCount;
 
+                if (options.log)
+                    Debug.Log($"\"{current}\" -> \"{target}\"");
+
                 if (options.nfade)
                     animator.CrossFade(target, options.fade, layerIndex, options.offset);
                 else
                     animator.CrossFadeInFixedTime(target, options.fade, layerIndex, options.offset);
+
+                return true;
             }
+            return false;
         }
 
         public void OnWriteBytes(BinaryWriter writer)
@@ -138,12 +144,10 @@ namespace _UTIL_
         }
 #endif
 
-        public void Apply(in T value) => Apply(value, Options.Default);
-        public void Apply(in T value, in Options options)
+        public bool Apply(in T value, in Options options)
         {
             Target = value;
-            Apply(options);
+            return Apply(options);
         }
     }
-
 }
