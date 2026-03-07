@@ -166,6 +166,7 @@ namespace _UTIL_
             }
         }
 
+        public void Update(T value) => Update(value, false);
         public virtual bool Update(T value, in bool force)
         {
             lock (this)

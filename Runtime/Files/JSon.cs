@@ -10,9 +10,9 @@ public abstract class JSon
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static string GetJSonName<T>() where T : JSon => GetJSonName(typeof(T));
+    public static string GetJSonName<T>() => GetJSonName(typeof(T));
     public static string GetJSonName(in Type type) => type.FullName + json;
-    public static string GetJSonExtension<T>() where T : JSon => GetJSonExtension(typeof(T));
+    public static string GetJSonExtension<T>() => GetJSonExtension(typeof(T));
     public static string GetJSonExtension(in Type type) => "." + GetJSonName(type);
 
     public void Save(in string filepath, in bool log) => Save(filepath, JsonUtility.ToJson(this, prettyPrint: true), log);

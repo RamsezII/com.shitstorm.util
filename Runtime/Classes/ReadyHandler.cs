@@ -2,7 +2,7 @@
 
 namespace _UTIL_
 {
-    public sealed class Readyhandler
+    public sealed class ReadyHandler
     {
         public bool is_ready;
         Action on_ready;

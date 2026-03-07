@@ -7,7 +7,6 @@ using UnityEngine;
 public static partial class Util
 {
     public static byte[] GetBuffer(this BinaryWriter writer) => ((MemoryStream)writer.BaseStream).GetBuffer();
-    public static byte[] GetBuffer(this BinaryReader reader) => ((MemoryStream)reader.BaseStream).GetBuffer();
 
     public static bool LengthPrefixedWrite(this BinaryWriter writer, in Action<BinaryWriter> onWriter)
     {
@@ -49,6 +48,14 @@ public static partial class Util
         writer.Write(length);
         writer.BaseStream.Position = endPos;
         return length;
+    }
+
+    public static void WriteString(this BinaryWriter writer, in string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            writer.Write(string.Empty);
+        else
+            writer.Write(text);
     }
 
     public static void WriteText(this BinaryWriter writer, in string text)
