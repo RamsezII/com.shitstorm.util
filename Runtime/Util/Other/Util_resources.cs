@@ -63,6 +63,50 @@ public static partial class Util
         return clone;
     }
 
+    public static GameObject InstantiateOrCreate(in string resource_name, in Vector3 position = default, Quaternion rotation = default, in Transform parent = null)
+    {
+        var resource = Resources.Load<GameObject>(resource_name);
+        GameObject clone;
+        string log;
+
+        rotation = rotation == default ? Quaternion.identity : rotation;
+
+        if (resource != null)
+        {
+            log = $"instantiated \"{resource_name}\"";
+            clone = Object.Instantiate(resource, position, rotation, parent);
+            clone.name = resource_name;
+        }
+        else
+        {
+            log = $"created \"{resource_name}\"";
+            if (parent == null)
+                clone = new GameObject(resource_name);
+            else
+            {
+                Transform tfm = parent.Find(resource_name);
+                if (tfm == null)
+                    tfm = parent.ForceFind(resource_name, true);
+                else
+                {
+                    Transform ptfm = tfm.parent;
+                    tfm = new GameObject(resource_name).transform;
+                    tfm.SetParent(ptfm, false);
+                }
+                clone = tfm.gameObject;
+            }
+
+            clone.transform.SetLocalPositionAndRotation(position, rotation);
+        }
+
+        if (parent != null)
+            log += $" ({clone.transform.GetPath(true)})";
+
+        Debug.Log(log.ToSubLog());
+
+        return clone;
+    }
+
     public static bool TryInstantiateByName(in string resource_name, out Object clone, in Vector3 position = default, Quaternion rotation = default, in Transform parent = null)
     {
         var resource = Resources.Load(resource_name);
