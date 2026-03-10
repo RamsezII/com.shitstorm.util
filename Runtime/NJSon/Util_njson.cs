@@ -7,7 +7,7 @@ using UnityEngine;
 partial class Util
 {
     public static string GetJSonExtension<T>() => GetJSonExtension(typeof(T));
-    public static string GetJSonExtension(this Type type) => type.FullName + "json.txt";
+    public static string GetJSonExtension(this Type type) => $".{type}.json.txt";
     public static void NJSave(this JToken njson, in string path, in bool log = true)
     {
         DirectoryInfo pdir = Directory.GetParent(path);
