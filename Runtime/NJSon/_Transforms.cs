@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-partial class Util_njson
+partial class Util
 {
     public static JObject ToJObject(this Transform transform, in Transform root) => transform == null ? null : new()
     {
@@ -11,13 +11,13 @@ partial class Util_njson
         ["scale"] = transform.localScale.ToJObject(),
     };
 
-    public static Transform ToTransform(this JObject njson, in Transform root)
+    public static Transform ToTransform(this JObject jobj, in Transform root)
     {
-        string path = (string)njson["path"];
+        string path = (string)jobj["path"];
         Transform T = root.ForceFind(path, force_new: false);
-        T.localPosition = njson["position"].ToVector3();
-        T.localEulerAngles = njson["rotation"].ToVector3();
-        T.localScale = njson["scale"].ToVector3();
+        T.localPosition = jobj["position"].ToVector3();
+        T.localEulerAngles = jobj["rotation"].ToVector3();
+        T.localScale = jobj["scale"].ToVector3();
         return T;
     }
 }

@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using UnityEngine;
 
-public static partial class Util_njson
+partial class Util
 {
     public static string GetJSonExtension<T>() => GetJSonExtension(typeof(T));
     public static string GetJSonExtension(this Type type) => type.FullName + "json.txt";
