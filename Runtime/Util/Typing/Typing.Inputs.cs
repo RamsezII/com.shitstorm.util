@@ -11,9 +11,7 @@ namespace _UTIL_
             Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || 
             Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
 
-        public static bool getCtrlC_down => Input.GetKeyDown(KeyCode.C) && getCtrl_hold;
         public static bool getCtrlV_down => Input.GetKeyDown(KeyCode.V) && getCtrl_hold;
-        public static bool getCtrlL_down => Input.GetKeyDown(KeyCode.L) && getCtrl_hold;
 
         public static bool getShift_hold =>
             Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);

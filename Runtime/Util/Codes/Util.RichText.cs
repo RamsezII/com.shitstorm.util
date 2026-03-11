@@ -49,48 +49,9 @@
     _last_
 }
 
-[System.Flags]
-public enum TextF : int
-{
-    style = 1 << TextB.style,
-    size = 1 << TextB.size,
-    align = 1 << TextB.align,
-    color = 1 << TextB.color,
-    alpha = 1 << TextB.alpha,
-    bold = 1 << TextB.bold,
-    italic = 1 << TextB.italic,
-    font = 1 << TextB.font,
-    indent = 1 << TextB.indent,
-    link = 1 << TextB.link,
-    lowercase = 1 << TextB.lowercase,
-    uppercase = 1 << TextB.uppercase,
-    smallcaps = 1 << TextB.smallcaps,
-    allcaps = 1 << TextB.allcaps,
-    noparse = 1 << TextB.noparse,
-    margin = 1 << TextB.margin,
-    mark = 1 << TextB.mark,
-    space = 1 << TextB.space,
-    sprite = 1 << TextB.sprite,
-    subscript = 1 << TextB.subscript,
-    superscript = 1 << TextB.superscript,
-    width = 1 << TextB.width,
-    page_break = 1 << TextB.page_break,
-    monospace = 1 << TextB.monospace,
-    horizontal_position = 1 << TextB.horizontal_position,
-    non_breaking_spaces = 1 << TextB.non_breaking_spaces,
-    line_indent = 1 << TextB.line_indent,
-    caracter_spacing = 1 << TextB.caracter_spacing,
-    line_height = 1 << TextB.line_height,
-    strikethrough = 1 << TextB.strikethrough,
-    underline = 1 << TextB.underline,
-    vertical_offset = 1 << TextB.vertical_offset,
-    _all_ = (1 << TextB._last_) - 1,
-}
-
 public static partial class Util_richtext
 {
     public static readonly string[] rtextAttr = new string[(int)TextB._last_];
-    public static string ToRtext(this TextB attr) => rtextAttr[(int)attr];
     static Util_richtext()
     {
         for (TextB tb = 0; tb < TextB._last_; ++tb)

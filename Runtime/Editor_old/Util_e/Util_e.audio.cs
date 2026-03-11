@@ -37,7 +37,7 @@ public static partial class Util_e_OLD
         log.Append("}");
         string message = log.ToString();
         Debug.Log(message);
-        message.WriteToClipboard();
+        GUIUtility.systemCopyBuffer = message;
     }
 
     [MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(LogAllAudioListeners))]

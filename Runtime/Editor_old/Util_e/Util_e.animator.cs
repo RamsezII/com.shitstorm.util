@@ -96,7 +96,7 @@ public static partial class Util_e_OLD
 
         string _log = log.ToString();
         Debug.Log(_log);
-        _log.WriteToClipboard();
+        GUIUtility.systemCopyBuffer = _log;
     }
 }
 #endif

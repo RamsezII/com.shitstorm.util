@@ -24,15 +24,6 @@ namespace _UTIL_
             }
         }
 
-        public static string setValue
-        {
-            set
-            {
-                Typing.value = value;
-                flags |= TypingFlags.changes | TypingFlags.refresh;
-            }
-        }
-
         public static void Reset(in string reset = null)
         {
             flags |= TypingFlags.changes | TypingFlags.refresh;
@@ -40,9 +31,6 @@ namespace _UTIL_
             bar_toggle = true;
             bar_time = .5f;
         }
-
-        public static string ReplaceEnd(this string text, in string end, in string replace = default)
-            => text.Substring(0, Mathf.Max(0, text.Length - end.Length)) + replace;
 
         public static bool Clamp(in byte clamp)
         {

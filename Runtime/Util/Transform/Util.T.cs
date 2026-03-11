@@ -91,10 +91,4 @@ public static partial class Util
         }
         return t3;
     }
-
-    public static void DestroyAllByType<ComponentType>(this GameObject gameObject) where ComponentType : Component
-    {
-        foreach (ComponentType component in gameObject.GetComponentsInChildren<ComponentType>(true))
-            UnityEngine.Object.Destroy(component.gameObject);
-    }
 }

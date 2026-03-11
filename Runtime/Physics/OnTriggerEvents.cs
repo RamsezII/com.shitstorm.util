@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace _UTIL_
@@ -13,30 +14,34 @@ namespace _UTIL_
             Exit,
         }
 
-#if UNITY_EDITOR
         [Header("~@ Editor @~")]
-        [SerializeField] List<Collider> colliders;
-        [SerializeField] List<Collider2D> colliders2D;
-#endif
+        public Collider[] triggers;
+
         public Action<Collider, Types> onTriggerEvent;
         public Action<Collider2D, Types> onTriggerEvent2D;
 
+#if UNITY_EDITOR
+        [SerializeField] List<Collider> _colliders;
+        [SerializeField] List<Collider2D> _colliders2D;
+#endif
+
         //--------------------------------------------------------------------------------------------------------------
 
-#if UNITY_EDITOR
         private void Awake()
         {
-            colliders = new();
-            colliders2D = new();
-        }
+            triggers = GetComponentsInChildren<Collider>().Where(cld => cld.isTrigger).ToArray();
+#if UNITY_EDITOR
+            _colliders = new();
+            _colliders2D = new();
 #endif
+        }
 
         //--------------------------------------------------------------------------------------------------------------
 
         private void OnTriggerEnter(Collider other)
         {
 #if UNITY_EDITOR
-            colliders.Add(other);
+            _colliders.Add(other);
 #endif
             onTriggerEvent?.Invoke(other, Types.Enter);
         }
@@ -44,7 +49,7 @@ namespace _UTIL_
         private void OnTriggerEnter2D(Collider2D other)
         {
 #if UNITY_EDITOR
-            colliders2D.Add(other);
+            _colliders2D.Add(other);
 #endif
             onTriggerEvent2D?.Invoke(other, Types.Enter);
         }
@@ -54,7 +59,7 @@ namespace _UTIL_
         private void OnTriggerExit(Collider other)
         {
 #if UNITY_EDITOR
-            colliders.Remove(other);
+            _colliders.Remove(other);
 #endif
             onTriggerEvent?.Invoke(other, Types.Exit);
         }
@@ -62,7 +67,7 @@ namespace _UTIL_
         private void OnTriggerExit2D(Collider2D other)
         {
 #if UNITY_EDITOR
-            colliders2D.Remove(other);
+            _colliders2D.Remove(other);
 #endif
             onTriggerEvent2D?.Invoke(other, Types.Exit);
         }

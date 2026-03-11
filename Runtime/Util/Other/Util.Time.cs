@@ -11,8 +11,10 @@ public static partial class Util
 
     //----------------------------------------------------------------------------------------------------------
 
-    static Util()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics()
     {
+        stopwatch.Reset();
         stopwatch.Start();
     }
 

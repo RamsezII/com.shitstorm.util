@@ -10,34 +10,6 @@ partial class Util
         RenderTexture.active = rt;
     }
 
-    public static Texture2D GetCopy_shit(this Texture source)
-    {
-        Texture2D texture = new(source.width, source.height, TextureFormat.ARGB32, false);
-        Graphics.CopyTexture(source, texture);
-        return texture;
-    }
-
-    public static Texture2D GetCopy(this RenderTexture renderTexture, in bool correction)
-    {
-        RenderTexture currentActive = RenderTexture.active;
-        RenderTexture.active = renderTexture;
-
-        Texture2D texture = new(renderTexture.width, renderTexture.height, TextureFormat.ARGB32, false);
-        texture.ReadPixels(new(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-        texture.Apply();
-
-        if (correction)
-        {
-            for (int y = 0; y < texture.height; y++)
-                for (int x = 0; x < texture.width; x++)
-                    texture.SetPixel(x, y, texture.GetPixel(x, y).gamma);
-            texture.Apply();
-        }
-
-        RenderTexture.active = currentActive;
-        return texture;
-    }
-
     public static Texture2D GetTexture(this Camera camera, in int width, in int height)
     {
         RenderTexture temp = RenderTexture.GetTemporary(

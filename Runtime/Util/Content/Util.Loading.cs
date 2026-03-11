@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using System;
-using UnityEngine.Networking;
+﻿using UnityEngine.Networking;
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
@@ -35,30 +33,5 @@ public static partial class Util
             yield return DownloadHandlerAudioClip.GetContent(request);
         else
             Debug.Log($"{request.result}");
-    }
-
-    public static async Task<AudioClip> LoadClip_await(string path)
-    {
-        AudioClip clip = null;
-        using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV))
-        {
-            uwr.SendWebRequest();
-
-            // wrap tasks in try/catch, otherwise it'll fail silently
-            try
-            {
-                while (!uwr.isDone) await Task.Delay(5);
-                if (uwr.isNetworkError || uwr.isHttpError)
-                    Debug.Log($"{uwr.error}");
-                else
-                    clip = DownloadHandlerAudioClip.GetContent(uwr);
-            }
-            catch (Exception err)
-            {
-                Debug.Log($"{err.Message}, {err.StackTrace}");
-            }
-        }
-
-        return clip;
     }
 }

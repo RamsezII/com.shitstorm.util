@@ -1,5 +1,6 @@
-﻿public static partial class Util  // http://digitalnativestudios.com/textmeshpro/docs/rich-text/
+﻿partial class Util
 {
+    // http://digitalnativestudios.com/textmeshpro/docs/rich-text/
     public static string Bold(this string text) => text.SetStyle(TextB.bold);
     public static string Italic(this string text) => text.SetStyle(TextB.italic);
     public static string SetStyle(this string text, in TextB style, string setting = "", in bool close = true, params string[] attributes)

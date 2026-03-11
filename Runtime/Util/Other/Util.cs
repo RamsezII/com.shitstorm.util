@@ -1,17 +1,14 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 public static partial class Util
 {
-    public static void Destroy(this UnityEngine.Object obj)
+    public static void Destroy(this Object obj)
     {
         if (Application.isPlaying)
-            UnityEngine.Object.Destroy(obj);
+            Object.Destroy(obj);
         else
-            UnityEngine.Object.DestroyImmediate(obj);
+            Object.DestroyImmediate(obj);
     }
-
-    public static void CallAction<T>(this T self, in Action<T> action) => action(self);
 
     public static bool PullValue(this ref bool flag)
     {
