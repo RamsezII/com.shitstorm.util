@@ -12,7 +12,7 @@ namespace _UTIL_
             public readonly bool loop;
             [Range(0, 1)] public float timer;
             public readonly Action action;
-            public readonly Action<Operation> action_f;
+            public readonly Action<Operation> action_op;
 
             //----------------------------------------------------------------------------------------------------------
 
@@ -27,9 +27,9 @@ namespace _UTIL_
                 this.action = action ?? throw new ArgumentNullException(nameof(action));
             }
 
-            public Operation(in string name, in float delay, in bool loop, in Action<Operation> action_f) : this(name, delay, loop)
+            public Operation(in string name, in float delay, in bool loop, in Action<Operation> action_op) : this(name, delay, loop)
             {
-                this.action_f = action_f ?? throw new ArgumentNullException(nameof(action_f));
+                this.action_op = action_op ?? throw new ArgumentNullException(nameof(action_op));
             }
         }
 
@@ -70,7 +70,7 @@ namespace _UTIL_
                             op.timer = deltaTime;
 
                         op.action?.Invoke();
-                        op.action_f?.Invoke(op);
+                        op.action_op?.Invoke(op);
 
                         if (!op.loop)
                         {
