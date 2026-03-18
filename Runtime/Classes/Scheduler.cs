@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace _UTIL_
 {
-    public sealed class HeartBeat : IDisposable
+    public sealed class Scheduler : IDisposable
     {
         public class Operation : Disposable
         {
