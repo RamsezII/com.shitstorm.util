@@ -20,11 +20,13 @@ partial class Util
         File.WriteAllText(path, text);
 
         if (log)
-            Debug.Log($"NJSave({path})".ToSubLog());
+            Debug.Log($"{nameof(NJSave)}({path})".ToSubLog());
     }
 
-    public static bool TryNJRead<T>(this string path, out T njson, in bool log_success = true, in bool log_failure = true) where T : JToken, new()
+    public static bool TryNJRead<T>(this string path, out T njson, in bool force = false, in bool log_success = true, in bool log_failure = true) where T : JToken, new()
     {
+        njson = null;
+
         if (File.Exists(path))
         {
             try
@@ -38,7 +40,6 @@ partial class Util
             catch (Exception e)
             {
                 Debug.LogWarning($"ERROR {nameof(TryNJRead)}: \"{e.TrimmedExceptionMessage()}\" ({path})");
-                njson = new();
                 return false;
             }
         }
@@ -46,7 +47,14 @@ partial class Util
         {
             if (log_failure)
                 Debug.LogWarning($"{nameof(TryNJRead)} no NJSon at: \"{path}\"");
-            njson = new();
+
+            if (force)
+            {
+                File.WriteAllText(path, string.Empty);
+                Debug.Log($"{nameof(TryNJRead)} forced: \"{path}\"".ToSubLog());
+                njson = new();
+            }
+
             return false;
         }
     }
