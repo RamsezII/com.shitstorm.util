@@ -67,28 +67,38 @@ public static partial class Util
         return false;
     }
 
-    public static Transform ForceFind(this Transform root, in string path, in bool force_new) => ForceFind(root, path.Split('/'), force_new);
-    public static Transform ForceFind(this Transform root, in IList<string> splits, in bool force_new)
+    public static T ForceFind<T>(this T root, in string path, in bool force_new) where T : Transform => ForceFind(root, path.Split('/'), force_new);
+    public static T ForceFind<T>(this T root, in IList<string> splits, in bool force_new) where T : Transform
     {
-        Transform t1 = root;
+        T t1 = root;
         for (int i = 0; i < splits.Count - 1; ++i)
         {
             string branch = splits[i];
-            Transform t2 = t1.Find(branch);
+            T t2 = (T)t1.Find(branch);
             if (t2 == null)
             {
-                t2 = new GameObject(branch).transform;
+                if (typeof(T) == typeof(Transform))
+                    t2 = (T)new GameObject(branch).transform;
+                else
+                    t2 = (T)new GameObject(branch, typeof(T)).transform;
+
                 t2.SetParent(t1, false);
                 t2.name = branch;
             }
             t1 = t2;
         }
-        Transform t3 = t1.Find(splits[^1]);
+
+        T t3 = (T)t1.Find(splits[^1]);
         if (force_new || t3 == null)
         {
-            t3 = new GameObject(splits[^1]).transform;
+            if (typeof(T) == typeof(Transform))
+                t3 = (T)new GameObject(splits[^1]).transform;
+            else
+                t3 = (T)new GameObject(splits[^1], typeof(T)).transform;
+
             t3.SetParent(t1, false);
         }
+
         return t3;
     }
 }

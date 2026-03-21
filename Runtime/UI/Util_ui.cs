@@ -6,6 +6,16 @@ partial class Util
 
     //--------------------------------------------------------------------------------------------------------------
 
+    public static void ResetToFullRect(this RectTransform rectTransform)
+    {
+        rectTransform.localScale = Vector3.one;
+        rectTransform.anchoredPosition = Vector3.zero;
+        rectTransform.pivot = .5f * Vector2.one;
+        rectTransform.sizeDelta = Vector2.zero;
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+    }
+
     public static Vector2 InverseLerp(this in Rect rect, in Vector2 point)
     {
         float u = InverseLerpUnclamped(rect.xMin, rect.xMax, point.x);
