@@ -3,6 +3,8 @@ using UnityEngine;
 
 public static partial class Util
 {
+    public static int GetAnimatorHash(this string str) => Animator.StringToHash(str);
+
     public static float GetNormalizedTime(this Animator animator, in int layerIndex = 0) => animator.GetStateInfo_safe(layerIndex).normalizedTime;
 
     public static float GetNormalizedTimeClamped(this Animator animator, in int layerIndex = 0) => Mathf.Clamp01(GetNormalizedTime(animator, layerIndex));

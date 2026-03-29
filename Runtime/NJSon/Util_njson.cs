@@ -6,10 +6,10 @@ using UnityEngine;
 
 partial class Util
 {
-    public static string GetJSonExtension<T>() => GetJSonExtension(typeof(T));
     public static string GetJSonExtension(this Type type) => $".{type}.json.txt";
-    public static string GetJSonFileName<T>() => GetJSonFileName(typeof(T));
+    public static string GetJSonExtension_noTXT(this Type type) => $".{type}.json";
     public static string GetJSonFileName(this Type type) => $"{type}.json.txt";
+    public static string GetJSonFileName_noTXT(this Type type) => $"{type}.json";
     public static void NJSave(this JToken njson, in string path, in bool log = true)
     {
         DirectoryInfo pdir = Directory.GetParent(path);
