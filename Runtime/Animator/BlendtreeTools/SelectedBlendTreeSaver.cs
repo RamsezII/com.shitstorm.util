@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace _UTIL_e
 {
-    static class SaveSelectedBlendTreeAsAsset
+    static class SelectedBlendTreeSaver
     {
         // Menu "Assets/..." (Project window)
         [MenuItem("Assets/Save Selected BlendTree as Asset", priority = 2010)]

@@ -5,7 +5,7 @@ using UnityEditor.Animations;
 
 namespace _UTIL_e
 {
-    static class CreateBlendTreeAsset
+    static class BlendTreeAssetCreator
     {
         [MenuItem("Assets/Create/Animation/Animation BlendTree")]
         static void Create()
@@ -14,11 +14,10 @@ namespace _UTIL_e
             if (string.IsNullOrWhiteSpace(path))
                 return;
 
-            if (File.Exists(path))
-                path = Directory.GetParent(path).FullName;
+            if (!AssetDatabase.IsValidFolder(path))
+                path = Path.GetDirectoryName(path);
 
-            if (Directory.Exists(path))
-                path = Path.Combine(path, "BlendTree.asset");
+            path = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(path, "BlendTree.asset"));
 
             BlendTree bt = new();
 
