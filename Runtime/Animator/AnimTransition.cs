@@ -10,7 +10,7 @@ namespace _UTIL_
         [Serializable]
         public struct Options
         {
-            public bool log, nfade, stateForce, frameForce;
+            public bool log, nfade, stateForce, frameForce, maintainFadeWhenForced;
             public float fade, offset;
             public static readonly Options Default = new()
             {
@@ -55,7 +55,7 @@ namespace _UTIL_
             last_options = Options.Default;
         }
 
-        public bool Apply(Options options, in bool no_fade_when_forced = true)
+        public bool Apply(Options options)
         {
             last_options = options;
             if ((options.stateForce || TargetChanged) && (options.frameForce || last_apply_frame != Time.frameCount))
@@ -63,7 +63,7 @@ namespace _UTIL_
                 if (animator.IsInTransition(layerIndex))
                     if (!options.frameForce)
                         return false;
-                    else if (no_fade_when_forced)
+                    else if (!options.maintainFadeWhenForced)
                         options.fade = 0;
 
                 last_apply_time = Time.time;
