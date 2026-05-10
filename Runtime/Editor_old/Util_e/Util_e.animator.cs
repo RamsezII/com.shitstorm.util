@@ -18,6 +18,9 @@ public static partial class Util_e_OLD
     [MenuItem("CONTEXT/" + nameof(Animator) + "/" + nameof(_EDITOR_) + "/" + nameof(RebindAnimator))]
     static void RebindAnimator(MenuCommand command) => ((Animator)command.context).Rebind();
 
+    [MenuItem("CONTEXT/" + nameof(Animator) + "/" + nameof(_EDITOR_) + "/" + nameof(WriteDefaultValues))]
+    static void WriteDefaultValues(MenuCommand command) => ((Animator)command.context).WriteDefaultValues();
+
     public static void LogAnimatorClips(this Animator animator)
     {
         string log = "";
