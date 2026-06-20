@@ -64,7 +64,10 @@ namespace _UTIL_
                     if (!options.frameForce)
                         return false;
                     else if (!options.maintainFadeWhenForced)
+                    {
                         options.fade = 0;
+                        Debug.Log($"0 FADE : \"{current}\" -> \"{target}\"");
+                    }
 
                 last_apply_time = Time.time;
                 last_apply_utime = Time.unscaledTime;
