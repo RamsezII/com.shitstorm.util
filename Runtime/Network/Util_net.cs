@@ -14,8 +14,6 @@ public static partial class Util_net
 
     public const ushort
         PORT_ARMA = 40000,
-        PORT_ATHENA = 50000,
-        PORT_NUCLEOR = 60000,
         PORT_PARAGON = 65000;
 
     public static readonly IPEndPoint
@@ -27,10 +25,13 @@ public static partial class Util_net
 
     //----------------------------------------------------------------------------------------------------------
 
-    static Util_net()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void OnResetStatics()
     {
         localIP = null;
     }
+
+    //----------------------------------------------------------------------------------------------------------
 
     public static IPAddress GetLocalIP()
     {
