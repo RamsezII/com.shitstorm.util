@@ -3,6 +3,9 @@
 partial class Util
 {
     public static void ExecuteCMD(in string working_dir, in string command)
+        => ExecuteCMDWithExitCode(working_dir, command);
+
+    public static int ExecuteCMDWithExitCode(in string working_dir, in string command)
     {
         GUIUtility.systemCopyBuffer = command;
 
@@ -45,10 +48,12 @@ partial class Util
             process.WaitForExit();
 
             Debug.Log($"{"[EXIT_CODE]".SetColor(Colors.white)} {process.ExitCode}".SetColor(cmd_color));
+            return process.ExitCode;
         }
         catch (System.Exception e)
         {
             Debug.LogException(e);
+            return -1;
         }
         finally
         {

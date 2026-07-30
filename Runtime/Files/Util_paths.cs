@@ -1,8 +1,5 @@
-﻿using _UTIL_;
-using System;
+﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace _UTIL_
 {
@@ -27,17 +24,17 @@ partial class Util
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static bool HasFlags_any(this FS_TYPES mask, FS_TYPES flags) => (mask & flags) != 0;
-    public static string ToLinuxPath(this string path) => path.Replace('\\', '/');
-    public static bool MatchesPattern(this string value, in string pattern)
+    public static DirectoryInfo Combine(this DirectoryInfo directory, params string[] dir_names)
     {
-        string regex = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-        return Regex.IsMatch(value, regex, RegexOptions.IgnoreCase);
+        string[] temp = new string[1 + dir_names.Length];
+        temp[0] = directory.FullName;
+        for (int i = 0; i < dir_names.Length; i++)
+            temp[1 + i] = dir_names[i];
+        string combine = Path.Combine(temp);
+        return new(combine);
     }
 
     public static bool IsSamePath_full(this string a, in string b) => string.Equals(NormalizePath(a), NormalizePath(b), comp_path);
-
-    public static bool IsSameDir(this DirectoryInfo a, DirectoryInfo b) => a.FullName.Equals_path(b.FullName);
 
     public static string NormalizePath(this string full_path)
     {
@@ -55,30 +52,4 @@ partial class Util
     public static string ForceLinuxPathSeparators(this string path) => path.Replace('\\', '/');
 
     public static string Dos2Unix(this string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
-
-    public static string CombinePaths(params string[] paths) => Path.Combine(paths).NormalizePath();
-
-    public static bool IsParentDirectoryOf(this string parent, string candidate)
-    {
-        parent = NormalizePath(parent);
-        candidate = NormalizePath(candidate);
-
-        if (string.IsNullOrEmpty(parent) || string.IsNullOrEmpty(candidate))
-            return false;
-
-        // Racines différentes => pas descendant (ex: "D:\..." vs "C:\...") sur Windows
-        string rootA = Path.GetPathRoot(parent);
-        string rootB = Path.GetPathRoot(candidate);
-
-        if (!string.Equals(rootA, rootB, comp_path))
-            return false;
-
-        // Forcer un séparateur terminal sur le parent pour éviter les faux positifs
-        // (ex: "C:\Foo" ne doit pas matcher "C:\Foobar")
-        string parentWithSep = parent.EndsWith(Path.DirectorySeparatorChar.ToString())
-            ? parent
-            : parent + Path.DirectorySeparatorChar;
-
-        return candidate.StartsWith(parentWithSep, comp_path) || IsSamePath_full(parent, candidate);
-    }
 }
