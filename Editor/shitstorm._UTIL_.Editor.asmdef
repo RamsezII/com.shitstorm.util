@@ -1,0 +1,16 @@
+{
+    "name": "shitstorm._UTIL_.Editor",
+    "rootNamespace": "_UTIL_.Editor",
+    "references": [
+        "GUID:ec96f6dc48fee4244bcebc247464e471"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
