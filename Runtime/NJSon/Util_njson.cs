@@ -10,13 +10,13 @@ partial class Util
     public static string GetJSonExtension_noTXT(this Type type) => $".{type}.json";
     public static string GetJSonFileName(this Type type) => $"{type}.json.txt";
     public static string GetJSonFileName_noTXT(this Type type) => $"{type}.json";
-    public static void NJSave(this JToken njson, in string path, in bool log = true)
+    public static void NJSave(this JToken njson, in string path, in bool log = true, in Formatting formatting = Formatting.Indented)
     {
         DirectoryInfo pdir = Directory.GetParent(path);
         if (!pdir.Exists)
             pdir.Create();
 
-        string text = JsonConvert.SerializeObject(njson, Formatting.Indented);
+        string text = JsonConvert.SerializeObject(njson, formatting);
         File.WriteAllText(path, text);
 
         if (log)
