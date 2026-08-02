@@ -15,7 +15,7 @@ namespace _EDITOR_
             RectTransform rT = (RectTransform)target;
             Transform T = rT;
 
-            if (GUILayout.Button(nameof(Util_e_OLD.FillParent)))
+            if (GUILayout.Button(nameof(Util.FillParent)))
                 rT.FillParent();
             if (GUILayout.Button(nameof(Util.GetPath)))
                 Debug.Log(GUIUtility.systemCopyBuffer = rT.GetPath(true));

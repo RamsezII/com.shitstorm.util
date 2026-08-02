@@ -8,7 +8,6 @@ namespace _UTIL_
         public readonly string name;
         public Action onDispose;
         public bool _disposed;
-        public bool log_disposed;
 
         static ushort _id;
         public readonly ushort disposable_id = _id++;

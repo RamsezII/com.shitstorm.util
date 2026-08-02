@@ -4,10 +4,10 @@ using UnityEngine;
 
 partial class Util
 {
-    public static void Toggle(this ValueHandler<bool> onValue) => onValue.Value = !onValue.Value;
-    public static void Toggle(this ValueHandler<bool> onValue, bool value) => onValue.Value = value;
-    public static void Toggle_inv(this ValueHandler<bool> onValue, bool value) => onValue.Value = !value;
-    public static void AddListener(this ValueHandler<bool> onValue, Action onTrue, Action onFalse) => onValue.AddListener(value =>
+    public static void Toggle(this ValueNotifier<bool> onValue) => onValue.Value = !onValue.Value;
+    public static void Toggle(this ValueNotifier<bool> onValue, bool value) => onValue.Value = value;
+    public static void Toggle_inv(this ValueNotifier<bool> onValue, bool value) => onValue.Value = !value;
+    public static void AddListener(this ValueNotifier<bool> onValue, Action onTrue, Action onFalse) => onValue.AddListener(value =>
     {
         if (value)
             onTrue?.Invoke();
@@ -18,14 +18,15 @@ partial class Util
 
 namespace _UTIL_
 {
-    public class ValueHandler : IDisposable
+    [Serializable]
+    public class ValueNotifier : IDisposable
     {
         public readonly Type type;
         public bool _disposed;
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        protected ValueHandler(in Type type)
+        protected ValueNotifier(in Type type)
         {
             this.type = type;
         }
@@ -49,7 +50,7 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public class ValueHandler<T> : ValueHandler
+    public class ValueNotifier<T> : ValueNotifier
     {
         public bool changed;
         public int last_frame;
@@ -60,7 +61,7 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public ValueHandler(in T init = default) : base(typeof(T))
+        public ValueNotifier(in T init = default) : base(typeof(T))
         {
             _value = old = init;
         }

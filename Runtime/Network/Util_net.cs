@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public static partial class Util_net
+partial class Util
 {
     public static readonly IPAddress
         IP_3VE = IPAddress.Parse("141.94.223.114"),
