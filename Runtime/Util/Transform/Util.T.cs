@@ -20,7 +20,7 @@ public static partial class Util
     {
         string res = transform.name;
 
-        while (transform.parent != root)
+        while (transform.parent != null && transform.parent != root)
         {
             transform = transform.parent;
             res = transform.name + "/" + res;
