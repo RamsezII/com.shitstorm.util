@@ -10,7 +10,7 @@ namespace _UTIL_
         [Serializable]
         public struct Options
         {
-            public bool log, nfade, stateForce, frameForce, maintainFadeWhenForced;
+            public bool log, nfade, stateForce, transitionForce, frameForce, maintainFadeWhenForced;
             public float fade, offset;
             public static readonly Options Default = new()
             {
@@ -61,12 +61,12 @@ namespace _UTIL_
             if ((options.stateForce || TargetChanged) && (options.frameForce || last_apply_frame != Time.frameCount))
             {
                 if (animator.IsInTransition(layerIndex))
-                    if (!options.frameForce)
+                    if (!options.transitionForce)
                         return false;
                     else if (!options.maintainFadeWhenForced)
                     {
                         options.fade = 0;
-                        Debug.Log($"0 FADE : \"{current}\" -> \"{target}\"");
+                        Debug.Log($"Forced 0 fade: \"{current}\" -> \"{target}\"", animator);
                     }
 
                 last_apply_time = Time.time;
@@ -74,7 +74,7 @@ namespace _UTIL_
                 last_apply_frame = Time.frameCount;
 
                 if (options.log)
-                    Debug.Log($"\"{current}\" -> \"{target}\"");
+                    Debug.Log($"\"{current}\" -> \"{target}\"", animator);
 
                 if (options.nfade)
                     animator.CrossFade(target, options.fade, layerIndex, options.offset);
