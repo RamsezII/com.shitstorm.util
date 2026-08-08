@@ -66,13 +66,13 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public sealed class BoolModifier_not : NotifierNode<bool, bool>
+    public sealed class BoolNotifier_not : NotifierNode<bool, bool>
     {
         readonly ValueNotifier<bool> _node;
 
         //--------------------------------------------------------------------------------------------------------------
 
-        public BoolModifier_not(in ValueNotifier<bool> node)
+        public BoolNotifier_not(in ValueNotifier<bool> node)
         {
             _node = node;
             _node.AddListener(PropagateValue, doNotCallThisTime: true);
@@ -92,13 +92,53 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public sealed class BoolModifier_or : NotifierNode_group<bool, bool>
+    public sealed class ValueNotifier_bool<InputType> : ValueNotifier<bool>
     {
-        public BoolModifier_or(params ValueNotifier<bool>[] nodes) : base(nodes) { }
+        ValueNotifier<InputType> _input;
+        readonly Func<bool> _onConvert;
+        public ValueNotifier<InputType> Input => _input;
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public ValueNotifier_bool(in ValueNotifier<InputType> input, Func<bool> onConvert)
+        {
+            _input = input;
+            _onConvert = onConvert;
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public void SetInput(in ValueNotifier<InputType> input, in bool doNotCallThisTime = false)
+        {
+            _input?.RemoveListener(PropagateValue);
+            _input = input;
+            _input.AddListener(PropagateValue, doNotCallThisTime: doNotCallThisTime);
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        void PropagateValue(InputType value)
+        {
+            Value = _onConvert();
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        protected override void OnDispose()
+        {
+            base.OnDispose();
+            SetInput(null);
+        }
+    }
+
+    [Serializable]
+    public sealed class BoolNotifier_or : NotifierNode_group<bool, bool>
+    {
+        public BoolNotifier_or(params ValueNotifier<bool>[] nodes) : base(nodes) { }
         protected override void PropagateValue()
         {
             bool value = false;
-            foreach (ValueNotifier<bool> node in _nodes)
+            foreach (var node in _nodes)
                 if (node._value)
                 {
                     value = true;
@@ -109,13 +149,13 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public sealed class BoolModifier_and : NotifierNode_group<bool, bool>
+    public sealed class BoolNotifier_and : NotifierNode_group<bool, bool>
     {
-        public BoolModifier_and(params ValueNotifier<bool>[] nodes) : base(nodes) { }
+        public BoolNotifier_and(params ValueNotifier<bool>[] nodes) : base(nodes) { }
         protected override void PropagateValue()
         {
             bool value = true;
-            foreach (ValueNotifier<bool> node in _nodes)
+            foreach (var node in _nodes)
                 if (!node._value)
                 {
                     value = false;

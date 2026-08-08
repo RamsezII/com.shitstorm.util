@@ -2,6 +2,42 @@
 
 namespace _UTIL_
 {
+    public class GroupNotifier<T> : GroupNotifier<T, object> where T : ICollection<object>, new()
+    {
+        public GroupNotifier(in CollectionListener<T, object> group) : base(group)
+        {
+        }
+    }
+
+    public class GroupNotifier<CollectionType, ItemType> : ValueNotifier<bool> where CollectionType : ICollection<ItemType>, new()
+    {
+        public CollectionListener<CollectionType, ItemType> _group;
+
+        public GroupNotifier(in CollectionListener<CollectionType, ItemType> group)
+        {
+            SetGroup(group);
+        }
+
+        public void SetGroup(in CollectionListener<CollectionType, ItemType> group, in bool doNotCallThisTime = false)
+        {
+            if (_group != null)
+                _group._listeners1 -= PropagateValue;
+            _group = group;
+            _group.AddListener1(PropagateValue, doNotCallThisTime: doNotCallThisTime);
+        }
+
+        void PropagateValue(bool value)
+        {
+            Value = value;
+        }
+
+        protected override void OnDispose()
+        {
+            base.OnDispose();
+            SetGroup(null);
+        }
+    }
+
     public class HashSetListener : HashSetListener<object>
     {
     }
