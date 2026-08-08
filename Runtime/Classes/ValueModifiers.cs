@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace _UTIL_
 {
@@ -40,7 +41,7 @@ namespace _UTIL_
         protected override void OnDispose()
         {
             base.OnDispose();
-            foreach (var node in _nodes)
+            foreach (var node in _nodes.ToArray())
                 RemoveNode(node);
             _nodes.Clear();
         }

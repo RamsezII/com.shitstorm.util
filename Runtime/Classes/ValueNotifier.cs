@@ -68,7 +68,7 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public void Reset(in T value = default)
+        public void Reset()
         {
             last_frame = Time.frameCount;
             changed = false;
@@ -77,7 +77,11 @@ namespace _UTIL_
             onChange = null;
             onChangeT = null;
             processor = null;
-            Update(value, true);
+            OnReset();
+        }
+
+        protected virtual void OnReset()
+        {
         }
 
         public T Value
