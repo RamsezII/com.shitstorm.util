@@ -5,12 +5,20 @@ public static partial class Util
     public static T LoadResourceByType<T>() where T : Object => Resources.Load<T>(typeof(T).FullName);
     public static Object LoadResourceByType(in System.Type type) => Resources.Load(type.FullName, type);
 
-    public static T InstantiateOrCreateIfAbsent<T>(in Vector3 position = default, in Quaternion rotation = default, in Transform parent = null, in FindObjectsInactive findObjectsInactive = FindObjectsInactive.Exclude) where T : MonoBehaviour
+    public static T InstantiateOrCreateIfAbsent<T>(in Transform parent = null, in FindObjectsInactive findObjectsInactive = FindObjectsInactive.Exclude) where T : MonoBehaviour
     {
         T clone = Object.FindAnyObjectByType<T>(findObjectsInactive);
         if (clone == null)
-            return InstantiateOrCreate<T>(position, rotation, parent);
+            return InstantiateOrCreate<T>(parent: parent);
         return clone;
+    }
+
+    public static Component InstantiateOrCreateIfAbsent(in System.Type type, in Transform parent = null, in FindObjectsInactive findObjectsInactive = FindObjectsInactive.Exclude)
+    {
+        GameObject clone = (GameObject)Object.FindAnyObjectByType(type, findObjectsInactive);
+        if (clone == null)
+            return InstantiateOrCreate(type: type, parent: parent);
+        return clone.GetComponent(type);
     }
 
     public static T InstantiateOrCreate<T>(in Vector3 position = default, in Quaternion rotation = default, in Transform parent = null) where T : Component => InstantiateOrCreate<T>(typeof(T), position, rotation, parent);
@@ -57,6 +65,9 @@ public static partial class Util
 
         if (parent != null)
             log += $" ({clone.transform.GetPath(true)})";
+
+        if (clone.transform is RectTransform rt)
+            rt.FillParent();
 
         Debug.Log(log.ToSubLog());
 
