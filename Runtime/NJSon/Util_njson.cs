@@ -58,4 +58,21 @@ partial class Util
             return false;
         }
     }
+
+    public static bool TryNJRead_resource<T>(this string rname, out T njson, in bool log_success = true, in bool log_failure = true) where T : JToken, new()
+    {
+        TextAsset rtext = Resources.Load<TextAsset>(rname);
+        if (rtext == null)
+            Debug.LogWarning($"{nameof(TryNJRead_resource)} no resource named: \"{rname}\"");
+        else
+        {
+            njson = JsonConvert.DeserializeObject<T>(rtext.text);
+            if (log_success)
+                Debug.Log($"{nameof(TryNJRead_resource)}({rname})".ToSubLog());
+            return true;
+        }
+
+        njson = null;
+        return false;
+    }
 }
