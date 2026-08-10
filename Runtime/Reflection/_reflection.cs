@@ -5,7 +5,7 @@ using System;
 partial class Util
 {
     public static IEnumerable<Type> EGetAllDerivedTypes<T>(bool include_abstracts = false) where T : class => EGetAllDerivedTypes(typeof(T), include_abstracts);
-    public static IEnumerable<Type> EGetAllDerivedTypes(Type type, bool include_abstracts = false)
+    public static IEnumerable<Type> EGetAllDerivedTypes(this Type type, bool include_abstracts = false)
     {
         Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
         for (int i = 0; i < assemblies.Length; i++)
