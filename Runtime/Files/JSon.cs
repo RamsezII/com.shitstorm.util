@@ -2,16 +2,17 @@
 using System.IO;
 using UnityEngine;
 
+[Serializable]
 public abstract class JSon
 {
     public const string
         txt = ".txt",
-        json = ".json" + txt;
+        json_txt = ".json" + txt;
 
     //----------------------------------------------------------------------------------------------------------
 
     public static string GetJSonName<T>() => GetJSonName(typeof(T));
-    public static string GetJSonName(in Type type) => type.FullName + json;
+    public static string GetJSonName(in Type type) => type.FullName + json_txt;
     public static string GetJSonExtension<T>() => GetJSonExtension(typeof(T));
     public static string GetJSonExtension(in Type type) => "." + GetJSonName(type);
 
