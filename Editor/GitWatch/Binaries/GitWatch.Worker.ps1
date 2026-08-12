@@ -5,15 +5,51 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $Root,
 
-    [ValidateSet('Status', 'Fetch', 'PullSafe')]
+    [ValidateSet('Status', 'Fetch', 'PullSafe', 'DiscardSuspicious')]
     [string] $Mode = 'Status',
 
     [Parameter(Mandatory = $true)]
-    [string] $OutputPath
+    [string] $OutputPath,
+
+    [string] $ProgressPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
 $env:GIT_TERMINAL_PROMPT = '0'
+
+function Write-ProgressEvent {
+    param([Parameter(Mandatory = $true)] [string] $Message)
+
+    if ([string]::IsNullOrWhiteSpace($ProgressPath)) { return }
+
+    try {
+        $progressDirectory = Split-Path -Parent $ProgressPath
+        if (-not (Test-Path -LiteralPath $progressDirectory)) {
+            [void] (New-Item -ItemType Directory -Path $progressDirectory -Force)
+        }
+
+        $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
+        [System.IO.File]::AppendAllText($ProgressPath, $Message + [Environment]::NewLine, $utf8WithoutBom)
+    }
+    catch {
+        # Le journal ne doit jamais interrompre une opération Git.
+    }
+}
+
+function Write-RepositorySnapshot {
+    param([Parameter(Mandatory = $true)] $State)
+
+    if ([string]::IsNullOrWhiteSpace($ProgressPath)) { return }
+
+    try {
+        $json = $State | ConvertTo-Json -Depth 6 -Compress
+        $payload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($json))
+        Write-ProgressEvent -Message ("@repo|" + $payload)
+    }
+    catch {
+        # L'affichage progressif ne doit jamais interrompre l'analyse.
+    }
+}
 
 function Invoke-Git {
     param(
@@ -25,7 +61,9 @@ function Invoke-Git {
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
     $startInfo.FileName = 'git.exe'
     $startInfo.WorkingDirectory = $Repository
-    $startInfo.Arguments = $Arguments -join ' '
+    $startInfo.Arguments = ($Arguments | ForEach-Object {
+        if ($_ -match '[\s"]') { '"' + $_.Replace('"', '\"') + '"' } else { $_ }
+    }) -join ' '
     $startInfo.UseShellExecute = $false
     $startInfo.CreateNoWindow = $true
     $startInfo.RedirectStandardOutput = $true
@@ -127,6 +165,110 @@ function Format-RelativeTime {
     }
 }
 
+function Get-ChangedPaths {
+    param([Parameter(Mandatory = $true)] [string] $Repository)
+
+    $paths = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+    $commands = @(
+        @('diff', '--name-only', '-z', '--'),
+        @('diff', '--cached', '--name-only', '-z', '--'),
+        @('ls-files', '--others', '--exclude-standard', '-z')
+    )
+
+    foreach ($arguments in $commands) {
+        $result = Invoke-Git -Repository $Repository -Arguments $arguments -TimeoutSeconds 45
+        if (-not $result.Success -or [string]::IsNullOrEmpty($result.Output)) { continue }
+
+        foreach ($path in $result.Output -split "`0") {
+            if (-not [string]::IsNullOrWhiteSpace($path)) {
+                [void] $paths.Add($path)
+            }
+        }
+    }
+
+    return @($paths | Sort-Object)
+}
+
+function Get-TmpAtlasInfo {
+    param([Parameter(Mandatory = $true)] [string] $AssetText)
+
+    $texture = [regex]::Match(
+        $AssetText,
+        '(?ms)^Texture2D:\s*\r?\n.*?^  m_Width: (?<width>\d+)\r?$.*?^  m_Height: (?<height>\d+)\r?$'
+    )
+    $glyphBlock = [regex]::Match(
+        $AssetText,
+        '(?ms)^  m_GlyphTable:(?<glyphs>.*?)^  m_CharacterTable:'
+    )
+
+    return [pscustomobject]@{
+        IsDynamicFontAsset = $AssetText -match '(?m)^  m_AtlasPopulationMode: 1\r?$'
+        ClearDynamicDataOnBuild = $AssetText -match '(?m)^  m_ClearDynamicDataOnBuild: 1\r?$'
+        Width = if ($texture.Success) { [int] $texture.Groups['width'].Value } else { 0 }
+        Height = if ($texture.Success) { [int] $texture.Groups['height'].Value } else { 0 }
+        GlyphCount = if ($glyphBlock.Success) {
+            [regex]::Matches($glyphBlock.Groups['glyphs'].Value, '(?m)^  - m_Index: ').Count
+        } else { 0 }
+        GlyphTableIsEmpty = $AssetText -match '(?m)^  m_GlyphTable: \[\]\r?$'
+        CharacterTableIsEmpty = $AssetText -match '(?m)^  m_CharacterTable: \[\]\r?$'
+    }
+}
+
+function Find-SuspiciousChanges {
+    param(
+        [Parameter(Mandatory = $true)] [string] $Repository,
+        [Parameter(Mandatory = $true)] [string[]] $ChangedPaths
+    )
+
+    $findings = @()
+
+    foreach ($relativePath in $ChangedPaths) {
+        if ([System.IO.Path]::GetExtension($relativePath) -ine '.asset') { continue }
+
+        $absolutePath = Join-Path $Repository ($relativePath -replace '/', [System.IO.Path]::DirectorySeparatorChar)
+        if (-not (Test-Path -LiteralPath $absolutePath -PathType Leaf)) { continue }
+
+        try {
+            $workingText = [System.IO.File]::ReadAllText($absolutePath)
+        }
+        catch {
+            continue
+        }
+
+        if ($workingText -notmatch '(?m)^  m_AtlasPopulationMode: 1\r?$') { continue }
+
+        $headResult = Invoke-Git -Repository $Repository -Arguments @('show', "HEAD:$relativePath") -TimeoutSeconds 60
+        if (-not $headResult.Success) { continue }
+
+        $headInfo = Get-TmpAtlasInfo -AssetText $headResult.Output
+        $workingInfo = Get-TmpAtlasInfo -AssetText $workingText
+
+        $atlasWasCleared =
+            $headInfo.IsDynamicFontAsset -and
+            $workingInfo.IsDynamicFontAsset -and
+            $workingInfo.ClearDynamicDataOnBuild -and
+            $headInfo.Width -gt 1 -and
+            $headInfo.Height -gt 1 -and
+            $headInfo.GlyphCount -gt 0 -and
+            $workingInfo.Width -eq 1 -and
+            $workingInfo.Height -eq 1 -and
+            $workingInfo.GlyphTableIsEmpty -and
+            $workingInfo.CharacterTableIsEmpty
+
+        if ($atlasWasCleared) {
+            $findings += [pscustomobject][ordered]@{
+                Path = $relativePath
+                Kind = 'TMPAtlasCleared'
+                Label = 'Atlas TMP vidé'
+                Reason = "Atlas TMP vidé automatiquement ($($headInfo.Width)×$($headInfo.Height) → 1×1 ; $($headInfo.GlyphCount) glyphes supprimés)."
+                Advice = "À restaurer sauf si cette remise à zéro de la police était volontaire."
+            }
+        }
+    }
+
+    return @($findings)
+}
+
 function Get-RepositoryState {
     param(
         [Parameter(Mandatory = $true)] [string] $Repository,
@@ -146,6 +288,13 @@ function Get-RepositoryState {
             Branch = '—'
             DirtyCount = 0
             LocalText = 'Inaccessible'
+            LocalColor = '#FF6B7A'
+            LocalBackground = '#331820'
+            ChangedFiles = @()
+            SuspiciousChanges = @()
+            SuspiciousCount = 0
+            DiagnosticText = 'Erreur Git'
+            RestoredCount = 0
             Ahead = 0
             Behind = 0
             HasUpstream = $false
@@ -170,8 +319,14 @@ function Get-RepositoryState {
 
     $statusResult = Invoke-Git -Repository $Repository -Arguments @('status', '--porcelain', '--untracked-files=normal') -TimeoutSeconds 60
     $dirtyCount = 0
+    $changedPaths = @()
+    $suspiciousChanges = @()
     if ($statusResult.Success -and -not [string]::IsNullOrWhiteSpace($statusResult.Output)) {
-        $dirtyCount = @($statusResult.Output -split "`r?`n" | Where-Object { $_ }).Count
+        $changedPaths = @(Get-ChangedPaths -Repository $Repository)
+        $dirtyCount = $changedPaths.Count
+        if ($changedPaths.Count -gt 0) {
+            $suspiciousChanges = @(Find-SuspiciousChanges -Repository $Repository -ChangedPaths $changedPaths)
+        }
     }
 
     $upstreamResult = Invoke-Git -Repository $Repository -Arguments @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}') -TimeoutSeconds 20
@@ -195,6 +350,19 @@ function Get-RepositoryState {
         '1 changement'
     } else {
         "$dirtyCount changements"
+    }
+
+    if (-not $statusResult.Success) {
+        $localColor = '#FF6B7A'
+        $localBackground = '#331820'
+    }
+    elseif ($dirtyCount -eq 0) {
+        $localColor = '#61D6A3'
+        $localBackground = '#183329'
+    }
+    else {
+        $localColor = '#EAC66B'
+        $localBackground = '#302B1A'
     }
 
     if ($ahead -gt 0 -and $behind -gt 0) {
@@ -222,10 +390,10 @@ function Get-RepositoryState {
         $statusBackground = '#252A34'
     }
     elseif ($dirtyCount -gt 0) {
-        $syncText = 'Commits à jour'
+        $syncText = 'À jour'
         $statusKey = 'Modified'
-        $statusColor = '#EAC66B'
-        $statusBackground = '#302B1A'
+        $statusColor = '#61D6A3'
+        $statusBackground = '#183329'
     }
     else {
         $syncText = 'À jour'
@@ -253,6 +421,17 @@ function Get-RepositoryState {
         Branch = $branch
         DirtyCount = $dirtyCount
         LocalText = $localText
+        LocalColor = $localColor
+        LocalBackground = $localBackground
+        ChangedFiles = @($changedPaths)
+        SuspiciousChanges = @($suspiciousChanges)
+        SuspiciousCount = $suspiciousChanges.Count
+        DiagnosticText = if ($suspiciousChanges.Count -eq 1) {
+            '1 atlas TMP suspect'
+        } elseif ($suspiciousChanges.Count -gt 1) {
+            "$($suspiciousChanges.Count) atlas TMP suspects"
+        } else { '' }
+        RestoredCount = 0
         Ahead = $ahead
         Behind = $behind
         HasUpstream = $hasUpstream
@@ -286,13 +465,27 @@ $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 try {
     $resolvedRoot = (Resolve-Path -LiteralPath $Root).Path
+    Write-ProgressEvent -Message '@phase|discovery'
+    Write-ProgressEvent -Message 'Recherche des dépôts Git…'
     $repositories = @(Find-GitRepositories -SearchRoot $resolvedRoot)
+    $detectedLabel = if ($repositories.Count -eq 1) { '1 dépôt détecté' } else { "$($repositories.Count) dépôts détectés" }
+    Write-ProgressEvent -Message $detectedLabel
+    Write-ProgressEvent -Message "@progress|0|$($repositories.Count)"
     $states = @()
 
-    foreach ($repository in $repositories) {
+    for ($repositoryIndex = 0; $repositoryIndex -lt $repositories.Count; $repositoryIndex++) {
+        $repository = $repositories[$repositoryIndex]
+        $repositoryName = Split-Path -Leaf $repository
+        if ($repositoryName.StartsWith('_') -and $repositoryName.EndsWith('_')) {
+            $repositoryName = $repositoryName.Trim('_')
+        }
+        $position = $repositoryIndex + 1
         $operation = ''
 
+        Write-ProgressEvent -Message "Analyse $position/$($repositories.Count) · $repositoryName"
+
         if ($Mode -eq 'Fetch' -or $Mode -eq 'PullSafe') {
+            Write-ProgressEvent -Message "Fetch $position/$($repositories.Count) · $repositoryName"
             $fetchResult = Invoke-Git -Repository $repository -Arguments @('fetch', '--all', '--prune', '--quiet') -TimeoutSeconds 180
             if ($fetchResult.Success) {
                 $operation = 'Fetch effectué'
@@ -335,6 +528,30 @@ try {
             }
         }
 
+        if ($Mode -eq 'DiscardSuspicious' -and $state.Error -eq '' -and $state.SuspiciousCount -gt 0) {
+            $pathsToRestore = @($state.SuspiciousChanges | ForEach-Object { $_.Path })
+            Write-ProgressEvent -Message "Restauration · $repositoryName · $($pathsToRestore.Count) atlas TMP"
+            $restoreArguments = @('restore', '--source=HEAD', '--staged', '--worktree', '--') + $pathsToRestore
+            $restoreResult = Invoke-Git -Repository $repository -Arguments $restoreArguments -TimeoutSeconds 120
+
+            if ($restoreResult.Success) {
+                $restoredCount = $pathsToRestore.Count
+                $restoredLabel = if ($restoredCount -eq 1) { '1 atlas TMP restauré' } else { "$restoredCount atlas TMP restaurés" }
+                $state = Get-RepositoryState -Repository $repository -Operation $restoredLabel
+                $state.RestoredCount = $restoredCount
+            }
+            else {
+                $state.Operation = "Restauration impossible : $($restoreResult.Error)"
+                $state.StatusKey = 'Error'
+                $state.StatusColor = '#FF6B7A'
+                $state.StatusBackground = '#331820'
+            }
+        }
+
+        $diagnosticSuffix = if ($state.SuspiciousCount -gt 0) { " · $($state.DiagnosticText)" } else { '' }
+        Write-RepositorySnapshot -State $state
+        Write-ProgressEvent -Message "Trouvé $($state.Name) · $($state.Branch) · $($state.LocalText) · $($state.SyncText)$diagnosticSuffix"
+        Write-ProgressEvent -Message "@progress|$position|$($repositories.Count)"
         $states += $state
     }
 
@@ -345,10 +562,17 @@ try {
         Modified = @($states | Where-Object { $_.DirtyCount -gt 0 }).Count
         Behind = @($states | Where-Object { $_.Behind -gt 0 }).Count
         Ahead = @($states | Where-Object { $_.Ahead -gt 0 }).Count
-        Attention = @($states | Where-Object { $_.StatusKey -in @('Diverged', 'Error', 'NoUpstream') }).Count
+        Attention = @($states | Where-Object {
+            $_.StatusKey -in @('Diverged', 'Error', 'NoUpstream') -or $_.SuspiciousCount -gt 0
+        }).Count
+        SuspiciousFiles = ($states | Measure-Object -Property SuspiciousCount -Sum).Sum
+        RestoredFiles = ($states | Measure-Object -Property RestoredCount -Sum).Sum
         Updated = @($states | Where-Object { $_.Operation -like 'Mis à jour*' }).Count
         Skipped = @($states | Where-Object { $_.Operation -like 'Ignoré*' }).Count
     }
+
+    $finishedLabel = if ($states.Count -eq 1) { 'Terminé · 1 dépôt analysé' } else { "Terminé · $($states.Count) dépôts analysés" }
+    Write-ProgressEvent -Message $finishedLabel
 
     Write-ResultFile -Value ([ordered]@{
         Success = $true

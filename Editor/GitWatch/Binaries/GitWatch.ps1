@@ -86,6 +86,12 @@ $xaml = @'
             <Setter Property="BorderBrush" Value="#29735B" />
         </Style>
 
+        <Style x:Key="WarningButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#5A3C13" />
+            <Setter Property="BorderBrush" Value="#9C6923" />
+            <Setter Property="Foreground" Value="#FFD78A" />
+        </Style>
+
         <Style x:Key="SummaryCard" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource PanelBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
@@ -171,13 +177,8 @@ $xaml = @'
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <CheckBox x:Name="AutoFetchCheckBox"
-                          Content="Auto · 5 min"
-                          IsChecked="True"
-                          Foreground="#AAB3C2"
-                          VerticalAlignment="Center"
-                          Margin="0,0,18,0"
-                          ToolTip="Actualise automatiquement les informations distantes toutes les 5 minutes." />
+                <Button x:Name="DiscardButton" Style="{StaticResource WarningButton}" Content="↶  Discard TMP" Margin="0,0,8,0" Visibility="Collapsed"
+                        ToolTip="Restaure au dernier commit les atlas TMP identifiés comme vidés automatiquement. Une confirmation détaillée sera demandée." />
                 <Button x:Name="StatusButton" Style="{StaticResource ActionButton}" Content="Vérifier" Margin="0,0,8,0"
                         ToolTip="Relit immédiatement les états locaux, sans accès réseau." />
                 <Button x:Name="FetchButton" Style="{StaticResource PrimaryButton}" Content="↻  Fetch global" Margin="0,0,8,0"
@@ -259,7 +260,15 @@ $xaml = @'
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="DÉPÔT" Binding="{Binding Name}" Width="155" />
                     <DataGridTextColumn Header="BRANCHE" Binding="{Binding Branch}" Width="145" />
-                    <DataGridTextColumn Header="LOCAL" Binding="{Binding LocalText}" Width="118" />
+                    <DataGridTemplateColumn Header="CHANGEMENTS LOCAUX" Width="160">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding LocalBackground}" CornerRadius="10" Padding="9,4" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding LocalText}" Foreground="{Binding LocalColor}" FontSize="12" FontWeight="SemiBold" />
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="SYNCHRO" Width="175">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -280,7 +289,13 @@ $xaml = @'
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="AUTEUR" Binding="{Binding Author}" Width="125" />
-                    <DataGridTextColumn Header="ACTION" Binding="{Binding Operation}" Width="205" />
+                    <DataGridTemplateColumn Header="ACTION / DIAGNOSTIC" Width="205">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding OperationDisplay}" Foreground="{Binding OperationColor}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
@@ -291,10 +306,10 @@ $xaml = @'
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <ProgressBar x:Name="ActivityIndicator" Width="92" Height="3" IsIndeterminate="True" Visibility="Collapsed"
+            <ProgressBar x:Name="ActivityIndicator" Width="180" Height="4" Minimum="0" Maximum="100" Value="0" IsIndeterminate="True" Visibility="Collapsed"
                          Foreground="#6B8CFF" Background="#252D3B" VerticalAlignment="Center" Margin="0,0,14,0" />
             <TextBlock x:Name="StatusLabel" Grid.Column="1" Text="Préparation…" Foreground="#818C9E" FontSize="12" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="2" Text="Double-clique un dépôt pour l’ouvrir" Foreground="#596476" FontSize="11" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="2" Text="Survole l’état pour le journal · Double-clique un dépôt pour l’ouvrir" Foreground="#596476" FontSize="11" VerticalAlignment="Center" />
         </Grid>
     </Grid>
 </Window>
@@ -307,7 +322,7 @@ $rootLabel = $window.FindName('RootLabel')
 $statusButton = $window.FindName('StatusButton')
 $fetchButton = $window.FindName('FetchButton')
 $pullButton = $window.FindName('PullButton')
-$autoFetchCheckBox = $window.FindName('AutoFetchCheckBox')
+$discardButton = $window.FindName('DiscardButton')
 $repositoryGrid = $window.FindName('RepositoryGrid')
 $searchBox = $window.FindName('SearchBox')
 $searchHint = $window.FindName('SearchHint')
@@ -322,6 +337,7 @@ $statusLabel = $window.FindName('StatusLabel')
 $resolvedRoot = (Resolve-Path -LiteralPath $Root).Path
 $workerScript = Join-Path $PSScriptRoot 'GitWatch.Worker.ps1'
 $stateFile = Join-Path ([System.IO.Path]::GetTempPath()) ("shitstorm-git-watch-{0}.json" -f [Guid]::NewGuid().ToString('N'))
+$progressFile = Join-Path ([System.IO.Path]::GetTempPath()) ("shitstorm-git-watch-progress-{0}.log" -f [Guid]::NewGuid().ToString('N'))
 $items = New-Object 'System.Collections.ObjectModel.ObservableCollection[object]'
 $repositoryGrid.ItemsSource = $items
 $rootLabel.Text = $resolvedRoot
@@ -331,6 +347,9 @@ $script:workerProcess = $null
 $script:activeMode = ''
 $script:lastResult = $null
 $script:searchTerm = ''
+$script:progressLines = New-Object System.Collections.Generic.List[string]
+$script:progressFileLineCount = 0
+$script:progressTotal = 0
 
 function Set-BusyState {
     param([bool] $Busy)
@@ -338,7 +357,16 @@ function Set-BusyState {
     $statusButton.IsEnabled = -not $Busy
     $fetchButton.IsEnabled = -not $Busy
     $pullButton.IsEnabled = -not $Busy
+    $discardButton.IsEnabled = (-not $Busy -and $null -ne $script:lastResult -and $script:lastResult.Summary.SuspiciousFiles -gt 0)
     $activityIndicator.Visibility = if ($Busy) { 'Visible' } else { 'Collapsed' }
+    if ($Busy) {
+        $activityIndicator.IsIndeterminate = $true
+        $activityIndicator.Value = 0
+    }
+    else {
+        $activityIndicator.IsIndeterminate = $false
+        $activityIndicator.Value = 0
+    }
 }
 
 function Quote-ProcessArgument {
@@ -346,21 +374,129 @@ function Quote-ProcessArgument {
     return '"' + $Value.Replace('"', '\"') + '"'
 }
 
+function Update-LiveSummary {
+    $currentItems = @($items)
+    $suspiciousFiles = ($currentItems | Measure-Object -Property SuspiciousCount -Sum).Sum
+    if ($null -eq $suspiciousFiles) { $suspiciousFiles = 0 }
+
+    $totalCount.Text = if ($null -ne $script:workerProcess -and $script:progressTotal -gt 0) {
+        "$($currentItems.Count) / $($script:progressTotal)"
+    } else { [string] $currentItems.Count }
+    $cleanCount.Text = [string] @($currentItems | Where-Object { $_.StatusKey -eq 'Clean' }).Count
+    $modifiedCount.Text = [string] @($currentItems | Where-Object { $_.DirtyCount -gt 0 }).Count
+    $behindCount.Text = [string] @($currentItems | Where-Object { $_.Behind -gt 0 }).Count
+    $attentionCount.Text = [string] @($currentItems | Where-Object {
+        $_.StatusKey -in @('Diverged', 'Error', 'NoUpstream') -or $_.SuspiciousCount -gt 0
+    }).Count
+
+    $discardButton.Visibility = if ($suspiciousFiles -gt 0) { 'Visible' } else { 'Collapsed' }
+    $discardButton.Content = "↶  Discard TMP ($suspiciousFiles)"
+    $discardButton.IsEnabled = ($suspiciousFiles -gt 0 -and $null -eq $script:workerProcess)
+
+    $liveView = [System.Windows.Data.CollectionViewSource]::GetDefaultView($repositoryGrid.ItemsSource)
+    $liveView.Refresh()
+}
+
+function Add-RepositoryItem {
+    param($Repository)
+
+    if ([string]::IsNullOrWhiteSpace($Repository.Operation)) {
+        $Repository.Operation = '—'
+    }
+
+    if ($Repository.SuspiciousCount -gt 0) {
+        $operationPrefix = if ($Repository.Operation -eq '—') { '' } else { "$($Repository.Operation) · " }
+        $Repository | Add-Member -NotePropertyName OperationDisplay -NotePropertyValue ($operationPrefix + $Repository.DiagnosticText) -Force
+        $Repository | Add-Member -NotePropertyName OperationColor -NotePropertyValue '#FFB45E' -Force
+    }
+    else {
+        $Repository | Add-Member -NotePropertyName OperationDisplay -NotePropertyValue $Repository.Operation -Force
+        $operationColor = if ($Repository.Operation -like '*impossible*') {
+            '#FF6B7A'
+        } elseif ($Repository.Operation -like 'Mis à jour*' -or $Repository.Operation -like '*restauré*') {
+            '#61D6A3'
+        } else { '#8E99AA' }
+        $Repository | Add-Member -NotePropertyName OperationColor -NotePropertyValue $operationColor -Force
+    }
+
+    $tooltipParts = New-Object System.Collections.Generic.List[string]
+    $tooltipParts.Add($Repository.Path)
+    if (-not [string]::IsNullOrWhiteSpace($Repository.Remote)) { $tooltipParts.Add($Repository.Remote) }
+    if (-not [string]::IsNullOrWhiteSpace($Repository.Error)) { $tooltipParts.Add($Repository.Error) }
+    if ($Repository.SuspiciousCount -gt 0) {
+        $tooltipParts.Add('')
+        $tooltipParts.Add('CHANGEMENTS SUSPECTS')
+        foreach ($finding in @($Repository.SuspiciousChanges)) {
+            $tooltipParts.Add("• $($finding.Path)")
+            $tooltipParts.Add("  $($finding.Reason)")
+            $tooltipParts.Add("  $($finding.Advice)")
+        }
+    }
+    $Repository | Add-Member -NotePropertyName Tooltip -NotePropertyValue ($tooltipParts -join "`n") -Force
+
+    $existingItem = @($items | Where-Object { $_.Path -eq $Repository.Path } | Select-Object -First 1)
+    if ($existingItem.Count -gt 0) {
+        [void] $items.Remove($existingItem[0])
+    }
+    $items.Add($Repository)
+    Update-LiveSummary
+}
+
+function Update-ProgressDisplay {
+    if (-not (Test-Path -LiteralPath $progressFile)) { return }
+
+    try {
+        $lines = @(Get-Content -LiteralPath $progressFile -Encoding UTF8 -ErrorAction Stop | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        if ($lines.Count -le $script:progressFileLineCount) { return }
+
+        for ($index = $script:progressFileLineCount; $index -lt $lines.Count; $index++) {
+            $line = $lines[$index]
+
+            if ($line -eq '@phase|discovery') {
+                $activityIndicator.IsIndeterminate = $true
+                continue
+            }
+
+            if ($line -match '^@progress\|(\d+)\|(\d+)$') {
+                $current = [int] $Matches[1]
+                $total = [Math]::Max(1, [int] $Matches[2])
+                $script:progressTotal = $total
+                $activityIndicator.IsIndeterminate = $false
+                $activityIndicator.Minimum = 0
+                $activityIndicator.Maximum = $total
+                $activityIndicator.Value = [Math]::Min($current, $total)
+                continue
+            }
+
+            if ($line.StartsWith('@repo|')) {
+                $payload = $line.Substring(6)
+                $json = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload))
+                $repository = $json | ConvertFrom-Json
+                Add-RepositoryItem -Repository $repository
+                continue
+            }
+
+            $script:progressLines.Add($line)
+        }
+
+        $script:progressFileLineCount = $lines.Count
+
+        if ($script:progressLines.Count -gt 0) {
+            $statusLabel.Text = $script:progressLines[$script:progressLines.Count - 1]
+            $statusLabel.ToolTip = $script:progressLines -join "`n"
+        }
+    }
+    catch {
+        # Le worker peut écrire exactement pendant la lecture ; le prochain tick réessaiera.
+    }
+}
+
 function Update-RepositoryView {
     param($Result)
 
     $items.Clear()
     foreach ($repository in @($Result.Repositories | Sort-Object Name)) {
-        if ([string]::IsNullOrWhiteSpace($repository.Operation)) {
-            $repository.Operation = '—'
-        }
-
-        $tooltipParts = New-Object System.Collections.Generic.List[string]
-        $tooltipParts.Add($repository.Path)
-        if (-not [string]::IsNullOrWhiteSpace($repository.Remote)) { $tooltipParts.Add($repository.Remote) }
-        if (-not [string]::IsNullOrWhiteSpace($repository.Error)) { $tooltipParts.Add($repository.Error) }
-        $repository | Add-Member -NotePropertyName Tooltip -NotePropertyValue ($tooltipParts -join "`n") -Force
-        $items.Add($repository)
+        Add-RepositoryItem -Repository $repository
     }
 
     $totalCount.Text = [string] $Result.Summary.Total
@@ -368,6 +504,9 @@ function Update-RepositoryView {
     $modifiedCount.Text = [string] $Result.Summary.Modified
     $behindCount.Text = [string] $Result.Summary.Behind
     $attentionCount.Text = [string] $Result.Summary.Attention
+    $discardButton.Visibility = if ($Result.Summary.SuspiciousFiles -gt 0) { 'Visible' } else { 'Collapsed' }
+    $discardButton.Content = "↶  Discard TMP ($($Result.Summary.SuspiciousFiles))"
+    $discardButton.IsEnabled = ($Result.Summary.SuspiciousFiles -gt 0 -and $null -eq $script:workerProcess)
 
     $view = [System.Windows.Data.CollectionViewSource]::GetDefaultView($repositoryGrid.ItemsSource)
     $view.Refresh()
@@ -391,7 +530,10 @@ function Complete-Refresh {
         $time = ([DateTime]::Parse($result.GeneratedAt)).ToLocalTime().ToString('HH:mm:ss')
         $failures = @($result.Repositories | Where-Object { $_.Operation -like '*impossible*' }).Count
 
-        if ($result.Mode -eq 'PullSafe') {
+        if ($result.Mode -eq 'DiscardSuspicious') {
+            $statusLabel.Text = "Restauration terminée · $($result.Summary.RestoredFiles) atlas TMP restauré(s) · $duration s · $time"
+        }
+        elseif ($result.Mode -eq 'PullSafe') {
             $statusLabel.Text = "Mise à jour terminée · $($result.Summary.Updated) dépôt(s) mis à jour · $($result.Summary.Skipped) protégé(s) · $duration s · $time"
         }
         elseif ($result.Mode -eq 'Fetch') {
@@ -410,6 +552,9 @@ function Complete-Refresh {
         if (Test-Path -LiteralPath $stateFile) {
             Remove-Item -LiteralPath $stateFile -Force -ErrorAction SilentlyContinue
         }
+        if (Test-Path -LiteralPath $progressFile) {
+            Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
+        }
         if ($null -ne $script:workerProcess) {
             $script:workerProcess.Dispose()
             $script:workerProcess = $null
@@ -419,17 +564,27 @@ function Complete-Refresh {
 }
 
 function Start-Refresh {
-    param([ValidateSet('Status', 'Fetch', 'PullSafe')] [string] $Mode)
+    param([ValidateSet('Status', 'Fetch', 'PullSafe', 'DiscardSuspicious')] [string] $Mode)
 
     if ($null -ne $script:workerProcess -and -not $script:workerProcess.HasExited) {
         return
     }
 
     Remove-Item -LiteralPath $stateFile -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
+    $script:progressLines.Clear()
+    $script:progressFileLineCount = 0
+    $script:progressTotal = 0
+    $statusLabel.ToolTip = $null
+    $items.Clear()
+    Update-LiveSummary
     $script:activeMode = $Mode
     Set-BusyState -Busy $true
 
-    if ($Mode -eq 'PullSafe') {
+    if ($Mode -eq 'DiscardSuspicious') {
+        $statusLabel.Text = 'Restauration des atlas TMP confirmés…'
+    }
+    elseif ($Mode -eq 'PullSafe') {
         $statusLabel.Text = 'Mise à jour prudente en cours… les dépôts sensibles seront ignorés.'
     }
     elseif ($Mode -eq 'Fetch') {
@@ -445,7 +600,8 @@ function Start-Refresh {
         '-File', $workerScript,
         '-Root', $resolvedRoot,
         '-Mode', $Mode,
-        '-OutputPath', $stateFile
+        '-OutputPath', $stateFile,
+        '-ProgressPath', $progressFile
     )
 
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -467,24 +623,9 @@ function Start-Refresh {
 $pollTimer = New-Object System.Windows.Threading.DispatcherTimer
 $pollTimer.Interval = [TimeSpan]::FromMilliseconds(300)
 $pollTimer.Add_Tick({
+    Update-ProgressDisplay
     if ($null -ne $script:workerProcess -and $script:workerProcess.HasExited) {
         Complete-Refresh
-    }
-})
-
-$localRefreshTimer = New-Object System.Windows.Threading.DispatcherTimer
-$localRefreshTimer.Interval = [TimeSpan]::FromSeconds(30)
-$localRefreshTimer.Add_Tick({
-    if ($null -eq $script:workerProcess) {
-        Start-Refresh -Mode 'Status'
-    }
-})
-
-$remoteRefreshTimer = New-Object System.Windows.Threading.DispatcherTimer
-$remoteRefreshTimer.Interval = [TimeSpan]::FromMinutes(5)
-$remoteRefreshTimer.Add_Tick({
-    if ($autoFetchCheckBox.IsChecked -and $null -eq $script:workerProcess) {
-        Start-Refresh -Mode 'Fetch'
     }
 })
 
@@ -505,6 +646,42 @@ $searchBox.Add_TextChanged({
 $statusButton.Add_Click({ Start-Refresh -Mode 'Status' })
 $fetchButton.Add_Click({ Start-Refresh -Mode 'Fetch' })
 $pullButton.Add_Click({ Start-Refresh -Mode 'PullSafe' })
+$discardButton.Add_Click({
+    if ($null -eq $script:lastResult -or $script:lastResult.Summary.SuspiciousFiles -le 0) {
+        return
+    }
+
+    $targets = New-Object System.Collections.Generic.List[string]
+    foreach ($repository in @($script:lastResult.Repositories | Where-Object { $_.SuspiciousCount -gt 0 })) {
+        foreach ($finding in @($repository.SuspiciousChanges)) {
+            $targets.Add("• $($repository.Name) / $($finding.Path)")
+        }
+    }
+
+    $message = @"
+Git Watch va restaurer ces fichiers exactement comme dans le dernier commit :
+
+$($targets -join "`n")
+
+Toutes leurs modifications locales seront supprimées, y compris si elles sont stagées.
+Cette action ne touche à aucun autre fichier.
+
+Continuer ?
+"@
+
+    $choice = [System.Windows.MessageBox]::Show(
+        $window,
+        $message,
+        'Discard des atlas TMP',
+        [System.Windows.MessageBoxButton]::YesNo,
+        [System.Windows.MessageBoxImage]::Warning,
+        [System.Windows.MessageBoxResult]::No
+    )
+
+    if ($choice -eq [System.Windows.MessageBoxResult]::Yes) {
+        Start-Refresh -Mode 'DiscardSuspicious'
+    }
+})
 
 $repositoryGrid.Add_MouseDoubleClick({
     if ($null -ne $repositoryGrid.SelectedItem) {
@@ -515,20 +692,17 @@ $repositoryGrid.Add_MouseDoubleClick({
 $window.Add_Loaded({
     if ([string]::IsNullOrWhiteSpace($PreviewPath)) {
         $pollTimer.Start()
-        $localRefreshTimer.Start()
-        $remoteRefreshTimer.Start()
         Start-Refresh -Mode 'Fetch'
     }
 })
 
 $window.Add_Closed({
     $pollTimer.Stop()
-    $localRefreshTimer.Stop()
-    $remoteRefreshTimer.Stop()
     if ($null -ne $script:workerProcess -and -not $script:workerProcess.HasExited) {
         try { $script:workerProcess.Kill() } catch { }
     }
     Remove-Item -LiteralPath $stateFile -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $progressFile -Force -ErrorAction SilentlyContinue
 })
 
 if ($ValidateOnly) {
