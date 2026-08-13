@@ -86,6 +86,12 @@ $xaml = @'
             <Setter Property="BorderBrush" Value="#29735B" />
         </Style>
 
+        <Style x:Key="PublishButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#4937A8" />
+            <Setter Property="BorderBrush" Value="#705CE0" />
+            <Setter Property="Foreground" Value="#F0EDFF" />
+        </Style>
+
         <Style x:Key="WarningButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
             <Setter Property="Background" Value="#5A3C13" />
             <Setter Property="BorderBrush" Value="#9C6923" />
@@ -183,8 +189,10 @@ $xaml = @'
                         ToolTip="Relit immédiatement les états locaux, sans accès réseau." />
                 <Button x:Name="FetchButton" Style="{StaticResource PrimaryButton}" Content="↻  Fetch global" Margin="0,0,8,0"
                         ToolTip="Télécharge les informations distantes de tous les dépôts, sans modifier les fichiers." />
-                <Button x:Name="PullButton" Style="{StaticResource SafeButton}" Content="↓  Mettre à jour"
+                <Button x:Name="PullButton" Style="{StaticResource SafeButton}" Content="↓  Mettre à jour" Margin="0,0,8,0"
                         ToolTip="Met uniquement à jour les dépôts propres et en retard. Les dépôts modifiés ou divergents sont ignorés." />
+                <Button x:Name="CommitPushButton" Style="{StaticResource PublishButton}" Content="↑  Commit &amp; Push" IsEnabled="False"
+                        ToolTip="Crée un commit dans chaque dépôt modifié avec le même message, puis tente de le pousser." />
             </StackPanel>
         </Grid>
 
@@ -322,6 +330,7 @@ $rootLabel = $window.FindName('RootLabel')
 $statusButton = $window.FindName('StatusButton')
 $fetchButton = $window.FindName('FetchButton')
 $pullButton = $window.FindName('PullButton')
+$commitPushButton = $window.FindName('CommitPushButton')
 $discardButton = $window.FindName('DiscardButton')
 $repositoryGrid = $window.FindName('RepositoryGrid')
 $searchBox = $window.FindName('SearchBox')
@@ -357,6 +366,8 @@ function Set-BusyState {
     $statusButton.IsEnabled = -not $Busy
     $fetchButton.IsEnabled = -not $Busy
     $pullButton.IsEnabled = -not $Busy
+    $modifiedRepositories = @($items | Where-Object { $_.DirtyCount -gt 0 }).Count
+    $commitPushButton.IsEnabled = (-not $Busy -and $modifiedRepositories -gt 0)
     $discardButton.IsEnabled = (-not $Busy -and $null -ne $script:lastResult -and $script:lastResult.Summary.SuspiciousFiles -gt 0)
     $activityIndicator.Visibility = if ($Busy) { 'Visible' } else { 'Collapsed' }
     if ($Busy) {
@@ -372,6 +383,117 @@ function Set-BusyState {
 function Quote-ProcessArgument {
     param([string] $Value)
     return '"' + $Value.Replace('"', '\"') + '"'
+}
+
+function Show-CommitPushDialog {
+    param([Parameter(Mandatory = $true)] [object[]] $Repositories)
+
+    $dialogXaml = @'
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Commit &amp; Push global"
+    Width="570"
+    Height="470"
+    MinWidth="570"
+    MinHeight="470"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterOwner"
+    Background="#0B0E14"
+    Foreground="#EDF1F7"
+    FontFamily="Segoe UI">
+    <Grid Margin="26,22,26,22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="12" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="18" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="PUBLIER TOUS LES CHANGEMENTS" Foreground="#8F82ED" FontSize="11" FontWeight="Bold" />
+            <TextBlock Text="Un message, plusieurs dépôts." FontSize="23" FontWeight="Bold" Margin="0,5,0,0" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Margin="0,10,0,0" Foreground="#909BAD" FontSize="12" TextWrapping="Wrap"
+                   Text="Tous les fichiers modifiés seront ajoutés. Chaque dépôt recevra son propre commit avec ce même message, puis son push sera tenté." />
+
+        <StackPanel Grid.Row="3">
+            <TextBlock Text="MESSAGE DE COMMIT" Foreground="#7F8A9C" FontSize="10" FontWeight="SemiBold" />
+            <TextBox x:Name="CommitMessageBox" Margin="0,7,0,0" Height="42" Padding="12,9"
+                     Background="#121722" Foreground="#EDF1F7" CaretBrush="#EDF1F7"
+                     BorderBrush="#3A4560" BorderThickness="1" FontSize="14" MaxLength="500" />
+        </StackPanel>
+
+        <Border Grid.Row="5" Background="#121722" BorderBrush="#283042" BorderThickness="1" CornerRadius="8" Padding="14,11">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="TargetTitle" Foreground="#AAB4C4" FontSize="11" FontWeight="SemiBold" />
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <TextBlock x:Name="TargetList" Foreground="#778397" FontSize="12" LineHeight="20" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Les erreurs éventuelles n'arrêteront pas les autres dépôts."
+                       Foreground="#626D7E" FontSize="10" VerticalAlignment="Center" />
+            <Button x:Name="CancelButton" Grid.Column="1" Content="Annuler" Padding="17,9"
+                    Background="#1B2230" Foreground="#DDE3ED" BorderBrush="#303A4D" BorderThickness="1" />
+            <Button x:Name="ConfirmButton" Grid.Column="3" Content="Commit &amp; Push" Padding="17,9" IsEnabled="False"
+                    Background="#4937A8" Foreground="#F0EDFF" BorderBrush="#705CE0" BorderThickness="1" FontWeight="SemiBold" />
+        </Grid>
+    </Grid>
+</Window>
+'@
+
+    $reader = New-Object System.Xml.XmlNodeReader ([xml] $dialogXaml)
+    $dialog = [Windows.Markup.XamlReader]::Load($reader)
+    $dialog.Owner = $window
+
+    $messageBox = $dialog.FindName('CommitMessageBox')
+    $targetTitle = $dialog.FindName('TargetTitle')
+    $targetList = $dialog.FindName('TargetList')
+    $cancelButton = $dialog.FindName('CancelButton')
+    $confirmButton = $dialog.FindName('ConfirmButton')
+    $repositoryCount = $Repositories.Count
+
+    $targetTitle.Text = if ($repositoryCount -eq 1) { '1 DÉPÔT MODIFIÉ' } else { "$repositoryCount DÉPÔTS MODIFIÉS" }
+    $targetList.Text = (@($Repositories | Sort-Object Name | ForEach-Object {
+        $changeLabel = if ($_.DirtyCount -eq 1) { '1 changement' } else { "$($_.DirtyCount) changements" }
+        "• $($_.Name)  ·  $changeLabel"
+    }) -join "`n")
+    $confirmButton.Content = "Commit & Push ($repositoryCount)"
+
+    $messageBox.Add_TextChanged({
+        $confirmButton.IsEnabled = -not [string]::IsNullOrWhiteSpace($messageBox.Text)
+    })
+    $cancelButton.Add_Click({ $dialog.Close() })
+    $confirmButton.Add_Click({
+        $dialog.Tag = $messageBox.Text.Trim()
+        $dialog.DialogResult = $true
+    })
+    $dialog.Add_ContentRendered({ [void] $messageBox.Focus() })
+
+    [void] $dialog.ShowDialog()
+    if ($dialog.DialogResult -eq $true) {
+        return [string] $dialog.Tag
+    }
+    return $null
 }
 
 function Update-LiveSummary {
@@ -393,6 +515,10 @@ function Update-LiveSummary {
     $discardButton.Content = "↶  Discard TMP ($suspiciousFiles)"
     $discardButton.IsEnabled = ($suspiciousFiles -gt 0 -and $null -eq $script:workerProcess)
 
+    $modifiedRepositories = @($currentItems | Where-Object { $_.DirtyCount -gt 0 }).Count
+    $commitPushButton.Content = "↑  Commit & Push ($modifiedRepositories)"
+    $commitPushButton.IsEnabled = ($modifiedRepositories -gt 0 -and $null -eq $script:workerProcess)
+
     $liveView = [System.Windows.Data.CollectionViewSource]::GetDefaultView($repositoryGrid.ItemsSource)
     $liveView.Refresh()
 }
@@ -413,7 +539,7 @@ function Add-RepositoryItem {
         $Repository | Add-Member -NotePropertyName OperationDisplay -NotePropertyValue $Repository.Operation -Force
         $operationColor = if ($Repository.Operation -like '*impossible*') {
             '#FF6B7A'
-        } elseif ($Repository.Operation -like 'Mis à jour*' -or $Repository.Operation -like '*restauré*') {
+        } elseif ($Repository.Operation -like 'Mis à jour*' -or $Repository.Operation -like '*restauré*' -or $Repository.Operation -eq 'Commit & push effectués') {
             '#61D6A3'
         } else { '#8E99AA' }
         $Repository | Add-Member -NotePropertyName OperationColor -NotePropertyValue $operationColor -Force
@@ -533,6 +659,10 @@ function Complete-Refresh {
         if ($result.Mode -eq 'DiscardSuspicious') {
             $statusLabel.Text = "Restauration terminée · $($result.Summary.RestoredFiles) atlas TMP restauré(s) · $duration s · $time"
         }
+        elseif ($result.Mode -eq 'CommitPush') {
+            $failureSuffix = if ($result.Summary.Failed -gt 0) { " · $($result.Summary.Failed) échec(s)" } else { '' }
+            $statusLabel.Text = "Publication terminée · $($result.Summary.Committed) commit(s) · $($result.Summary.Pushed) push(s)$failureSuffix · $duration s · $time"
+        }
         elseif ($result.Mode -eq 'PullSafe') {
             $statusLabel.Text = "Mise à jour terminée · $($result.Summary.Updated) dépôt(s) mis à jour · $($result.Summary.Skipped) protégé(s) · $duration s · $time"
         }
@@ -564,7 +694,10 @@ function Complete-Refresh {
 }
 
 function Start-Refresh {
-    param([ValidateSet('Status', 'Fetch', 'PullSafe', 'DiscardSuspicious')] [string] $Mode)
+    param(
+        [ValidateSet('Status', 'Fetch', 'PullSafe', 'DiscardSuspicious', 'CommitPush')] [string] $Mode,
+        [string] $CommitMessage = ''
+    )
 
     if ($null -ne $script:workerProcess -and -not $script:workerProcess.HasExited) {
         return
@@ -583,6 +716,9 @@ function Start-Refresh {
 
     if ($Mode -eq 'DiscardSuspicious') {
         $statusLabel.Text = 'Restauration des atlas TMP confirmés…'
+    }
+    elseif ($Mode -eq 'CommitPush') {
+        $statusLabel.Text = 'Commit et publication des dépôts modifiés…'
     }
     elseif ($Mode -eq 'PullSafe') {
         $statusLabel.Text = 'Mise à jour prudente en cours… les dépôts sensibles seront ignorés.'
@@ -603,6 +739,11 @@ function Start-Refresh {
         '-OutputPath', $stateFile,
         '-ProgressPath', $progressFile
     )
+
+    if ($Mode -eq 'CommitPush') {
+        $messageBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($CommitMessage))
+        $arguments += @('-CommitMessageBase64', $messageBase64)
+    }
 
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
     $startInfo.FileName = 'powershell.exe'
@@ -646,6 +787,17 @@ $searchBox.Add_TextChanged({
 $statusButton.Add_Click({ Start-Refresh -Mode 'Status' })
 $fetchButton.Add_Click({ Start-Refresh -Mode 'Fetch' })
 $pullButton.Add_Click({ Start-Refresh -Mode 'PullSafe' })
+$commitPushButton.Add_Click({
+    $targets = @($items | Where-Object { $_.DirtyCount -gt 0 })
+    if ($targets.Count -le 0) {
+        return
+    }
+
+    $commitMessage = Show-CommitPushDialog -Repositories $targets
+    if (-not [string]::IsNullOrWhiteSpace($commitMessage)) {
+        Start-Refresh -Mode 'CommitPush' -CommitMessage $commitMessage
+    }
+})
 $discardButton.Add_Click({
     if ($null -eq $script:lastResult -or $script:lastResult.Summary.SuspiciousFiles -le 0) {
         return

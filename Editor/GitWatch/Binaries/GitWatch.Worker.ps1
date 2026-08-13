@@ -5,17 +5,20 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $Root,
 
-    [ValidateSet('Status', 'Fetch', 'PullSafe', 'DiscardSuspicious')]
+    [ValidateSet('Status', 'Fetch', 'PullSafe', 'DiscardSuspicious', 'CommitPush')]
     [string] $Mode = 'Status',
 
     [Parameter(Mandatory = $true)]
     [string] $OutputPath,
 
-    [string] $ProgressPath = ''
+    [string] $ProgressPath = '',
+
+    [string] $CommitMessageBase64 = ''
 )
 
 $ErrorActionPreference = 'Stop'
 $env:GIT_TERMINAL_PROMPT = '0'
+$commitMessageFile = ''
 
 function Write-ProgressEvent {
     param([Parameter(Mandatory = $true)] [string] $Message)
@@ -465,6 +468,28 @@ $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 try {
     $resolvedRoot = (Resolve-Path -LiteralPath $Root).Path
+
+    if ($Mode -eq 'CommitPush') {
+        if ([string]::IsNullOrWhiteSpace($CommitMessageBase64)) {
+            throw 'Le message de commit est manquant.'
+        }
+
+        try {
+            $commitMessage = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($CommitMessageBase64))
+        }
+        catch {
+            throw 'Le message de commit est illisible.'
+        }
+
+        if ([string]::IsNullOrWhiteSpace($commitMessage)) {
+            throw 'Le message de commit ne peut pas être vide.'
+        }
+
+        $commitMessageFile = Join-Path ([System.IO.Path]::GetTempPath()) ("shitstorm-git-watch-message-{0}.txt" -f [Guid]::NewGuid().ToString('N'))
+        $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
+        [System.IO.File]::WriteAllText($commitMessageFile, $commitMessage.Trim(), $utf8WithoutBom)
+    }
+
     Write-ProgressEvent -Message '@phase|discovery'
     Write-ProgressEvent -Message 'Recherche des dépôts Git…'
     $repositories = @(Find-GitRepositories -SearchRoot $resolvedRoot)
@@ -528,6 +553,64 @@ try {
             }
         }
 
+        if ($Mode -eq 'CommitPush' -and $state.Error -eq '') {
+            if ($state.DirtyCount -le 0) {
+                $state.Operation = ''
+            }
+            else {
+                Write-ProgressEvent -Message "Ajout au commit $position/$($repositories.Count) · $repositoryName"
+                $addResult = Invoke-Git -Repository $repository -Arguments @('add', '--all') -TimeoutSeconds 120
+
+                if (-not $addResult.Success) {
+                    $state.Operation = "Ajout impossible : $($addResult.Error)"
+                    $state.StatusKey = 'Error'
+                    $state.StatusColor = '#FF6B7A'
+                    $state.StatusBackground = '#331820'
+                }
+                else {
+                    Write-ProgressEvent -Message "Commit $position/$($repositories.Count) · $repositoryName"
+                    $commitResult = Invoke-Git -Repository $repository -Arguments @('commit', "--file=$commitMessageFile") -TimeoutSeconds 240
+
+                    if (-not $commitResult.Success) {
+                        $state = Get-RepositoryState -Repository $repository -Operation "Commit impossible : $($commitResult.Error)"
+                        $state.StatusKey = 'Error'
+                        $state.StatusColor = '#FF6B7A'
+                        $state.StatusBackground = '#331820'
+                    }
+                    else {
+                        $state = Get-RepositoryState -Repository $repository -Operation 'Commit effectué · push en attente'
+                        Write-ProgressEvent -Message "Push $position/$($repositories.Count) · $repositoryName"
+
+                        if ($state.HasUpstream) {
+                            $pushResult = Invoke-Git -Repository $repository -Arguments @('push', '--quiet') -TimeoutSeconds 240
+                        }
+                        else {
+                            $currentBranchResult = Invoke-Git -Repository $repository -Arguments @('symbolic-ref', '--quiet', '--short', 'HEAD') -TimeoutSeconds 20
+                            if (-not $currentBranchResult.Success) {
+                                $pushResult = [pscustomobject]@{ Success = $false; Error = 'HEAD est détachée : aucune branche ne peut être envoyée automatiquement.' }
+                            }
+                            elseif ([string]::IsNullOrWhiteSpace($state.Remote)) {
+                                $pushResult = [pscustomobject]@{ Success = $false; Error = 'Aucun remote origin configuré.' }
+                            }
+                            else {
+                                $pushResult = Invoke-Git -Repository $repository -Arguments @('push', '--quiet', '--set-upstream', 'origin', $currentBranchResult.Output) -TimeoutSeconds 240
+                            }
+                        }
+
+                        if ($pushResult.Success) {
+                            $state = Get-RepositoryState -Repository $repository -Operation 'Commit & push effectués'
+                        }
+                        else {
+                            $state = Get-RepositoryState -Repository $repository -Operation "Commit effectué · push impossible : $($pushResult.Error)"
+                            $state.StatusKey = 'Error'
+                            $state.StatusColor = '#FF6B7A'
+                            $state.StatusBackground = '#331820'
+                        }
+                    }
+                }
+            }
+        }
+
         if ($Mode -eq 'DiscardSuspicious' -and $state.Error -eq '' -and $state.SuspiciousCount -gt 0) {
             $pathsToRestore = @($state.SuspiciousChanges | ForEach-Object { $_.Path })
             Write-ProgressEvent -Message "Restauration · $repositoryName · $($pathsToRestore.Count) atlas TMP"
@@ -569,6 +652,11 @@ try {
         RestoredFiles = ($states | Measure-Object -Property RestoredCount -Sum).Sum
         Updated = @($states | Where-Object { $_.Operation -like 'Mis à jour*' }).Count
         Skipped = @($states | Where-Object { $_.Operation -like 'Ignoré*' }).Count
+        Committed = @($states | Where-Object {
+            $_.Operation -eq 'Commit & push effectués' -or $_.Operation -like 'Commit effectué · push impossible*'
+        }).Count
+        Pushed = @($states | Where-Object { $_.Operation -eq 'Commit & push effectués' }).Count
+        Failed = @($states | Where-Object { $_.Operation -like '*impossible*' }).Count
     }
 
     $finishedLabel = if ($states.Count -eq 1) { 'Terminé · 1 dépôt analysé' } else { "Terminé · $($states.Count) dépôts analysés" }
@@ -596,4 +684,9 @@ catch {
         Repositories = @()
     })
     exit 1
+}
+finally {
+    if (-not [string]::IsNullOrWhiteSpace($commitMessageFile) -and (Test-Path -LiteralPath $commitMessageFile)) {
+        Remove-Item -LiteralPath $commitMessageFile -Force -ErrorAction SilentlyContinue
+    }
 }
