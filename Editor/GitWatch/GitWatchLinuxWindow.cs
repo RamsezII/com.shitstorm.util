@@ -105,7 +105,7 @@ namespace _UTIL_.Editor
             }
         }
 
-        void StartOperation(GitWatchMode mode)
+        void StartOperation(GitWatchMode mode, string commitMessage = "", string[] commitTargets = null)
         {
             if (activeTask != null || string.IsNullOrWhiteSpace(root))
                 return;
@@ -119,11 +119,19 @@ namespace _UTIL_.Editor
                     ? "Mise à jour prudente…"
                     : mode == GitWatchMode.DiscardSuspicious
                         ? "Restauration des atlas TMP…"
+                        : mode == GitWatchMode.CommitPush
+                            ? "Commit et publication des dépôts modifiés…"
                         : "Lecture des états locaux…";
 
             CancellationToken token = cancellation.Token;
             activeTask = Task.Run(
-                () => GitWatchLinuxEngine.Run(root, mode, message => progressMessages.Enqueue(message), token),
+                () => GitWatchLinuxEngine.Run(
+                    root,
+                    mode,
+                    commitMessage,
+                    commitTargets ?? Array.Empty<string>(),
+                    message => progressMessages.Enqueue(message),
+                    token),
                 token);
         }
 
@@ -161,6 +169,14 @@ namespace _UTIL_.Editor
                 StartOperation(GitWatchMode.Fetch);
             if (GUILayout.Button("↓  Mettre à jour", GUILayout.Height(34f)))
                 StartOperation(GitWatchMode.PullSafe);
+
+            int modifiedCount = repositories.Count(repository => repository.DirtyCount > 0);
+            GUI.enabled = activeTask == null && modifiedCount > 0;
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = HtmlColor("#705CE0");
+            if (GUILayout.Button($"↑  Commit & Push ({modifiedCount})", GUILayout.Height(34f)))
+                ConfirmCommitPush();
+            GUI.backgroundColor = previousBackground;
 
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
@@ -287,7 +303,10 @@ namespace _UTIL_.Editor
                     : $"{repository.SuspiciousChanges.Count} atlas TMP suspects";
                 operation = string.IsNullOrWhiteSpace(operation) ? diagnostic : $"{operation} · {diagnostic}";
             }
+            Color previousColor = GUI.color;
+            GUI.color = OperationColor(operation, repository.SuspiciousChanges.Count > 0);
             DrawCell(ref x, row.y, 245f, string.IsNullOrWhiteSpace(operation) ? "—" : operation, tooltip, mutedCellStyle);
+            GUI.color = previousColor;
 
             Event currentEvent = Event.current;
             if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && row.Contains(currentEvent.mousePosition))
@@ -343,6 +362,21 @@ namespace _UTIL_.Editor
 
             if (EditorUtility.DisplayDialog("Discard des atlas TMP", message, "Restaurer", "Annuler"))
                 StartOperation(GitWatchMode.DiscardSuspicious);
+        }
+
+        void ConfirmCommitPush()
+        {
+            List<GitWatchRepositoryState> targets = repositories
+                .Where(repository => repository.DirtyCount > 0)
+                .OrderBy(repository => repository.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (targets.Count == 0)
+                return;
+
+            string[] targetPaths = targets.Select(repository => repository.Path).ToArray();
+            GitWatchCommitPushDialog.Open(
+                targets,
+                commitMessage => StartOperation(GitWatchMode.CommitPush, commitMessage, targetPaths));
         }
 
         void EnsureStyles()
@@ -411,6 +445,141 @@ namespace _UTIL_.Editor
             }
         }
 
+        static Color OperationColor(string operation, bool hasSuspiciousChanges)
+        {
+            if (!string.IsNullOrWhiteSpace(operation) &&
+                operation.IndexOf("impossible", StringComparison.OrdinalIgnoreCase) >= 0)
+                return HtmlColor("#FF6B7A");
+            if (!string.IsNullOrWhiteSpace(operation) &&
+                (operation.StartsWith("Mis à jour", StringComparison.Ordinal) ||
+                 operation.IndexOf("restauré", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 operation.Equals("Commit & push effectués", StringComparison.Ordinal)))
+                return HtmlColor("#61D6A3");
+            if (hasSuspiciousChanges)
+                return HtmlColor("#FFB45E");
+            return Color.white;
+        }
+
+        static Color HtmlColor(string html)
+        {
+            return ColorUtility.TryParseHtmlString(html, out Color color) ? color : Color.white;
+        }
+    }
+
+    internal sealed class GitWatchCommitPushDialog : EditorWindow
+    {
+        readonly List<string> targets = new List<string>();
+        Action<string> onConfirm;
+        Vector2 targetScroll;
+        string commitMessage = string.Empty;
+        bool focusMessage = true;
+
+        internal static void Open(
+            IReadOnlyList<GitWatchRepositoryState> repositories,
+            Action<string> confirmAction)
+        {
+            GitWatchCommitPushDialog dialog = CreateInstance<GitWatchCommitPushDialog>();
+            dialog.titleContent = new GUIContent("Commit & Push global");
+            dialog.minSize = dialog.maxSize = new Vector2(570f, 460f);
+            dialog.onConfirm = confirmAction;
+            dialog.targets.AddRange(repositories.Select(repository =>
+                $"• {repository.Name}  ·  {repository.LocalText}"));
+
+            Resolution resolution = Screen.currentResolution;
+            dialog.position = new Rect(
+                Math.Max(0f, (resolution.width - dialog.minSize.x) * 0.5f),
+                Math.Max(0f, (resolution.height - dialog.minSize.y) * 0.5f),
+                dialog.minSize.x,
+                dialog.minSize.y);
+            dialog.ShowModalUtility();
+        }
+
+        void OnGUI()
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent.type == EventType.KeyDown && currentEvent.keyCode == KeyCode.Escape)
+            {
+                currentEvent.Use();
+                Close();
+                return;
+            }
+
+            GUIStyle overline = new GUIStyle(EditorStyles.miniBoldLabel);
+            overline.normal.textColor = HtmlColor("#8F82ED");
+            GUIStyle heading = new GUIStyle(EditorStyles.boldLabel) { fontSize = 21 };
+            GUIStyle muted = new GUIStyle(EditorStyles.wordWrappedMiniLabel);
+            muted.normal.textColor = HtmlColor("#909BAD");
+            GUIStyle targetStyle = new GUIStyle(EditorStyles.label) { fontSize = 12 };
+            targetStyle.normal.textColor = HtmlColor("#AAB4C4");
+
+            GUILayout.Space(18f);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(22f);
+            EditorGUILayout.BeginVertical();
+
+            GUILayout.Label("PUBLIER TOUS LES CHANGEMENTS", overline);
+            GUILayout.Label("Un message, plusieurs dépôts.", heading);
+            GUILayout.Space(8f);
+            GUILayout.Label(
+                "Tous les fichiers modifiés seront ajoutés. Chaque dépôt recevra son propre commit avec ce même message, puis son push sera tenté.",
+                muted);
+
+            GUILayout.Space(16f);
+            GUILayout.Label("MESSAGE DE COMMIT", EditorStyles.miniBoldLabel);
+            GUI.SetNextControlName("CommitMessage");
+            commitMessage = EditorGUILayout.TextField(commitMessage, GUILayout.Height(28f));
+            if (commitMessage.Length > 500)
+                commitMessage = commitMessage.Substring(0, 500);
+
+            if (focusMessage)
+            {
+                EditorGUI.FocusTextInControl("CommitMessage");
+                focusMessage = false;
+            }
+
+            GUILayout.Space(14f);
+            GUILayout.Label(
+                targets.Count == 1 ? "1 DÉPÔT MODIFIÉ" : $"{targets.Count} DÉPÔTS MODIFIÉS",
+                EditorStyles.miniBoldLabel);
+            targetScroll = EditorGUILayout.BeginScrollView(targetScroll, EditorStyles.helpBox, GUILayout.Height(150f));
+            foreach (string target in targets)
+                GUILayout.Label(target, targetStyle);
+            EditorGUILayout.EndScrollView();
+
+            GUILayout.Space(12f);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Une erreur n’arrêtera pas les autres dépôts.", muted);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Annuler", GUILayout.Width(90f), GUILayout.Height(30f)))
+                Close();
+
+            bool canConfirm = !string.IsNullOrWhiteSpace(commitMessage);
+            GUI.enabled = canConfirm;
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = HtmlColor("#705CE0");
+            if (GUILayout.Button($"Commit & Push ({targets.Count})", GUILayout.Width(155f), GUILayout.Height(30f)))
+                Confirm();
+            GUI.backgroundColor = previousBackground;
+            GUI.enabled = true;
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(22f);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        void Confirm()
+        {
+            string message = commitMessage.Trim();
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            Action<string> callback = onConfirm;
+            onConfirm = null;
+            Close();
+            callback?.Invoke(message);
+        }
+
         static Color HtmlColor(string html)
         {
             return ColorUtility.TryParseHtmlString(html, out Color color) ? color : Color.white;
@@ -422,7 +591,8 @@ namespace _UTIL_.Editor
         Status,
         Fetch,
         PullSafe,
-        DiscardSuspicious
+        DiscardSuspicious,
+        CommitPush
     }
 
     internal enum GitWatchStatus
@@ -461,6 +631,8 @@ namespace _UTIL_.Editor
         internal string Operation = string.Empty;
         internal string Error = string.Empty;
         internal int RestoredCount;
+        internal bool CommitCreated;
+        internal bool PushCompleted;
         internal readonly List<string> ChangedFiles = new List<string>();
         internal readonly List<GitWatchSuspiciousChange> SuspiciousChanges = new List<GitWatchSuspiciousChange>();
     }
@@ -482,12 +654,18 @@ namespace _UTIL_.Editor
         internal static GitWatchScanResult Run(
             string root,
             GitWatchMode mode,
+            string commitMessage,
+            IEnumerable<string> commitTargets,
             Action<string> reportProgress,
             CancellationToken cancellationToken)
         {
+            if (mode == GitWatchMode.CommitPush && string.IsNullOrWhiteSpace(commitMessage))
+                throw new ArgumentException("Le message de commit ne peut pas être vide.", nameof(commitMessage));
+
             Stopwatch stopwatch = Stopwatch.StartNew();
             List<string> repositoryPaths = FindGitRepositories(root, cancellationToken);
             GitWatchScanResult result = new GitWatchScanResult();
+            HashSet<string> commitTargetSet = new HashSet<string>(commitTargets ?? Enumerable.Empty<string>(), StringComparer.Ordinal);
             reportProgress(repositoryPaths.Count == 1 ? "1 dépôt détecté" : $"{repositoryPaths.Count} dépôts détectés");
 
             for (int index = 0; index < repositoryPaths.Count; index++)
@@ -510,6 +688,18 @@ namespace _UTIL_.Editor
                 if (mode == GitWatchMode.PullSafe && string.IsNullOrWhiteSpace(state.Error))
                     PullSafely(state, cancellationToken);
 
+                if (mode == GitWatchMode.CommitPush &&
+                    commitTargetSet.Contains(repositoryPath) &&
+                    string.IsNullOrWhiteSpace(state.Error) &&
+                    state.DirtyCount > 0)
+                {
+                    CommitAndPush(
+                        state,
+                        commitMessage,
+                        message => reportProgress($"{message} {index + 1}/{repositoryPaths.Count} · {repositoryName}"),
+                        cancellationToken);
+                }
+
                 if (mode == GitWatchMode.DiscardSuspicious &&
                     string.IsNullOrWhiteSpace(state.Error) &&
                     state.SuspiciousChanges.Count > 0)
@@ -525,6 +715,8 @@ namespace _UTIL_.Editor
             int restored = result.Repositories.Sum(repository => repository.RestoredCount);
             int updated = result.Repositories.Count(repository => repository.Operation.StartsWith("Mis à jour", StringComparison.Ordinal));
             int skipped = result.Repositories.Count(repository => repository.Operation.StartsWith("Ignoré", StringComparison.Ordinal));
+            int committed = result.Repositories.Count(repository => repository.CommitCreated);
+            int pushed = result.Repositories.Count(repository => repository.PushCompleted);
             string duration = (stopwatch.ElapsedMilliseconds / 1000d).ToString("0.0");
 
             switch (mode)
@@ -538,6 +730,11 @@ namespace _UTIL_.Editor
                     break;
                 case GitWatchMode.DiscardSuspicious:
                     result.Status = $"Restauration terminée · {restored} atlas TMP restauré(s) · {duration} s";
+                    break;
+                case GitWatchMode.CommitPush:
+                    result.Status = $"Publication terminée · {committed} commit(s) · {pushed} push(s)" +
+                                    (failures > 0 ? $" · {failures} échec(s)" : string.Empty) +
+                                    $" · {duration} s";
                     break;
                 default:
                     result.Status = $"État local actualisé · {result.Repositories.Count} dépôt(s) · {duration} s";
@@ -822,6 +1019,99 @@ namespace _UTIL_.Editor
                 state.Operation = "Déjà à jour";
         }
 
+        static void CommitAndPush(
+            GitWatchRepositoryState state,
+            string commitMessage,
+            Action<string> reportProgress,
+            CancellationToken cancellationToken)
+        {
+            reportProgress("Ajout au commit");
+            GitResult add = InvokeGit(state.Path, new[] { "add", "--all" }, 120, cancellationToken);
+            if (!add.Success)
+            {
+                state.Operation = $"Ajout impossible : {add.Error}";
+                state.StatusKey = GitWatchStatus.Error;
+                return;
+            }
+
+            reportProgress("Commit");
+            GitResult commit = InvokeGit(
+                state.Path,
+                new[] { "commit", "--file=-" },
+                240,
+                cancellationToken,
+                commitMessage);
+            if (!commit.Success)
+            {
+                GitWatchRepositoryState refreshed = GetRepositoryState(
+                    state.Path,
+                    $"Commit impossible : {commit.Error}",
+                    cancellationToken);
+                CopyState(refreshed, state);
+                state.StatusKey = GitWatchStatus.Error;
+                return;
+            }
+
+            GitWatchRepositoryState afterCommit = GetRepositoryState(
+                state.Path,
+                "Commit effectué · push en attente",
+                cancellationToken);
+            CopyState(afterCommit, state);
+            state.CommitCreated = true;
+            reportProgress("Push");
+
+            GitResult push;
+            if (state.HasUpstream)
+            {
+                push = InvokeGit(state.Path, new[] { "push", "--quiet" }, 240, cancellationToken);
+            }
+            else
+            {
+                GitResult currentBranch = InvokeGit(
+                    state.Path,
+                    new[] { "symbolic-ref", "--quiet", "--short", "HEAD" },
+                    20,
+                    cancellationToken);
+                if (!currentBranch.Success)
+                {
+                    push = GitResult.Failure("HEAD est détachée : aucune branche ne peut être envoyée automatiquement.");
+                }
+                else if (string.IsNullOrWhiteSpace(state.Remote))
+                {
+                    push = GitResult.Failure("Aucun remote origin configuré.");
+                }
+                else
+                {
+                    push = InvokeGit(
+                        state.Path,
+                        new[] { "push", "--quiet", "--set-upstream", "origin", currentBranch.Output.Trim() },
+                        240,
+                        cancellationToken);
+                }
+            }
+
+            if (push.Success)
+            {
+                GitWatchRepositoryState refreshed = GetRepositoryState(
+                    state.Path,
+                    "Commit & push effectués",
+                    cancellationToken);
+                CopyState(refreshed, state);
+                state.CommitCreated = true;
+                state.PushCompleted = true;
+            }
+            else
+            {
+                GitWatchRepositoryState refreshed = GetRepositoryState(
+                    state.Path,
+                    $"Commit effectué · push impossible : {push.Error}",
+                    cancellationToken);
+                CopyState(refreshed, state);
+                state.CommitCreated = true;
+                state.StatusKey = GitWatchStatus.Error;
+            }
+        }
+
         static void RestoreSuspiciousFiles(GitWatchRepositoryState state, CancellationToken cancellationToken)
         {
             string[] paths = state.SuspiciousChanges.Select(change => change.Path).ToArray();
@@ -864,6 +1154,8 @@ namespace _UTIL_.Editor
             destination.Operation = source.Operation;
             destination.Error = source.Error;
             destination.RestoredCount = source.RestoredCount;
+            destination.CommitCreated = source.CommitCreated;
+            destination.PushCompleted = source.PushCompleted;
             destination.ChangedFiles.Clear();
             destination.ChangedFiles.AddRange(source.ChangedFiles);
             destination.SuspiciousChanges.Clear();
@@ -874,7 +1166,8 @@ namespace _UTIL_.Editor
             string repositoryPath,
             IEnumerable<string> arguments,
             int timeoutSeconds,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            string standardInput = null)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
@@ -885,9 +1178,12 @@ namespace _UTIL_.Editor
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                RedirectStandardInput = standardInput != null,
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8
             };
+            if (standardInput != null)
+                startInfo.StandardInputEncoding = Encoding.UTF8;
             startInfo.EnvironmentVariables["GIT_TERMINAL_PROMPT"] = "0";
 
             using (Process process = new Process { StartInfo = startInfo })
@@ -895,6 +1191,11 @@ namespace _UTIL_.Editor
                 try
                 {
                     process.Start();
+                    if (standardInput != null)
+                    {
+                        process.StandardInput.Write(standardInput);
+                        process.StandardInput.Close();
+                    }
                     Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
                     Task<string> stderrTask = process.StandardError.ReadToEndAsync();
                     Stopwatch timeout = Stopwatch.StartNew();
