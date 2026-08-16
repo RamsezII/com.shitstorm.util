@@ -12,7 +12,7 @@ partial class Util
         instance += to_add;
     }
 
-    public static void AddAction<T>(ref Action<T> instance, in Action<T> to_add)
+    public static void AddActionOnce<T>(ref Action<T> instance, in Action<T> to_add)
     {
         instance -= to_add;
         instance += to_add;

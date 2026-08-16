@@ -4,8 +4,8 @@ using UnityEngine;
 
 partial class Util
 {
-    public static void Toggle(this ValueNotifier<bool> onValue) => onValue.Value = !onValue.Value;
-    public static void Toggle(this ValueNotifier<bool> onValue, bool value) => onValue.Value = value;
+    public static void ToggleAuto(this ValueNotifier<bool> onValue) => onValue.Value = !onValue.Value;
+    public static void ToggleValue(this ValueNotifier<bool> onValue, bool value) => onValue.Value = value;
     public static void Toggle_inv(this ValueNotifier<bool> onValue, bool value) => onValue.Value = !value;
     public static void AddListener(this ValueNotifier<bool> onValue, Action onTrue, Action onFalse) => onValue.AddListener(value =>
     {
