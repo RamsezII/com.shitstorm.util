@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static partial class Util
 {
@@ -64,6 +65,18 @@ public static partial class Util
         if (transform != null)
             return true;
         transform = null;
+        return false;
+    }
+
+    public static bool TryFindRootTransform(in string name, out Transform tfm)
+    {
+        foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects())
+            if (go.name.Equals(name, System.StringComparison.Ordinal))
+            {
+                tfm = go.transform;
+                return true;
+            }
+        tfm = null;
         return false;
     }
 

@@ -10,7 +10,7 @@ namespace _UTIL_.Editor
         static void LogSize(MenuCommand command)
         {
             RectTransform rt = (RectTransform)command.context;
-            Debug.Log(rt.rect.size);
+            Debug.Log(rt.rect.size, rt);
         }
     }
 }

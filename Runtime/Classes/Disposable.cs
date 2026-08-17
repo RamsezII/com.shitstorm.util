@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace _UTIL_
 {
+    [Serializable]
     public class Disposable : IDisposable
     {
         public readonly string name;
