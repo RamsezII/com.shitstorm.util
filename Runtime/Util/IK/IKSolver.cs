@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace _UTIL_
 {
+    [Serializable]
     public class IKSolver
     {
         public readonly Transform a, b, c;
