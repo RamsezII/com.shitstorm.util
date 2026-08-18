@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+﻿#if UNITY_EDITOR && USE_DEFAULT_RECT
 using UnityEditor;
 using UnityEngine;
 
