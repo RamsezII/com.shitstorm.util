@@ -8,6 +8,8 @@ public static partial class Util
     public static bool TryLoadResourceByType(in System.Type type, out Object resource)
     {
         resource = Resources.Load(type.FullName);
+        if (resource != null)
+            resource = ((GameObject)resource).GetComponent(type);
         return resource != null;
     }
 

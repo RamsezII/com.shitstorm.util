@@ -28,7 +28,7 @@ namespace _UTIL_
 
         public static implicit operator PosRot(in (Vector3 pos, Quaternion rot) value) => new(value.pos, value.rot);
 
-        public static implicit operator PosRot(in Transform transform) => new(transform.position, transform.rotation);
+        public static implicit operator PosRot(in Transform transform) => new(transform.localPosition, transform.localRotation);
 
         public static PosRot Slerp(in PosRot a, in PosRot b, in float lerp) => new(
             Vector3.Lerp(a.pos, b.pos, lerp),

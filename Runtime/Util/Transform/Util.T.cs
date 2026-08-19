@@ -19,6 +19,9 @@ public static partial class Util
 
     public static string GetRelativePath(this Transform transform, in Transform root)
     {
+        if (root == null)
+            throw new System.ArgumentNullException(paramName: nameof(root));
+
         string res = transform.name;
 
         while (transform.parent != null && transform.parent != root)
