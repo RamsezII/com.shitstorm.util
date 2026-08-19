@@ -58,6 +58,8 @@ namespace _UTIL_
         Action onChange;
         Action<T> onChangeT;
         public Func<T, T> processor;
+        public bool Has => Value != null;
+        public bool Had => old != null;
 
         //------------------------------------------------------------------------------------------------------------------------------
 
