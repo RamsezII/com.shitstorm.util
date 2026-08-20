@@ -66,6 +66,46 @@ namespace _UTIL_
         }
     }
 
+    public sealed class ValueNotifier_group_custom<U> : ValueNotifier<U>
+    {
+        readonly Func<U> _onConvert;
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public ValueNotifier_group_custom(in Func<U> onConvert)
+        {
+            _onConvert = onConvert;
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public void PropagateValue()
+        {
+            Value = _onConvert();
+        }
+    }
+
+    public sealed class ValueNotifier_group_custom<InputType, OutputType> : ValueNotifier<OutputType>
+    {
+        readonly Func<OutputType> _onConvert;
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public ValueNotifier_group_custom(in Func<OutputType> onConvert, params Action<Action<InputType>>[] listeners)
+        {
+            _onConvert = onConvert;
+            foreach (var listener in listeners)
+                listener(PropagateValue);
+        }
+
+        //--------------------------------------------------------------------------------------------------------------
+
+        public void PropagateValue(InputType _)
+        {
+            Value = _onConvert();
+        }
+    }
+
     [Serializable]
     public sealed class BoolNotifier_not : NotifierNode<bool, bool>
     {

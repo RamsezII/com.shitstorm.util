@@ -50,6 +50,7 @@ namespace _UTIL_
             }
         }
 
+        public void AddListener1b(Action<bool> action) => AddListener1(action);
         public void AddListener1(in Action<bool> action, in bool doNotCallThisTime = false)
         {
             lock (this)
