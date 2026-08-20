@@ -9,4 +9,6 @@ public static partial class Util
         color.a = alpha;
         return color;
     }
+
+    public static Color WithAlpha(this Color color, in float alpha) => new(color.r, color.g, color.b, alpha);
 }
