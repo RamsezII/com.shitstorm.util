@@ -10,18 +10,16 @@ public static partial class Util
                 yield return s;
     }
 
-    public static bool IsMatchChars(this string chars, in string text)
+    public static bool IsMatchChars(this string chars, string text)
     {
-        int last = 0, ic = 0, matches = 0;
-        while (ic < chars.Length)
+        Queue<char> set = new(chars);
+        while (set.TryDequeue(out char c))
         {
-            int i = text.IndexOf(chars[ic..++ic], last, text.Length - last, StringComparison.OrdinalIgnoreCase);
-            if (i >= 0)
-            {
-                last = i + 1;
-                ++matches;
-            }
+            int index = text.IndexOf(c, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+                return false;
+            text = text[index..];
         }
-        return matches == chars.Length;
+        return true;
     }
 }
