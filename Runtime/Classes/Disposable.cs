@@ -26,9 +26,9 @@ namespace _UTIL_
 
         //----------------------------------------------------------------------------------------------------------
 
-        public Disposable(in string name)
+        public Disposable(in string name = null)
         {
-            this.name = name;
+            this.name = name ?? GetType().FullName;
             all_disposables.AddElement(this);
         }
 
