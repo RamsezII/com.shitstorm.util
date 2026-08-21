@@ -21,6 +21,7 @@ namespace _UTIL_.Editor
         const float RowHeight = 54f;
 
         readonly ConcurrentQueue<string> progressMessages = new ConcurrentQueue<string>();
+        readonly ConcurrentQueue<GitWatchRepositoryState> repositoryUpdates = new ConcurrentQueue<GitWatchRepositoryState>();
         readonly List<GitWatchRepositoryState> repositories = new List<GitWatchRepositoryState>();
 
         CancellationTokenSource cancellation;
@@ -71,6 +72,16 @@ namespace _UTIL_.Editor
             while (progressMessages.TryDequeue(out string message))
                 status = message;
 
+            bool repositoriesChanged = false;
+            while (repositoryUpdates.TryDequeue(out GitWatchRepositoryState repository))
+            {
+                repositories.Add(repository);
+                repositoriesChanged = true;
+            }
+
+            if (repositoriesChanged)
+                Repaint();
+
             if (activeTask == null)
                 return;
 
@@ -112,6 +123,7 @@ namespace _UTIL_.Editor
 
             cancellation = new CancellationTokenSource();
             repositories.Clear();
+            while (repositoryUpdates.TryDequeue(out _)) { }
             selectedRepository = null;
             status = mode == GitWatchMode.Fetch
                 ? "Actualisation des remotes…"
@@ -131,6 +143,7 @@ namespace _UTIL_.Editor
                     commitMessage,
                     commitTargets ?? Array.Empty<string>(),
                     message => progressMessages.Enqueue(message),
+                    repository => repositoryUpdates.Enqueue(repository),
                     token),
                 token);
         }
@@ -657,6 +670,7 @@ namespace _UTIL_.Editor
             string commitMessage,
             IEnumerable<string> commitTargets,
             Action<string> reportProgress,
+            Action<GitWatchRepositoryState> reportRepository,
             CancellationToken cancellationToken)
         {
             if (mode == GitWatchMode.CommitPush && string.IsNullOrWhiteSpace(commitMessage))
@@ -708,6 +722,8 @@ namespace _UTIL_.Editor
                 }
 
                 result.Repositories.Add(state);
+                reportRepository(state);
+                reportProgress($"Trouvé {state.Name} · {state.Branch} · {state.LocalText} · {state.StatusText}");
             }
 
             stopwatch.Stop();
