@@ -61,6 +61,18 @@ namespace _UTIL_
         public bool Has => Value != null;
         public bool Had => old != null;
 
+        public bool HasT(out T value)
+        {
+            value = _value;
+            return Has;
+        }
+
+        public bool HadT(out T old)
+        {
+            old = this.old;
+            return Had;
+        }
+
         //------------------------------------------------------------------------------------------------------------------------------
 
         public ValueNotifier(in T init = default) : base(typeof(T))
