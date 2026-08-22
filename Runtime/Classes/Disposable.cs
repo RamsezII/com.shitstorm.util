@@ -13,15 +13,12 @@ namespace _UTIL_
         static ushort _id;
         public readonly ushort disposable_id = _id++;
 
-        public static readonly HashSetListener<Disposable> all_disposables = new();
-
         //----------------------------------------------------------------------------------------------------------
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             _id = 0;
-            all_disposables.Reset();
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -29,7 +26,6 @@ namespace _UTIL_
         public Disposable(in string name = null)
         {
             this.name = name ?? GetType().FullName;
-            all_disposables.AddElement(this);
         }
 
         //----------------------------------------------------------------------------------------------------------
@@ -59,8 +55,6 @@ namespace _UTIL_
                     return;
                 _disposed = true;
             }
-
-            all_disposables.RemoveElement(this);
 
             OnDispose();
 
