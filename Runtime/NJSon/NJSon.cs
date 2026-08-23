@@ -37,7 +37,7 @@ namespace _UTIL_
 
         // -------------------------------------------------------------------------------------------------------------
 
-        public static void WriteNJFields(object obj, JObject json)
+        public static void WriteNJFields(this JObject json, object obj)
         {
             foreach (var field in obj.GetType().GetFields(flags))
             {
@@ -54,7 +54,7 @@ namespace _UTIL_
             }
         }
 
-        public static void ReadNJFields(object obj, JObject json)
+        public static void ReadNJFields(this JObject json, object obj)
         {
             foreach (var field in obj.GetType().GetFields(flags))
             {
@@ -68,15 +68,15 @@ namespace _UTIL_
                     continue;
 
                 SetValue(
-                    field.FieldType,
                     token,
+                    field.FieldType,
                     value => field.SetValue(obj, value));
             }
         }
 
         // -------------------------------------------------------------------------------------------------------------
 
-        public static void WriteNJTransforms(in Transform root, object obj, JObject json)
+        public static void WriteNJTransforms(this JObject json, object obj, in Transform root)
         {
             foreach (var field in obj.GetType().GetFields(flags))
                 if (field.FieldType == typeof(Transform) && field.GetValue(obj) is Transform transform)
@@ -95,7 +95,7 @@ namespace _UTIL_
                 }
         }
 
-        public static void ReadNJTransforms(in Transform root, object obj, JObject json)
+        public static void ReadNJTransforms(this JObject json, object obj, in Transform root)
         {
             foreach (var field in obj.GetType().GetFields(flags))
                 if (field.FieldType == typeof(Transform))
@@ -124,7 +124,7 @@ namespace _UTIL_
 
         // -------------------------------------------------------------------------------------------------------------
 
-        static void SetValue(Type type, JToken token, Action<object> setter)
+        static void SetValue(JToken token, Type type, Action<object> setter)
         {
             if (token.Type == JTokenType.Null)
             {
