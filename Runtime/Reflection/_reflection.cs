@@ -45,7 +45,7 @@ partial class Util
         return false;
     }
 
-    public static bool TryGetType(this string typeName, in Type filter, out Type result, in bool include_abstracts = false)
+    public static bool TryCastType_filtered(this string typeName, in Type filter, out Type result, in bool include_abstracts = false)
     {
         if (TryCastType(typeName, out result))
             if (include_abstracts || !result.IsAbstract)
