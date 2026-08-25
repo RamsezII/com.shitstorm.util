@@ -14,4 +14,6 @@ partial class Util
         rT.localScale = Vector3.one;
         rT.pivot = .5f * Vector2.one;
     }
+
+    public static void CopyPositionAndRotation(this Transform a, in Transform b) => a.SetPositionAndRotation(b.position, b.rotation);
 }
