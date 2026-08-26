@@ -98,6 +98,8 @@ namespace _UTIL_
         {
         }
 
+        public void Revert() => Value = old;
+
         public T Value
         {
             get
