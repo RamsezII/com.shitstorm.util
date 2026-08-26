@@ -1,44 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace _UTIL_
 {
     public static class TypeResolver
     {
-        static readonly Dictionary<string, Type> cache = new();
+        static readonly Dictionary<Type, List<Type>> cache = new();
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public static Type GetType(this string typeName)
+        public static List<Type> AllDerivedTypes(this Type type)
         {
-            if (string.IsNullOrWhiteSpace(typeName))
-                return null;
-
-            if (cache.TryGetValue(typeName, out var cached))
+            if (cache.TryGetValue(type, out var cached))
                 return cached;
 
-            // Fonctionne notamment avec un nom assembly-qualified.
-            var type = Type.GetType(typeName);
+            var types = cache[type] = Util.EGetAllDerivedTypes(type).ToList();
+            types.Sort((a, b) => a.FullName.CompareTo(b.FullName));
 
-            if (type != null)
-            {
-                cache[typeName] = type;
-                return type;
-            }
-
-            // Recherche dans toutes les assemblies actuellement chargées.
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                type = assembly.GetType(typeName);
-
-                if (type != null)
-                {
-                    cache[typeName] = type;
-                    return type;
-                }
-            }
-
-            return null;
+            return types;
         }
     }
 }
