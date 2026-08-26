@@ -56,7 +56,9 @@ namespace _UTIL_
         public int last_frame;
         public T _value, old;
         Action onChange;
+        public Action onChange_once;
         Action<T> onChangeT;
+        public Action<T> onChangeT_once;
         public Func<T, T> processor;
         public bool Has => Value != null;
         public bool Had => old != null;
@@ -202,6 +204,12 @@ namespace _UTIL_
 
                 if (force || changed)
                 {
+                    onChangeT_once?.Invoke(value);
+                    onChangeT_once = null;
+
+                    onChange_once?.Invoke();
+                    onChange_once = null;
+
                     onChangeT?.Invoke(value);
                     onChange?.Invoke();
                 }

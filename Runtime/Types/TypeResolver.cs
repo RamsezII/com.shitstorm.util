@@ -6,19 +6,21 @@ namespace _UTIL_
 {
     public static class TypeResolver
     {
-        static readonly Dictionary<Type, List<Type>> cache = new();
+        static readonly Dictionary<Type, Type[]> cache = new();
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public static List<Type> AllDerivedTypes(this Type type)
+        public static Type[] AllDerivedTypes(this Type type)
         {
-            if (cache.TryGetValue(type, out var cached))
-                return cached;
+            lock (cache)
+            {
+                if (cache.TryGetValue(type, out var cached))
+                    return cached;
 
-            var types = cache[type] = Util.EGetAllDerivedTypes(type).ToList();
-            types.Sort((a, b) => a.FullName.CompareTo(b.FullName));
-
-            return types;
+                var types = cache[type] = Util.EGetAllDerivedTypes(type).ToArray();
+                Array.Sort(types, (a, b) => a.FullName.CompareTo(b.FullName));
+                return types;
+            }
         }
     }
 }
