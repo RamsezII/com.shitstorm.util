@@ -21,7 +21,7 @@ partial class Util
 
     public static bool TryNJRead<T>(this string path, out T njson, in bool force = false, in bool log_success = true, in bool log_failure = true) where T : JToken, new()
     {
-        njson = null;
+        njson = new();
 
         if (File.Exists(path))
         {
@@ -29,8 +29,18 @@ partial class Util
             {
                 string text = File.ReadAllText(path);
                 njson = JsonConvert.DeserializeObject<T>(text);
+
+                if (njson == null)
+                {
+                    if (log_failure)
+                        Debug.LogWarning($"{nameof(TryNJRead)} empty NJSon at: \"{path}\"");
+                    njson = new();
+                    return false;
+                }
+
                 if (log_success)
                     Debug.Log($"{nameof(TryNJRead)}({path})".ToSubLog());
+
                 return true;
             }
             catch (Exception e)
@@ -48,7 +58,6 @@ partial class Util
             {
                 File.WriteAllText(path, string.Empty);
                 Debug.Log($"{nameof(TryNJRead)} forced: \"{path}\"".ToSubLog());
-                njson = new();
             }
 
             return false;

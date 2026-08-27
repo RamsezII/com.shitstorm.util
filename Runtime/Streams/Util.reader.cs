@@ -1,12 +1,9 @@
 ﻿using System.IO;
-using System.Net;
 using System.Text;
 using UnityEngine;
 
 public static partial class Util
 {
-    public static BinaryReader NewReader(this byte[] buffer) => new(new MemoryStream(buffer), Encoding.UTF8);
-
     public static string ReadText(this BinaryReader reader)
     {
         ushort size = reader.ReadUInt16();
@@ -14,21 +11,6 @@ public static partial class Util
             return Encoding.UTF8.GetString(reader.ReadBytes(size));
         else
             return string.Empty;
-    }
-
-    public static bool TryReadText(this BinaryReader reader, out string text)
-    {
-        ushort size = reader.ReadUInt16();
-        if (size > 0)
-        {
-            text = Encoding.UTF8.GetString(reader.ReadBytes(size));
-            return true;
-        }
-        else
-        {
-            text = string.Empty;
-            return false;
-        }
     }
 
     public static float Read_f16(this BinaryReader reader) => Mathf.HalfToFloat(reader.ReadUInt16());
@@ -62,6 +44,4 @@ public static partial class Util
     public static Quaternion ReadQ_4f16(this BinaryReader reader) => new Quaternion(reader.Read_f16(), reader.Read_f16(), reader.Read_f16(), reader.Read_f16()).normalized;
 
     public static Quaternion ReadQ_4f32(this BinaryReader reader) => new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()).normalized;
-
-    public static IPEndPoint ReadIPEnd(this BinaryReader reader) => new(reader.ReadUInt32(), reader.ReadUInt16());
 }

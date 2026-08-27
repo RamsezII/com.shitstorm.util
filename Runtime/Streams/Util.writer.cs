@@ -34,22 +34,6 @@ public static partial class Util
         }
     }
 
-    public static void StartPrefixedWrite(this BinaryWriter writer, out ushort prefixePos)
-    {
-        prefixePos = (ushort)writer.BaseStream.Position;
-        writer.Write((ushort)0);
-    }
-
-    public static ushort EndPrefixedWrite(this BinaryWriter writer, in ushort prefixePos)
-    {
-        ushort endPos = (ushort)writer.BaseStream.Position;
-        writer.BaseStream.Position = prefixePos;
-        ushort length = (ushort)(endPos - prefixePos - sizeof(ushort));
-        writer.Write(length);
-        writer.BaseStream.Position = endPos;
-        return length;
-    }
-
     public static void WriteString(this BinaryWriter writer, in string text)
     {
         if (string.IsNullOrEmpty(text))
