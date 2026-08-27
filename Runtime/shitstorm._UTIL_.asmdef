@@ -37,6 +37,11 @@
             "name": "com.unity.animation.rigging",
             "expression": "",
             "define": "HAS_ANIMRIG"
+        },
+        {
+            "name": "com.unity.ai.navigation",
+            "expression": "",
+            "define": "HAS_AI"
         }
     ],
     "noEngineReferences": false
