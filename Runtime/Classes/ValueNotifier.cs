@@ -21,15 +21,7 @@ namespace _UTIL_
     [Serializable]
     public class ValueNotifier : IDisposable
     {
-        public readonly Type type;
         public bool _disposed;
-
-        //------------------------------------------------------------------------------------------------------------------------------
-
-        protected ValueNotifier(in Type type)
-        {
-            this.type = type;
-        }
 
         //------------------------------------------------------------------------------------------------------------------------------
 
@@ -77,7 +69,7 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public ValueNotifier(in T init = default) : base(typeof(T))
+        public ValueNotifier(in T init = default)
         {
             _value = old = init;
         }
