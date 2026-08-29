@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using _UTIL_;
 using Newtonsoft.Json.Linq;
 
 namespace _UTIL_
@@ -21,7 +20,6 @@ partial class Util
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static void WriteNJFields(this JObject jobj, in object target, in Type type = null) => WriteFields<NJFieldAttribute>(jobj, target, type);
     public static void WriteFields<T>(this JObject jobj, in object target, in Type type = null) where T : Attribute
     {
         foreach (var field in (type ?? target.GetType()).GetFields(BindingFlagsALL))
@@ -35,7 +33,6 @@ partial class Util
         }
     }
 
-    public static void ReadNJFields(this JObject jobj, in object target, in Type type = null) => ReadFields<NJFieldAttribute>(jobj, target, type);
     public static void ReadFields<T>(this JObject jobj, in object target, in Type type = null) where T : Attribute
     {
         foreach (var field in (type ?? target.GetType()).GetFields(BindingFlagsALL))
