@@ -5,22 +5,8 @@ using UnityEngine;
 
 partial class Util
 {
-    public static readonly IPAddress
-        IP_3VE = IPAddress.Parse("141.94.223.114"),
-        IP_GOOGLE = IPAddress.Parse("8.8.8.8");
-
-    public const string
-        DOMAIN_3VE = "www.shitstorm.ovh";
-
-    public const ushort
-        PORT_ARMA = 40000,
-        PORT_PARAGON = 65000;
-
-    public static readonly IPEndPoint
-        end_ARMA = new(IP_3VE, PORT_ARMA),
-        end_ARMA_loop = new(IPAddress.Loopback, PORT_ARMA),
-        end_init = end_ARMA_loop;
-
+    public static readonly IPAddress IP_GOOGLE = IPAddress.Parse("8.8.8.8");
+    public const ushort PORT_ARMA = 40000;
     static IPAddress localIP;
 
     //----------------------------------------------------------------------------------------------------------

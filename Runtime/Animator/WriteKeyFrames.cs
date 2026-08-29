@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-partial class Util_e
+partial class Util
 {
     /// <summary>
     /// Écrit des keyframes pour toutes les feuilles float sous `property` (SerializedProperty),

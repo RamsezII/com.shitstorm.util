@@ -2,9 +2,6 @@
 
 public static partial class Util
 {
-    public static ushort LoopID(this ref byte id) => ++id == 0 ? ++id : id;
-    public static ushort LoopID(this ref ushort id) => ++id == 0 ? ++id : id;
-
     public static float Clamp_ref(ref this float value, in float min, in float max) => Mathf.Clamp(value, min, max);
     public static float Clamp01_ref(ref this float value) => Mathf.Clamp01(value);
 

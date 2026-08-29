@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+﻿#if UNITY_EDITOR && DEFAULT_TFMS
 using UnityEditor;
 using UnityEngine;
 

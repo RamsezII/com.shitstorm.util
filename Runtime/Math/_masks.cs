@@ -15,6 +15,4 @@ partial class Util
 
         return (T)Enum.ToObject(typeof(T), _mask);
     }
-
-    public static bool HasFlags_or(this int mask, in int flags) => (mask & flags) != 0;
 }

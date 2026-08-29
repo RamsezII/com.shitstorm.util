@@ -8,11 +8,6 @@ namespace _UTIL_
         Right,
         Down,
         Left,
-
-        TopRight,
-        DownRight,
-        DownLeft,
-        TopLeft,
     }
 
     [Flags]
@@ -22,10 +17,5 @@ namespace _UTIL_
         Right = 1 << DIRS_ENUM.Right,
         Down = 1 << DIRS_ENUM.Down,
         Left = 1 << DIRS_ENUM.Left,
-
-        TopRight = Top | Right,
-        DownRight = Down | Right,
-        DownLeft = Down | Left,
-        TopLeft = Top | Left,
     }
 }

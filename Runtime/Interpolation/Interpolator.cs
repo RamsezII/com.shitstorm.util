@@ -64,11 +64,5 @@ namespace _UTIL_
             this.position = position;
             this.velocity = velocity;
         }
-
-        //----------------------------------------------------------------------------------------------------------
-
-        public static implicit operator (Vector3 position, Vector3 velocity)(in RgbInfos1 value) => (value.position, value.velocity);
-
-        public static implicit operator RgbInfos1(in (Vector3 position, Vector3 velocity) value) => new(value.position, value.velocity);
     }
 }

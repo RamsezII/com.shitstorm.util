@@ -3,7 +3,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-partial class Util_e
+partial class Util
 {
     [MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(LogShaderPropertyIDs))]
     static void LogShaderPropertyIDs()

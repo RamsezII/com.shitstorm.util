@@ -7,7 +7,7 @@ namespace _UTIL_e
 {
     static class TextureUtils
     {
-        [MenuItem("Assets/" + nameof(Util_e) + "/" + nameof(TextureUtils) + "/" + nameof(CreateCircularGlow64))]
+        [MenuItem("Assets/" + nameof(_UTIL_) + "/" + nameof(TextureUtils) + "/" + nameof(CreateCircularGlow64))]
         public static void CreateCircularGlow64()
         {
             const int W = 64, H = 64;

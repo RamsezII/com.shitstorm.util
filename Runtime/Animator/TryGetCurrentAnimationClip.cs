@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-partial class Util_e
+partial class Util
 {
     public static bool TryGetCurrentAnimationClip(out AnimationClip clip, out float time)
     {

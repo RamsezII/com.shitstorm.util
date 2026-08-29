@@ -18,13 +18,6 @@ partial class Util
         }
     }
 
-    public static IEnumerable<Type> EAllTypes()
-    {
-        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            foreach (var type in assembly.GetTypes())
-                yield return type;
-    }
-
     public static Type CastType(this string typeName, in bool include_abstracts = false) => TryCastType(typeName, out Type type, include_abstracts) ? type : null;
     public static bool TryCastType(this string typeName, out Type type, in bool include_abstracts = false)
     {

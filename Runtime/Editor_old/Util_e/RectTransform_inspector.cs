@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR && USE_DEFAULT_RECT
+﻿#if UNITY_EDITOR && DEFAULT_RTFMS
 using UnityEditor;
 using UnityEngine;
 

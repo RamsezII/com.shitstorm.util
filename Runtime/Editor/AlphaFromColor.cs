@@ -7,7 +7,7 @@ namespace _UTIL_e
 {
     static class TextureAlphaTools
     {
-        [MenuItem("Assets/" + nameof(Util_e) + "/" + nameof(ReplaceBlackWithAlpha))]
+        [MenuItem("Assets/" + nameof(_UTIL_) + "/" + nameof(ReplaceBlackWithAlpha))]
         static void ReplaceBlackWithAlpha()
         {
             Texture2D tex = Selection.activeObject as Texture2D;
