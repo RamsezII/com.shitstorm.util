@@ -27,7 +27,7 @@ namespace _UTIL_
         public void AddNode(in ValueNotifier<InputType> node, bool doNotCallThisTime = false)
         {
             if (_nodes.Add(node))
-                node.AddListener(PropagateValue, doNotCallThisTime: doNotCallThisTime);
+                node.AddListener(PropagateValue, do_not_call_this_time: doNotCallThisTime);
         }
 
         public void RemoveNode(in ValueNotifier<InputType> node)
@@ -116,7 +116,7 @@ namespace _UTIL_
         public BoolNotifier_not(in ValueNotifier<bool> node)
         {
             _node = node;
-            _node.AddListener(PropagateValue, doNotCallThisTime: true);
+            _node.AddListener(PropagateValue, do_not_call_this_time: true);
         }
 
         //--------------------------------------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ namespace _UTIL_
         {
             _input?.RemoveListener(PropagateValue);
             _input = input;
-            _input.AddListener(PropagateValue, doNotCallThisTime: doNotCallThisTime);
+            _input.AddListener(PropagateValue, do_not_call_this_time: doNotCallThisTime);
         }
 
         //--------------------------------------------------------------------------------------------------------------

@@ -138,24 +138,24 @@ namespace _UTIL_
                     return false;
         }
 
-        public void AddListener(in Action action, in bool doNotCallThisTime = false)
+        public void AddListener(in Action action, in bool do_not_call_this_time = false)
         {
             lock (this)
             {
                 onChange -= action;
                 onChange += action;
-                if (!doNotCallThisTime)
+                if (!do_not_call_this_time)
                     action();
             }
         }
 
-        public void AddListener(in Action<T> action, in bool doNotCallThisTime = false)
+        public void AddListener(in Action<T> action, in bool do_not_call_this_time = false)
         {
             lock (this)
             {
                 onChangeT -= action;
                 onChangeT += action;
-                if (!doNotCallThisTime)
+                if (!do_not_call_this_time)
                     action(Value);
             }
         }
