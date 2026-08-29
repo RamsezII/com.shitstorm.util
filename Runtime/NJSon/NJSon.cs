@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
 
@@ -19,6 +21,9 @@ partial class Util
         BindingFlags.Static;
 
     //----------------------------------------------------------------------------------------------------------
+
+    public static IEnumerable<FieldInfo> EFields(in object target, in Type type = null) => (type ?? target.GetType()).GetFields(BindingFlagsALL);
+    public static IEnumerable<(FieldInfo field, T attribute)> EFields<T>(in object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
 
     public static void WriteFields<T>(this JObject jobj, in object target, in Type type = null) where T : Attribute
     {
