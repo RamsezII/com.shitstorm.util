@@ -22,8 +22,9 @@ partial class Util
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static IEnumerable<FieldInfo> EFields(in object target, in Type type = null) => (type ?? target.GetType()).GetFields(BindingFlagsALL);
-    public static IEnumerable<(FieldInfo field, T attribute)> EFields<T>(in object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
+    public static IEnumerable<FieldInfo> EFields(this object target, in Type type = null) => (type ?? target.GetType()).GetFields(BindingFlagsALL);
+    public static IEnumerable<FieldInfo> EFields<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Where(field => field.GetCustomAttribute<T>() != null);
+    public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
 
     public static void WriteFields<T>(this JObject jobj, in object target, in Type type = null) where T : Attribute
     {
