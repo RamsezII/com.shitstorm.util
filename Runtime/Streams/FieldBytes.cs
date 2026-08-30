@@ -13,7 +13,7 @@ partial class Util
 {
     public static void WriteFields<T>(this BinaryWriter writer, in object target, Type type = null) where T : Attribute
     {
-        foreach (var field in (type ?? target.GetType()).EFields<T>())
+        foreach (var field in target.EFields<T>(type))
             WriteFields(writer, field.GetValue(target));
     }
 
@@ -55,7 +55,7 @@ partial class Util
 
     public static void ReadFields<T>(this BinaryReader reader, in object target, in Type type = null) where T : Attribute
     {
-        foreach (var field in (type ?? target.GetType()).EFields<T>())
+        foreach (var field in target.EFields<T>(type))
             field.SetValue(target, ReadFields(reader, field.FieldType));
     }
 
