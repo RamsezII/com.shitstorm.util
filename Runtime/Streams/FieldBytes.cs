@@ -56,7 +56,7 @@ partial class Util
     public static void ReadFields<T>(this BinaryReader reader, in object target, in Type type = null) where T : Attribute
     {
         foreach (var field in (type ?? target.GetType()).EFields<T>())
-            ReadFields(reader, field.FieldType);
+            field.SetValue(target, ReadFields(reader, field.FieldType));
     }
 
     public static object ReadFields(this BinaryReader reader, in Type type)

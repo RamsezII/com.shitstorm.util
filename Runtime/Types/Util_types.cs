@@ -17,7 +17,7 @@ partial class Util
     public static Type ReadType(this BinaryReader reader)
     {
         string typeName = reader.ReadString();
-        if (string.IsNullOrEmpty(typeName))
+        if (!string.IsNullOrEmpty(typeName))
             return CastType(typeName);
         return null;
     }
