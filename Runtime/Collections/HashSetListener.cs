@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace _UTIL_
 {
@@ -42,16 +43,21 @@ namespace _UTIL_
     {
     }
 
-    public class HashSetListener<T> : CollectionListener<HashSet<T>, T>
+    public class HashSetListener<TItem> : CollectionListener<HashSet<TItem>, TItem>
     {
-        public void AddElement(T element)
+        public Action<TItem, bool>
+            _listeners3;
+
+        //------------------------------------------------------------------------------------------------------------------------------
+
+        public void AddElement(TItem element)
         {
             lock (this)
                 if (!_collection.Contains(element))
                     Modify(set => set.Add(element));
         }
 
-        public bool RemoveElement(T element)
+        public bool RemoveElement(TItem element)
         {
             lock (this)
             {
@@ -61,13 +67,27 @@ namespace _UTIL_
             }
         }
 
-        public bool ToggleElement(T element)
+
+        public void AddListener3(in Action<TItem, bool> action, in bool do_not_call_this_time = false)
+        {
+            lock (this)
+            {
+                _listeners3 -= action;
+                _listeners3 += action;
+
+                if (!do_not_call_this_time)
+                    foreach (var e in _collection)
+                        action(e, true);
+            }
+        }
+
+        public bool ToggleElement(TItem element)
         {
             lock (this)
                 return ToggleElement(element, !_collection.Contains(element));
         }
 
-        public bool ToggleElement(T element, in bool toggle)
+        public bool ToggleElement(TItem element, in bool toggle)
         {
             lock (this)
             {
