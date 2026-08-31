@@ -33,4 +33,18 @@ public static partial class Util
         }
         action?.Invoke();
     }
+
+    public static IEnumerator<float> EWaitForProgression(this Func<float> progression, Action action, Action dispose = null)
+    {
+        try
+        {
+            float current = 0;
+            while ((current = progression()) < 1)
+                yield return current;
+        }
+        finally
+        {
+            dispose?.Invoke();
+        }
+    }
 }

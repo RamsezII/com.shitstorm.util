@@ -55,6 +55,15 @@ namespace _UTIL_
         public bool Has => Value != null;
         public bool Had => old != null;
 
+        //------------------------------------------------------------------------------------------------------------------------------
+
+        public ValueNotifier(in T init = default)
+        {
+            _value = old = init;
+        }
+
+        //------------------------------------------------------------------------------------------------------------------------------
+
         public bool HasT(out T value)
         {
             value = _value;
@@ -67,14 +76,7 @@ namespace _UTIL_
             return Had;
         }
 
-        //------------------------------------------------------------------------------------------------------------------------------
-
-        public ValueNotifier(in T init = default)
-        {
-            _value = old = init;
-        }
-
-        //------------------------------------------------------------------------------------------------------------------------------
+        public bool WasLastChangedThisFrame => changed && last_frame == Time.frameCount;
 
         public void Reset()
         {
