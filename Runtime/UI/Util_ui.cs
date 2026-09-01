@@ -57,13 +57,21 @@ partial class Util
         return lp;
     }
 
-    public static Rect GetScreenRect(this RectTransform rT)
+    public static Rect GetScreenRect(this RectTransform rT, Camera camera)
     {
         lock (rt_corners)
         {
             rT.GetWorldCorners(rt_corners);
-            Vector2 min = rt_corners[0];
-            Vector2 max = rt_corners[2];
+            Vector2 min = new(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 max = new(float.NegativeInfinity, float.NegativeInfinity);
+
+            for (int i = 0; i < rt_corners.Length; ++i)
+            {
+                Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(camera, rt_corners[i]);
+                min = Vector2.Min(min, screenPoint);
+                max = Vector2.Max(max, screenPoint);
+            }
+
             return new(min, max - min);
         }
     }
