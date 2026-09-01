@@ -66,7 +66,8 @@ namespace _UTIL_
             {
                 bool contained = false;
                 Modify(set => contained = set.Remove(element));
-                _listeners3?.Invoke(element, false);
+                if (contained)
+                    _listeners3?.Invoke(element, false);
                 return contained;
             }
         }
