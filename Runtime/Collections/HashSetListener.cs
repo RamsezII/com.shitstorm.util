@@ -54,7 +54,10 @@ namespace _UTIL_
         {
             lock (this)
                 if (!_collection.Contains(element))
+                {
                     Modify(set => set.Add(element));
+                    _listeners3?.Invoke(element, true);
+                }
         }
 
         public bool RemoveElement(TItem element)
@@ -63,6 +66,7 @@ namespace _UTIL_
             {
                 bool contained = false;
                 Modify(set => contained = set.Remove(element));
+                _listeners3?.Invoke(element, false);
                 return contained;
             }
         }
