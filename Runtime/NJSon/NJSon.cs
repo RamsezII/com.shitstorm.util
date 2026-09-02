@@ -7,7 +7,12 @@ using Newtonsoft.Json.Linq;
 namespace _UTIL_
 {
     [AttributeUsage(AttributeTargets.Field)]
-    public sealed class NJFieldAttribute : Attribute
+    public class NJTextAttribute : Attribute
+    {
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
+    public class NJEditAttribute : NJTextAttribute
     {
     }
 }
