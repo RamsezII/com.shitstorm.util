@@ -9,13 +9,24 @@ using UnityEngine;
 namespace _UTIL_
 {
     [AttributeUsage(AttributeTargets.Field)]
-    public class NJTextAttribute : Attribute
+    public class NJFieldAttribute : Attribute
     {
+        public readonly bool editable;
+        public NJFieldAttribute(bool editable = true)
+        {
+            this.editable = editable;
+        }
     }
 
     [AttributeUsage(AttributeTargets.Field)]
-    public class NJEditAttribute : NJTextAttribute
+    public class NJSliderAttribute : NJFieldAttribute
     {
+        internal readonly float min, max;
+        public NJSliderAttribute(float min, float max)
+        {
+            this.min = min;
+            this.max = max;
+        }
     }
 }
 
