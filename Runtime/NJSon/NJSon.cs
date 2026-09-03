@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace _UTIL_
 {
@@ -25,6 +27,15 @@ partial class Util
         BindingFlags.Instance |
         BindingFlags.Static;
 
+    static readonly JsonSerializer njSerializer = CreateNJSerializer();
+
+    static JsonSerializer CreateNJSerializer()
+    {
+        JsonSerializer serializer = new();
+        serializer.Converters.Add(new UnityStructJsonConverter());
+        return serializer;
+    }
+
     //----------------------------------------------------------------------------------------------------------
 
     public static IEnumerable<FieldInfo> EFields(this object target, in Type type = null) => (type ?? target.GetType()).GetFields(BindingFlagsALL);
@@ -40,7 +51,7 @@ partial class Util
                 continue;
 
             object value = field.GetValue(target);
-            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
+            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
         }
     }
 
@@ -56,7 +67,7 @@ partial class Util
                 continue;
 
             if (token.Type != JTokenType.Null)
-                field.SetValue(target, token.ToObject(field.FieldType));
+                field.SetValue(target, token.ToObject(field.FieldType, njSerializer));
             else
             {
                 // null autorisé uniquement pour références et Nullable<T>
@@ -64,5 +75,45 @@ partial class Util
                     field.SetValue(target, null);
             }
         }
+    }
+}
+
+sealed class UnityStructJsonConverter : JsonConverter
+{
+    static readonly HashSet<Type> supportedTypes = new()
+    {
+        typeof(Vector2),
+        typeof(Vector3),
+        typeof(Vector4),
+        typeof(Vector2Int),
+        typeof(Vector3Int),
+        typeof(Quaternion),
+        typeof(Color),
+        typeof(Color32),
+        typeof(Rect),
+        typeof(RectInt),
+        typeof(Bounds),
+        typeof(BoundsInt),
+        typeof(Ray),
+        typeof(Ray2D),
+        typeof(Plane),
+        typeof(Matrix4x4),
+        typeof(LayerMask),
+    };
+
+    public override bool CanConvert(Type objectType) => supportedTypes.Contains(objectType);
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        JToken.Parse(JsonUtility.ToJson(value)).WriteTo(writer);
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        if (reader.TokenType == JsonToken.Null)
+            return Activator.CreateInstance(objectType);
+
+        JToken token = JToken.Load(reader);
+        return JsonUtility.FromJson(token.ToString(Formatting.None), objectType);
     }
 }
