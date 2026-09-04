@@ -64,6 +64,14 @@ namespace _UTIL_
         ScrollY,
     }
 
+    public enum AxisCompositePart
+    {
+        /// <summary>The negative direction of a <c>1DAxis</c> composite.</summary>
+        Negative,
+        /// <summary>The positive direction of a <c>1DAxis</c> composite.</summary>
+        Positive,
+    }
+
     public enum Vector2CompositePart
     {
         /// <summary>The upward direction of a <c>2DVector</c> composite.</summary>
@@ -111,6 +119,22 @@ namespace _UTIL_
 
             _ => throw new ArgumentOutOfRangeException(nameof(control)),
         };
+
+        public static CompositeSyntax AddCompositeBinding_1DAxis(this InputAction action) => action.AddCompositeBinding("1DAxis");
+
+        public static CompositeSyntax With_gamepad(this CompositeSyntax composite, in AxisCompositePart part, in GamepadButton button) => composite.With(part switch
+        {
+            AxisCompositePart.Negative => "Negative",
+            AxisCompositePart.Positive => "Positive",
+            _ => throw new ArgumentOutOfRangeException(nameof(part)),
+        }, $"<Gamepad>/{button}");
+
+        public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in AxisCompositePart part, in Key key) => composite.With(part switch
+        {
+            AxisCompositePart.Negative => "Negative",
+            AxisCompositePart.Positive => "Positive",
+            _ => throw new ArgumentOutOfRangeException(nameof(part)),
+        }, $"<Keyboard>/{key}");
 
         public static CompositeSyntax AddCompositeBinding_2DVector(this InputAction action) => action.AddCompositeBinding("2DVector");
 
