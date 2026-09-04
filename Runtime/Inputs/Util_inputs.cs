@@ -64,6 +64,18 @@ namespace _UTIL_
         ScrollY,
     }
 
+    public enum Vector2CompositePart
+    {
+        /// <summary>The upward direction of a <c>2DVector</c> composite.</summary>
+        Up,
+        /// <summary>The downward direction of a <c>2DVector</c> composite.</summary>
+        Down,
+        /// <summary>The leftward direction of a <c>2DVector</c> composite.</summary>
+        Left,
+        /// <summary>The rightward direction of a <c>2DVector</c> composite.</summary>
+        Right,
+    }
+
     public static partial class Util_inputs
     {
         public static string Path(this GamepadSpecial control) => control switch
@@ -99,6 +111,17 @@ namespace _UTIL_
 
             _ => throw new ArgumentOutOfRangeException(nameof(control)),
         };
+
+        public static CompositeSyntax AddCompositeBinding_2DVector(this InputAction action) => action.AddCompositeBinding("2DVector");
+
+        public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in Vector2CompositePart part, in Key key) => composite.With(part switch
+        {
+            Vector2CompositePart.Up => "Up",
+            Vector2CompositePart.Down => "Down",
+            Vector2CompositePart.Left => "Left",
+            Vector2CompositePart.Right => "Right",
+            _ => throw new ArgumentOutOfRangeException(nameof(part)),
+        }, $"<Keyboard>/{key}");
 
         public static BindingSyntax AddBinding_keyboard(this InputAction action, in Key key) => action.AddBinding($"<Keyboard>/{key}");
         public static BindingSyntax AddBinding_keyboard_special(this InputAction action, in KeyboardSpecial key) => action.AddBinding($"<Keyboard>/{key}");
