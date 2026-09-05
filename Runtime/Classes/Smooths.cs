@@ -56,10 +56,17 @@ namespace _UTIL_
             return base.Update(value, true);
         }
 
-        public bool SmoothDamp(in float damp, in float deltaTime)
+        public bool SmoothDamp(in float smoothTime, in float deltaTime)
         {
             if (deltaTime > 0)
-                return Update(Mathf.SmoothDamp(_value, target, ref velocity, damp, Mathf.Infinity, deltaTime), false);
+                return Update(Mathf.SmoothDamp(_value, target, ref velocity, smoothTime, Mathf.Infinity, deltaTime), false);
+            return false;
+        }
+
+        public bool SmoothDampElastic(in float smoothTime, in float elastic, in float deltaTime)
+        {
+            if (deltaTime > 0)
+                return Update(Mathf.SmoothDamp(_value, _value + elastic * (target - _value), ref velocity, smoothTime, Mathf.Infinity, deltaTime), false);
             return false;
         }
 
