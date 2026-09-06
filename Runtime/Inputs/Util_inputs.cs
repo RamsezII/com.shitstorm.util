@@ -86,6 +86,52 @@ namespace _UTIL_
 
     public static partial class Util_inputs
     {
+        public static string Path(this Key key) => key switch
+        {
+            Key.None => throw new ArgumentOutOfRangeException(nameof(key)),
+            Key.Digit0 => "0",
+            Key.Digit1 => "1",
+            Key.Digit2 => "2",
+            Key.Digit3 => "3",
+            Key.Digit4 => "4",
+            Key.Digit5 => "5",
+            Key.Digit6 => "6",
+            Key.Digit7 => "7",
+            Key.Digit8 => "8",
+            Key.Digit9 => "9",
+            _ when Enum.IsDefined(typeof(Key), key) => key.ToString(),
+            _ => throw new ArgumentOutOfRangeException(nameof(key)),
+        };
+
+        public static string Path(this KeyboardSpecial key) => key switch
+        {
+            KeyboardSpecial.Shift => "shift",
+            KeyboardSpecial.Ctrl => "ctrl",
+            KeyboardSpecial.Alt => "alt",
+            _ => throw new ArgumentOutOfRangeException(nameof(key)),
+        };
+
+        public static string Path(this GamepadButton button) => button switch
+        {
+            GamepadButton.DpadUp => "dpad/up",
+            GamepadButton.DpadDown => "dpad/down",
+            GamepadButton.DpadLeft => "dpad/left",
+            GamepadButton.DpadRight => "dpad/right",
+            GamepadButton.North => "buttonNorth",
+            GamepadButton.East => "buttonEast",
+            GamepadButton.South => "buttonSouth",
+            GamepadButton.West => "buttonWest",
+            GamepadButton.LeftStick => "leftStickPress",
+            GamepadButton.RightStick => "rightStickPress",
+            GamepadButton.LeftShoulder => "leftShoulder",
+            GamepadButton.RightShoulder => "rightShoulder",
+            GamepadButton.Start => "start",
+            GamepadButton.Select => "select",
+            GamepadButton.LeftTrigger => "leftTrigger",
+            GamepadButton.RightTrigger => "rightTrigger",
+            _ => throw new ArgumentOutOfRangeException(nameof(button)),
+        };
+
         public static string Path(this GamepadSpecial control) => control switch
         {
             GamepadSpecial.LeftStick => "leftStick",
@@ -101,6 +147,16 @@ namespace _UTIL_
             GamepadSpecial.DpadY => "dpad/y",
 
             _ => throw new ArgumentOutOfRangeException(nameof(control)),
+        };
+
+        public static string Path(this MouseButton button) => button switch
+        {
+            MouseButton.Left => "leftButton",
+            MouseButton.Right => "rightButton",
+            MouseButton.Middle => "middleButton",
+            MouseButton.Forward => "forwardButton",
+            MouseButton.Back => "backButton",
+            _ => throw new ArgumentOutOfRangeException(nameof(button)),
         };
 
         public static string Path(this MouseSpecial control) => control switch
@@ -127,14 +183,14 @@ namespace _UTIL_
             AxisCompositePart.Negative => "Negative",
             AxisCompositePart.Positive => "Positive",
             _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        }, $"<Gamepad>/{button}");
+        }, $"<Gamepad>/{button.Path()}");
 
         public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in AxisCompositePart part, in Key key) => composite.With(part switch
         {
             AxisCompositePart.Negative => "Negative",
             AxisCompositePart.Positive => "Positive",
             _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        }, $"<Keyboard>/{key}");
+        }, $"<Keyboard>/{key.Path()}");
 
         public static CompositeSyntax AddCompositeBinding_2DVector(this InputAction action) => action.AddCompositeBinding("2DVector");
 
@@ -145,14 +201,14 @@ namespace _UTIL_
             Vector2CompositePart.Left => "Left",
             Vector2CompositePart.Right => "Right",
             _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        }, $"<Keyboard>/{key}");
+        }, $"<Keyboard>/{key.Path()}");
 
-        public static BindingSyntax AddBinding_keyboard(this InputAction action, in Key key) => action.AddBinding($"<Keyboard>/{key}");
-        public static BindingSyntax AddBinding_keyboard_special(this InputAction action, in KeyboardSpecial key) => action.AddBinding($"<Keyboard>/{key}");
-        public static BindingSyntax AddBinding_gamepad(this InputAction action, in GamepadButton button) => action.AddBinding($"<Gamepad>/{button}");
+        public static BindingSyntax AddBinding_keyboard(this InputAction action, in Key key) => action.AddBinding($"<Keyboard>/{key.Path()}");
+        public static BindingSyntax AddBinding_keyboard_special(this InputAction action, in KeyboardSpecial key) => action.AddBinding($"<Keyboard>/{key.Path()}");
+        public static BindingSyntax AddBinding_gamepad(this InputAction action, in GamepadButton button) => action.AddBinding($"<Gamepad>/{button.Path()}");
         public static BindingSyntax AddBinding_gamepad_special(this InputAction action, in GamepadSpecial control) => action.AddBinding($"<Gamepad>/{control.Path()}");
         public static BindingSyntax AddBinding_mouse_special(this InputAction action, in MouseSpecial control) => action.AddBinding($"<Mouse>/{control.Path()}");
-        public static BindingSyntax AddBinding_mouse(this InputAction action, in MouseButton button) => action.AddBinding($"<Mouse>/{button}Button");
+        public static BindingSyntax AddBinding_mouse(this InputAction action, in MouseButton button) => action.AddBinding($"<Mouse>/{button.Path()}");
     }
 }
 #endif
