@@ -1,0 +1,24 @@
+{
+    "name": "ram._UTIL_.UGUI",
+    "rootNamespace": "",
+    "references": [
+        "GUID:ec96f6dc48fee4244bcebc247464e471"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "HAS_UGUI"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.ugui",
+            "expression": "",
+            "define": "HAS_UGUI"
+        }
+    ],
+    "noEngineReferences": false
+}
