@@ -194,6 +194,12 @@ namespace _UTIL_
 
         public static CompositeSyntax AddCompositeBinding_2DVector(this InputAction action) => action.AddCompositeBinding("2DVector");
 
+        public static CompositeSyntax AddCompositeBinding_2DVector_ZQSD(this InputAction action) => action.AddCompositeBinding_2DVector()
+            .With_keyboard(Vector2CompositePart.Up, Key.W)
+            .With_keyboard(Vector2CompositePart.Down, Key.S)
+            .With_keyboard(Vector2CompositePart.Left, Key.A)
+            .With_keyboard(Vector2CompositePart.Right, Key.D);
+
         public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in Vector2CompositePart part, in Key key) => composite.With(part switch
         {
             Vector2CompositePart.Up => "Up",
