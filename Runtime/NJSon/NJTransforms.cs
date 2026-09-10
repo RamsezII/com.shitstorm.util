@@ -1,5 +1,4 @@
 ﻿using _UTIL_;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Reflection;
@@ -31,7 +30,7 @@ namespace _UTIL_
 
 partial class Util
 {
-    public static void WriteNJTransforms(this JObject jobj, object target, in Transform root)
+    public static void SaveNJTransforms(this JObject jobj, object target, in Transform root)
     {
         foreach (var field in target.GetType().GetFields(BindingFlagsALL))
             if (field.FieldType == typeof(Transform) && field.GetValue(target) is Transform transform)
@@ -46,19 +45,19 @@ partial class Util
                 };
 
                 if (attr.flags.HasFlag(NJTransformFlags.Position))
-                    jobj[nameof(transform.localPosition)] = JsonConvert.SerializeObject(transform.localPosition);
+                    jtfm[nameof(transform.localPosition)] = transform.localPosition.ToJObject();
 
                 if (attr.flags.HasFlag(NJTransformFlags.Rotation))
-                    jobj[nameof(transform.localEulerAngles)] = JsonConvert.SerializeObject(transform.localEulerAngles.SignedEulers());
+                    jtfm[nameof(transform.localEulerAngles)] = transform.localEulerAngles.SignedEulers().ToJObject();
 
                 if (attr.flags.HasFlag(NJTransformFlags.Scale))
-                    jobj[nameof(transform.localScale)] = JsonConvert.SerializeObject(transform.localScale);
+                    jtfm[nameof(transform.localScale)] = transform.localScale.ToJObject();
 
                 jobj[field.Name] = jtfm;
             }
     }
 
-    public static void ReadNJTransforms(this JObject jobj, object target, in Transform root)
+    public static void LoadNJTransforms(this JObject jobj, object target, in Transform root)
     {
         foreach (var field in target.GetType().GetFields(BindingFlagsALL))
             if (field.FieldType == typeof(Transform))
