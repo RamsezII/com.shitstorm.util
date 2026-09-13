@@ -2,6 +2,18 @@
 
 public static partial class Util
 {
+    // Exponential smoothing: timeConstant seconds absorbs ~63% of the gap to a constant target.
+    // A non-positive deltaTime keeps the current value; a non-positive timeConstant snaps to the target.
+    public static float ExpSmoothFactor(in float timeConstant, in float deltaTime) => deltaTime <= 0f ? 0f : timeConstant <= 0f ? 1f : 1f - Mathf.Exp(-deltaTime / timeConstant);
+
+    public static float ExpSmooth(in float current, in float target, in float timeConstant, in float deltaTime) => Mathf.Lerp(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+    public static Vector2 ExpSmooth(in Vector2 current, in Vector2 target, in float timeConstant, in float deltaTime) => Vector2.Lerp(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+    public static Vector3 ExpSmooth(in Vector3 current, in Vector3 target, in float timeConstant, in float deltaTime) => Vector3.Lerp(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+    public static Vector4 ExpSmooth(in Vector4 current, in Vector4 target, in float timeConstant, in float deltaTime) => Vector4.Lerp(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+    public static Color ExpSmooth(in Color current, in Color target, in float timeConstant, in float deltaTime) => Color.Lerp(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+    public static Quaternion ExpSmooth(in Quaternion current, in Quaternion target, in float timeConstant, in float deltaTime) => Quaternion.Slerp(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+    public static float ExpSmoothAngle(in float current, in float target, in float timeConstant, in float deltaTime) => Mathf.LerpAngle(current, target, ExpSmoothFactor(timeConstant, deltaTime));
+
     public static float Clamp_ref(ref this float value, in float min, in float max) => Mathf.Clamp(value, min, max);
     public static float Clamp01_ref(ref this float value) => Mathf.Clamp01(value);
 
