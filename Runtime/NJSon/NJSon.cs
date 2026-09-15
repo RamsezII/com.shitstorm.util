@@ -53,9 +53,26 @@ partial class Util
     public static IEnumerable<FieldInfo> EFields<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Where(field => field.GetCustomAttribute<T>() != null);
     public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
 
+    public static void WriteFields<T>(this Dictionary<Type, JObject> jobjs, in object target, in Type type = null) where T : Attribute
+    {
+        foreach (var field in EFieldsByLayer(type ?? target.GetType()))
+        {
+            var attr = field.GetCustomAttribute<T>();
+            if (attr == null)
+                continue;
+
+            if (!jobjs.TryGetValue(field.DeclaringType, out var jobj))
+                jobjs.Add(field.DeclaringType, jobj = new());
+
+            object value = field.GetValue(target);
+            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
+        }
+    }
+
+    public static void WriteStaticFields<T>(this JObject jobj, in Type type) where T : Attribute => jobj.WriteFields<T>(target: null, type: type);
     public static void WriteFields<T>(this JObject jobj, in object target, in Type type = null) where T : Attribute
     {
-        foreach (var field in (type ?? target.GetType()).GetFields(BindingFlagsALL))
+        foreach (var field in EFieldsByLayer(type ?? target.GetType()))
         {
             var attr = field.GetCustomAttribute<T>();
             if (attr == null)
@@ -66,9 +83,10 @@ partial class Util
         }
     }
 
+    public static void ReadStaticFields<T>(this JObject jobj, in Type type) where T : Attribute => jobj.ReadFields<T>(target: null, type: type);
     public static void ReadFields<T>(this JObject jobj, in object target, in Type type = null) where T : Attribute
     {
-        foreach (var field in (type ?? target.GetType()).GetFields(BindingFlagsALL))
+        foreach (var field in EFieldsByLayer(type ?? target.GetType()))
         {
             var attr = field.GetCustomAttribute<T>();
             if (attr == null)
@@ -86,6 +104,38 @@ partial class Util
                     field.SetValue(target, null);
             }
         }
+    }
+
+    public static void ReadFields<T>(this Dictionary<Type, JObject> jobjs, in object target, in Type type = null) where T : Attribute
+    {
+        foreach (var field in EFieldsByLayer(type ?? target.GetType()))
+        {
+            var attr = field.GetCustomAttribute<T>();
+            if (attr == null)
+                continue;
+
+            if (!jobjs.TryGetValue(field.DeclaringType, out var jobj))
+                continue;
+
+            if (!jobj.TryGetValue(field.Name, out JToken token))
+                continue;
+
+            if (token.Type != JTokenType.Null)
+                field.SetValue(target, token.ToObject(field.FieldType, njSerializer));
+            else
+            {
+                // null autorisé uniquement pour références et Nullable<T>
+                if (!field.FieldType.IsValueType || Nullable.GetUnderlyingType(field.FieldType) != null)
+                    field.SetValue(target, null);
+            }
+        }
+    }
+
+    static IEnumerable<FieldInfo> EFieldsByLayer(Type type)
+    {
+        for (var layer = type; layer != null; layer = layer.BaseType)
+            foreach (var field in layer.GetFields(BindingFlagsALL | BindingFlags.DeclaredOnly))
+                yield return field;
     }
 }
 

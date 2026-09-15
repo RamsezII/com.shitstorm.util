@@ -69,7 +69,7 @@ public static partial class Util
             {
                 Transform tfm = parent.Find(name);
                 if (tfm == null)
-                    tfm = parent.ForceFind(name, true);
+                    tfm = parent.ForceFind(name);
                 else
                 {
                     Transform ptfm = tfm.parent;
@@ -78,9 +78,9 @@ public static partial class Util
                 }
                 clone = (T)tfm.gameObject.AddComponent(type);
             }
-
-            clone.transform.SetLocalPositionAndRotation(position, rotation);
         }
+
+        clone.transform.SetLocalPositionAndRotation(position, rotation);
 
         if (parent != null)
             log += $" ({clone.transform.GetPath(true)})";
@@ -116,7 +116,7 @@ public static partial class Util
             {
                 Transform tfm = parent.Find(resource_name);
                 if (tfm == null)
-                    tfm = parent.ForceFind(resource_name, true);
+                    tfm = parent.ForceFind(resource_name);
                 else
                 {
                     Transform ptfm = tfm.parent;

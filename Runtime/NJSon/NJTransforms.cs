@@ -30,7 +30,7 @@ namespace _UTIL_
 
 partial class Util
 {
-    public static void SaveNJTransforms(this JObject jobj, object target, in Transform root)
+    public static void WriteNJTransforms(this JObject jobj, object target, in Transform root)
     {
         foreach (var field in target.GetType().GetFields(BindingFlagsALL))
             if (field.FieldType == typeof(Transform) && field.GetValue(target) is Transform transform)
@@ -57,7 +57,7 @@ partial class Util
             }
     }
 
-    public static void LoadNJTransforms(this JObject jobj, object target, in Transform root)
+    public static void ReadNJTransforms(this JObject jobj, object target, in Transform root)
     {
         foreach (var field in target.GetType().GetFields(BindingFlagsALL))
             if (field.FieldType == typeof(Transform))
@@ -69,7 +69,7 @@ partial class Util
                 if (jobj[field.Name] is JObject jtfm)
                     if (jtfm.TryGetValue("relativePath", out var jpath))
                     {
-                        Transform transform = root.ForceFind((string)jpath, false);
+                        Transform transform = root.ForceFind((string)jpath);
 
                         if (attr.flags.HasFlag(NJTransformFlags.Position))
                             if (jtfm.TryGetValue(nameof(transform.localPosition), out var jpos))

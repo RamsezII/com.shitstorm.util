@@ -39,7 +39,7 @@ namespace _UTIL_
                 return null;
             }
 
-            Transform transform = root == null ? path.ForceFindTransform() : root.ForceFind(path, false);
+            Transform transform = root.ForceFind(path);
             transform.SetLocalPositionAndRotation(position, Quaternion.Euler(eulers));
             transform.localScale = scale;
 

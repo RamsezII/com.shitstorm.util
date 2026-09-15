@@ -14,7 +14,7 @@ partial class Util
     public static Transform ToTransform(this JObject jobj, in Transform root)
     {
         string path = (string)jobj["path"];
-        Transform T = root.ForceFind(path, force_new: false);
+        Transform T = root.ForceFind(path);
         T.localPosition = jobj["position"].ToVector3();
         T.localEulerAngles = jobj["rotation"].ToVector3();
         T.localScale = jobj["scale"].ToVector3();

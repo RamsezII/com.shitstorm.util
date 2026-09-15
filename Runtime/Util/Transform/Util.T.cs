@@ -45,23 +45,6 @@ public static partial class Util
             Object.Destroy(transform.GetChild(i).gameObject);
     }
 
-    public static Transform ForceFindTransform(this string path)
-    {
-        string[] splits = path.Split('/');
-        Transform root;
-
-        GameObject go = GameObject.Find(splits[0]);
-        if (go == null)
-            root = new GameObject(splits[0]).transform;
-        else
-            root = go.transform;
-
-        if (splits.Length == 1)
-            return root;
-        else
-            return ForceFind(root, splits[1..], false);
-    }
-
     public static bool TryFind(this Transform root, in string path, out Transform transform)
     {
         transform = root.Find(path);
@@ -83,38 +66,40 @@ public static partial class Util
         return false;
     }
 
-    public static T ForceFind<T>(this T root, in string path, in bool force_new) where T : Transform => ForceFind(root, path.Split('/'), force_new);
-    public static T ForceFind<T>(this T root, in IList<string> splits, in bool force_new) where T : Transform
+    public static Transform ForceFind(this Transform root, in string path, in bool clean = false)
     {
-        T t1 = root;
-        for (int i = 0; i < splits.Count - 1; ++i)
+        string[] branches = path.Split('/');
+        Transform current = root;
+
+        for (int i = 0; i < branches.Length; ++i)
         {
-            string branch = splits[i];
-            T t2 = (T)t1.Find(branch);
-            if (t2 == null)
+            string branch = branches[i];
+            bool isLast = i == branches.Length - 1;
+
+            if (current == null)
             {
-                if (typeof(T) == typeof(Transform))
-                    t2 = (T)new GameObject(branch).transform;
-                else
-                    t2 = (T)new GameObject(branch, typeof(T)).transform;
-
-                t2.SetParent(t1, false);
-                t2.name = branch;
+                current = new GameObject(branch).transform;
+                continue;
             }
-            t1 = t2;
+
+            Transform child = current.Find(branch);
+
+            if (child != null && clean && isLast)
+            {
+                child.SetParent(null);
+                Object.Destroy(child.gameObject);
+                child = null;
+            }
+
+            if (child == null)
+            {
+                child = new GameObject(branch).transform;
+                child.SetParent(current, false);
+            }
+
+            current = child;
         }
 
-        T t3 = (T)t1.Find(splits[^1]);
-        if (force_new || t3 == null)
-        {
-            if (typeof(T) == typeof(Transform))
-                t3 = (T)new GameObject(splits[^1]).transform;
-            else
-                t3 = (T)new GameObject(splits[^1], typeof(T)).transform;
-
-            t3.SetParent(t1, false);
-        }
-
-        return t3;
+        return current;
     }
 }
