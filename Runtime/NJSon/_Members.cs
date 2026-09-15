@@ -70,7 +70,7 @@ partial class Util
         object value = GetMemberValue(member, target);
 
         jobj[fieldName] = value != null
-            ? JToken.FromObject(value)
+            ? JToken.FromObject(value, njSerializer)
             : JValue.CreateNull();
     }
 
@@ -81,7 +81,7 @@ partial class Util
         object value;
 
         if (jobj.TryGetValue(fieldName, out var token) && token.Type != JTokenType.Null)
-            value = token.ToObject(GetMemberType(member));
+            value = token.ToObject(GetMemberType(member), njSerializer);
         else
             value = defaultValue;
 
