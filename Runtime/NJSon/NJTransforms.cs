@@ -39,6 +39,9 @@ partial class Util
                 if (attr == null)
                     continue;
 
+                if (transform == null)
+                    continue;
+
                 var jtfm = new JObject()
                 {
                     ["relativePath"] = transform.GetRelativePath(root),
