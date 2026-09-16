@@ -12,20 +12,93 @@ namespace _UTIL_
     public class NJFieldAttribute : Attribute
     {
         public readonly bool editable;
+
+        //--------------------------------------------------------------------------------------------------------------
+
         public NJFieldAttribute(bool editable = true)
         {
             this.editable = editable;
         }
     }
+}
 
-    [AttributeUsage(AttributeTargets.Field)]
-    public class NJSliderAttribute : NJFieldAttribute
+public sealed class NJDict : Dictionary<Type, JObject>
+{
+    public JObject GetOrAddLayerJObject<T>()
     {
-        internal readonly float min, max;
-        public NJSliderAttribute(float min, float max)
+        var type = typeof(T);
+
+        if (!TryGetValue(type, out var jobj))
+            Add(type, jobj = new());
+
+        return jobj;
+    }
+
+    public void SaveTexts<T>(Func<Type, string> getPath, bool log, in object target, in Type type = null) where T : Attribute
+    {
+        foreach (var field in (type ?? target.GetType()).EFieldsByLayer())
         {
-            this.min = min;
-            this.max = max;
+            var attr = field.GetCustomAttribute<T>();
+            if (attr == null)
+                continue;
+
+            if (!TryGetValue(field.DeclaringType, out var jobj))
+                Add(field.DeclaringType, jobj = new());
+
+            object value = field.GetValue(target);
+            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value, Util.njSerializer);
+        }
+
+        if (Count > 0)
+            foreach (var pair in this)
+            {
+                string spath = getPath(pair.Key);
+                pair.Value.NJSave(spath, log);
+            }
+    }
+
+    public void LoadTexts<TAttribute>(Type targetType, Func<Type, string> getPath, bool log) where TAttribute : Attribute
+    {
+        for (var t = targetType; t != null; t = t.BaseType)
+        {
+            string path = getPath(t);
+            if (path.TryNJRead(out JObject jobj, log_success: log))
+                Add(t, jobj);
+        }
+    }
+
+    public void LoadRTexts<TAttribute>(Type targetType, bool log) where TAttribute : Attribute
+    {
+        for (var t = targetType; t != null; t = t.BaseType)
+        {
+            string rname = t.GetJSonFileName_noTXT();
+            if (rname.TryNJRead_resource(out JObject jobj, log_success: log))
+                Add(t, jobj);
+        }
+    }
+
+    public void SetFields<TAttribute>(object target, Type targetType = null) where TAttribute : Attribute
+    {
+        foreach (var field in (targetType ?? target.GetType()).EFieldsByLayer())
+        {
+            var attr = field.GetCustomAttribute<TAttribute>();
+            if (attr == null)
+                continue;
+
+            if (!TryGetValue(field.DeclaringType, out var jobj))
+                continue;
+
+            if (!jobj.TryGetValue(field.Name, out JToken token))
+                continue;
+
+            if (token.Type != JTokenType.Null)
+                field.SetValue(target, token.ToObject(field.FieldType, Util.njSerializer));
+            else
+            {
+                // null autorisé uniquement pour références et Nullable<T>
+                if (!field.FieldType.IsValueType || Nullable.GetUnderlyingType(field.FieldType) != null)
+                    field.SetValue(target, null);
+            }
         }
     }
 }
@@ -38,7 +111,7 @@ partial class Util
         BindingFlags.Instance |
         BindingFlags.Static;
 
-    static readonly JsonSerializer njSerializer = CreateNJSerializer();
+    internal static readonly JsonSerializer njSerializer = CreateNJSerializer();
 
     static JsonSerializer CreateNJSerializer()
     {
@@ -49,24 +122,14 @@ partial class Util
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static IEnumerable<FieldInfo> EFields(this object target, in Type type = null) => (type ?? target.GetType()).GetFields(BindingFlagsALL);
-    public static IEnumerable<FieldInfo> EFields<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Where(field => field.GetCustomAttribute<T>() != null);
-    public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).GetFields(BindingFlagsALL).Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
+    public static IEnumerable<FieldInfo> EFields<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).EFieldsByLayer().Where(field => field.GetCustomAttribute<T>() != null);
+    public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).EFieldsByLayer().Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
 
-    public static void WriteFields<T>(this Dictionary<Type, JObject> jobjs, in object target, in Type type = null) where T : Attribute
+    public static IEnumerable<FieldInfo> EFieldsByLayer(this Type type)
     {
-        foreach (var field in EFieldsByLayer(type ?? target.GetType()))
-        {
-            var attr = field.GetCustomAttribute<T>();
-            if (attr == null)
-                continue;
-
-            if (!jobjs.TryGetValue(field.DeclaringType, out var jobj))
-                jobjs.Add(field.DeclaringType, jobj = new());
-
-            object value = field.GetValue(target);
-            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
-        }
+        for (var layer = type; layer != null; layer = layer.BaseType)
+            foreach (var field in layer.GetFields(BindingFlagsALL | BindingFlags.DeclaredOnly))
+                yield return field;
     }
 
     public static void WriteStaticFields<T>(this JObject jobj, in Type type) where T : Attribute => jobj.WriteFields<T>(target: null, type: type);
@@ -104,38 +167,6 @@ partial class Util
                     field.SetValue(target, null);
             }
         }
-    }
-
-    public static void ReadFields<T>(this Dictionary<Type, JObject> jobjs, in object target, in Type type = null) where T : Attribute
-    {
-        foreach (var field in EFieldsByLayer(type ?? target.GetType()))
-        {
-            var attr = field.GetCustomAttribute<T>();
-            if (attr == null)
-                continue;
-
-            if (!jobjs.TryGetValue(field.DeclaringType, out var jobj))
-                continue;
-
-            if (!jobj.TryGetValue(field.Name, out JToken token))
-                continue;
-
-            if (token.Type != JTokenType.Null)
-                field.SetValue(target, token.ToObject(field.FieldType, njSerializer));
-            else
-            {
-                // null autorisé uniquement pour références et Nullable<T>
-                if (!field.FieldType.IsValueType || Nullable.GetUnderlyingType(field.FieldType) != null)
-                    field.SetValue(target, null);
-            }
-        }
-    }
-
-    static IEnumerable<FieldInfo> EFieldsByLayer(Type type)
-    {
-        for (var layer = type; layer != null; layer = layer.BaseType)
-            foreach (var field in layer.GetFields(BindingFlagsALL | BindingFlags.DeclaredOnly))
-                yield return field;
     }
 }
 

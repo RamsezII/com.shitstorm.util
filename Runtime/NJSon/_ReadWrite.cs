@@ -69,12 +69,27 @@ partial class Util
         TextAsset rtext = Resources.Load<TextAsset>(rname);
         if (rtext == null)
             Debug.LogWarning($"{nameof(TryNJRead_resource)} no resource named: \"{rname}\"");
+        else if (string.IsNullOrWhiteSpace(rtext.text))
+            Debug.LogWarning($"{nameof(TryNJRead_resource)} empty resource text: \"{rname}\"");
         else
         {
-            njson = JsonConvert.DeserializeObject<T>(rtext.text);
-            if (log_success)
-                Debug.Log($"{nameof(TryNJRead_resource)}({rname})".ToSubLog());
-            return true;
+            try
+            {
+                njson = JsonConvert.DeserializeObject<T>(rtext.text);
+                if (njson == null)
+                    Debug.LogWarning($"{nameof(TryNJRead_resource)} empty njson in resource text: \"{rname}\"");
+                else
+                {
+                    if (log_success)
+                        Debug.Log($"{nameof(TryNJRead_resource)}({rname})".ToSubLog());
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                if (log_failure)
+                    Debug.LogWarning($"ERROR {nameof(TryNJRead_resource)}: \"{e.TrimmedExceptionMessage()}\" ({rname})");
+            }
         }
 
         njson = null;
