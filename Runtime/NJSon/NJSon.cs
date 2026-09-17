@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using _UTIL_;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
@@ -56,8 +57,7 @@ public sealed class NJDict : Dictionary<Type, JObject>
             if (!TryGetValue(field.DeclaringType, out var jobj))
                 Add(field.DeclaringType, jobj = new());
 
-            object value = field.GetValue(target);
-            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value, Util.njSerializer);
+            jobj[field.Name] = Util.GetNJFieldToken(field, target);
         }
 
         if (Count > 0)
@@ -109,20 +109,39 @@ public sealed class NJDict : Dictionary<Type, JObject>
             if (!jobj.TryGetValue(field.Name, out JToken token))
                 continue;
 
-            if (token.Type != JTokenType.Null)
-                field.SetValue(target, token.ToObject(field.FieldType, Util.njSerializer));
-            else
-            {
-                // null autorisé uniquement pour références et Nullable<T>
-                if (!field.FieldType.IsValueType || Nullable.GetUnderlyingType(field.FieldType) != null)
-                    field.SetValue(target, null);
-            }
+            Util.SetNJFieldToken(field, target, token);
         }
     }
 }
 
 partial class Util
 {
+    internal static JToken GetNJFieldToken(FieldInfo field, object target)
+    {
+        object value = field.GetValue(target);
+        if (value is IValueNotifier notifier)
+            value = notifier.BoxedValue;
+        return value == null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
+    }
+
+    internal static void SetNJFieldToken(FieldInfo field, object target, JToken token)
+    {
+        if (typeof(IValueNotifier).IsAssignableFrom(field.FieldType))
+        {
+            var notifier = field.GetValue(target) as IValueNotifier ?? throw new InvalidOperationException($"Initialize notifier {field.DeclaringType}.{field.Name} before loading settings.");
+            if (token.Type != JTokenType.Null)
+                notifier.BoxedValue = token.ToObject(notifier.ValueType, njSerializer);
+            else if (!notifier.ValueType.IsValueType || Nullable.GetUnderlyingType(notifier.ValueType) != null)
+                notifier.BoxedValue = null;
+            return;
+        }
+
+        if (token.Type != JTokenType.Null)
+            field.SetValue(target, token.ToObject(field.FieldType, njSerializer));
+        else if (!field.FieldType.IsValueType || Nullable.GetUnderlyingType(field.FieldType) != null)
+            field.SetValue(target, null);
+    }
+
     public const BindingFlags BindingFlagsALL =
         BindingFlags.Public |
         BindingFlags.NonPublic |
@@ -159,8 +178,7 @@ partial class Util
             if (attr == null)
                 continue;
 
-            object value = field.GetValue(target);
-            jobj[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
+            jobj[field.Name] = GetNJFieldToken(field, target);
         }
     }
 
@@ -176,14 +194,7 @@ partial class Util
             if (!jobj.TryGetValue(field.Name, out JToken token))
                 continue;
 
-            if (token.Type != JTokenType.Null)
-                field.SetValue(target, token.ToObject(field.FieldType, njSerializer));
-            else
-            {
-                // null autorisé uniquement pour références et Nullable<T>
-                if (!field.FieldType.IsValueType || Nullable.GetUnderlyingType(field.FieldType) != null)
-                    field.SetValue(target, null);
-            }
+            SetNJFieldToken(field, target, token);
         }
     }
 }
@@ -215,6 +226,12 @@ sealed class UnityStructJsonConverter : JsonConverter
 
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
+        if (value is LayerMask mask)
+        {
+            writer.WriteValue(mask.value);
+            return;
+        }
+
         JToken.Parse(JsonUtility.ToJson(value)).WriteTo(writer);
     }
 
@@ -224,6 +241,19 @@ sealed class UnityStructJsonConverter : JsonConverter
             return Activator.CreateInstance(objectType);
 
         JToken token = JToken.Load(reader);
+        if (objectType == typeof(LayerMask))
+        {
+            JToken bits = token is JObject obj ? obj["m_Mask"] ?? obj["m_Bits"] : token;
+            if (bits == null || bits.Type != JTokenType.Integer)
+                throw new JsonSerializationException("LayerMask must be an integer or an object containing m_Mask or m_Bits.");
+
+            long value = bits.Value<long>();
+            if (value < int.MinValue || value > uint.MaxValue)
+                throw new JsonSerializationException("LayerMask must contain a 32-bit mask.");
+
+            return (LayerMask)unchecked((int)value);
+        }
+
         return JsonUtility.FromJson(token.ToString(Formatting.None), objectType);
     }
 }

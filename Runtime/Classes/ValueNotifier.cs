@@ -18,6 +18,12 @@ partial class Util
 
 namespace _UTIL_
 {
+    public interface IValueNotifier
+    {
+        Type ValueType { get; }
+        object BoxedValue { get; set; }
+    }
+
     [Serializable]
     public class ValueNotifier : IDisposable
     {
@@ -42,8 +48,11 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public class ValueNotifier<T> : ValueNotifier
+    public class ValueNotifier<T> : ValueNotifier, IValueNotifier
     {
+        Type IValueNotifier.ValueType => typeof(T);
+        object IValueNotifier.BoxedValue { get => Value; set => Value = (T)value; }
+
         public bool changed;
         public int last_frame;
         public T _value, old;
