@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Reflection;
 
@@ -77,30 +77,37 @@ partial class Util
         WriteMember_custom(jobj, fieldName, value);
     }
 
-    public static bool ReadMember(this JObject jobj, object target, string fieldName, object defaultValue = null)
+    public static bool ReadMember(this JObject jobj, object target, string fieldName, object defaultValue = null, bool strict = false)
     {
         var member = FindMember(target.GetType(), fieldName) ?? throw new MissingMemberException(target.GetType().FullName, fieldName);
 
-        object value = ReadMember_custom(jobj, fieldName, GetMemberType(member), defaultValue);
+        object value = ReadMember_custom(jobj, fieldName, GetMemberType(member), defaultValue, strict);
         SetMemberValue(member, target, value);
         return jobj.ContainsKey(fieldName);
     }
 
-    public static T ReadMember_custom<T>(this JObject jobj, string memberName, T defaultValue = default)
+    public static T ReadMember_custom<T>(this JObject jobj, string memberName, T defaultValue = default, bool strict = false)
     {
-        return (T)ReadMember_custom(jobj, memberName, typeof(T), defaultValue);
+        return (T)ReadMember_custom(jobj, memberName, typeof(T), defaultValue, strict);
     }
 
-    static object ReadMember_custom(JObject jobj, string memberName, Type memberType, object defaultValue)
+    static object ReadMember_custom(JObject jobj, string memberName, Type memberType, object defaultValue, bool strict = false)
     {
-        if (!jobj.TryGetValue(memberName, out var token) || token.Type is JTokenType.Null or JTokenType.Undefined)
+        if (!jobj.TryGetValue(memberName, out var token))
             return defaultValue;
+
+        if (token.Type is JTokenType.Null or JTokenType.Undefined)
+        {
+            if (strict)
+                throw new Newtonsoft.Json.JsonSerializationException($"Member '{memberName}' cannot be null.");
+            return defaultValue;
+        }
 
         try
         {
             return token.ToObject(memberType, njSerializer);
         }
-        catch
+        catch when (!strict)
         {
             return defaultValue;
         }
