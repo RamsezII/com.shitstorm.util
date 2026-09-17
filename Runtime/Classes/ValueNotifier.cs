@@ -18,16 +18,19 @@ partial class Util
 
 namespace _UTIL_
 {
-    public interface IValueNotifier
-    {
-        Type ValueType { get; }
-        object BoxedValue { get; set; }
-    }
-
     [Serializable]
-    public class ValueNotifier : IDisposable
+    public abstract class ValueNotifier : IDisposable
     {
         public bool _disposed;
+        public readonly Type type;
+        public abstract object BoxedValue { set; get; }
+
+        //------------------------------------------------------------------------------------------------------------------------------
+
+        protected ValueNotifier(in Type type)
+        {
+            this.type = type;
+        }
 
         //------------------------------------------------------------------------------------------------------------------------------
 
@@ -48,11 +51,8 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public class ValueNotifier<T> : ValueNotifier, IValueNotifier
+    public class ValueNotifier<T> : ValueNotifier
     {
-        Type IValueNotifier.ValueType => typeof(T);
-        object IValueNotifier.BoxedValue { get => Value; set => Value = (T)value; }
-
         public bool changed;
         public int last_frame;
         public T _value, old;
@@ -61,12 +61,14 @@ namespace _UTIL_
         Action<T> onChangeT;
         public Action<T> onChangeT_once;
         public Func<T, T> processor;
-        public bool Has => Value != null;
+        public bool Has => _value != null;
         public bool Had => old != null;
+
+        public override object BoxedValue { set => Value = (T)value; get => _value; }
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public ValueNotifier(in T init = default)
+        public ValueNotifier(in T init = default) : base(typeof(T))
         {
             _value = old = init;
         }

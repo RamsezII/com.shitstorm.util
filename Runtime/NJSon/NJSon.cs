@@ -119,19 +119,19 @@ partial class Util
     internal static JToken GetNJFieldToken(FieldInfo field, object target)
     {
         object value = field.GetValue(target);
-        if (value is IValueNotifier notifier)
+        if (value is ValueNotifier notifier)
             value = notifier.BoxedValue;
         return value == null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
     }
 
     internal static void SetNJFieldToken(FieldInfo field, object target, JToken token)
     {
-        if (typeof(IValueNotifier).IsAssignableFrom(field.FieldType))
+        if (typeof(ValueNotifier).IsAssignableFrom(field.FieldType))
         {
-            var notifier = field.GetValue(target) as IValueNotifier ?? throw new InvalidOperationException($"Initialize notifier {field.DeclaringType}.{field.Name} before loading settings.");
+            var notifier = field.GetValue(target) as ValueNotifier ?? throw new InvalidOperationException($"Initialize notifier {field.DeclaringType}.{field.Name} before loading settings.");
             if (token.Type != JTokenType.Null)
-                notifier.BoxedValue = token.ToObject(notifier.ValueType, njSerializer);
-            else if (!notifier.ValueType.IsValueType || Nullable.GetUnderlyingType(notifier.ValueType) != null)
+                notifier.BoxedValue = token.ToObject(notifier.type, njSerializer);
+            else if (!notifier.type.IsValueType || Nullable.GetUnderlyingType(notifier.type) != null)
                 notifier.BoxedValue = null;
             return;
         }
