@@ -63,29 +63,46 @@ partial class Util
         }
     }
 
+    public static void WriteMember_custom<T>(this JObject jobj, string memberName, T value)
+    {
+        jobj[memberName] = value is null ? JValue.CreateNull() : JToken.FromObject(value, njSerializer);
+    }
+
     public static void WriteMember(this JObject jobj, object target, string fieldName)
     {
         var member = FindMember(target.GetType(), fieldName) ?? throw new MissingMemberException(target.GetType().FullName, fieldName);
 
         object value = GetMemberValue(member, target);
 
-        jobj[fieldName] = value != null
-            ? JToken.FromObject(value, njSerializer)
-            : JValue.CreateNull();
+        WriteMember_custom(jobj, fieldName, value);
     }
 
     public static bool ReadMember(this JObject jobj, object target, string fieldName, object defaultValue = null)
     {
         var member = FindMember(target.GetType(), fieldName) ?? throw new MissingMemberException(target.GetType().FullName, fieldName);
 
-        object value;
-
-        if (jobj.TryGetValue(fieldName, out var token) && token.Type != JTokenType.Null)
-            value = token.ToObject(GetMemberType(member), njSerializer);
-        else
-            value = defaultValue;
-
+        object value = ReadMember_custom(jobj, fieldName, GetMemberType(member), defaultValue);
         SetMemberValue(member, target, value);
-        return token != null;
+        return jobj.ContainsKey(fieldName);
+    }
+
+    public static T ReadMember_custom<T>(this JObject jobj, string memberName, T defaultValue = default)
+    {
+        return (T)ReadMember_custom(jobj, memberName, typeof(T), defaultValue);
+    }
+
+    static object ReadMember_custom(JObject jobj, string memberName, Type memberType, object defaultValue)
+    {
+        if (!jobj.TryGetValue(memberName, out var token) || token.Type is JTokenType.Null or JTokenType.Undefined)
+            return defaultValue;
+
+        try
+        {
+            return token.ToObject(memberType, njSerializer);
+        }
+        catch
+        {
+            return defaultValue;
+        }
     }
 }

@@ -24,6 +24,17 @@ namespace _UTIL_
 
 public sealed class NJDict : Dictionary<Type, JObject>
 {
+    public readonly Type limit;
+
+    //--------------------------------------------------------------------------------------------------------------
+
+    public NJDict(Type included_limit)
+    {
+        limit = included_limit?.BaseType ?? null;
+    }
+
+    //--------------------------------------------------------------------------------------------------------------
+
     public JObject GetOrAddLayerJObject<T>()
     {
         var type = typeof(T);
@@ -36,7 +47,7 @@ public sealed class NJDict : Dictionary<Type, JObject>
 
     public void SaveTexts<T>(Func<Type, string> getPath, bool log, in object target, in Type type = null) where T : Attribute
     {
-        foreach (var field in (type ?? target.GetType()).EFieldsByLayer())
+        foreach (var field in (type ?? target.GetType()).EFieldsByLayer(limit))
         {
             var attr = field.GetCustomAttribute<T>();
             if (attr == null)
@@ -57,29 +68,36 @@ public sealed class NJDict : Dictionary<Type, JObject>
             }
     }
 
-    public void LoadTexts<TAttribute>(Type targetType, Func<Type, string> getPath, bool log) where TAttribute : Attribute
+    IEnumerable<Type> ETextLayers<TAttribute, TTextAttribute>(Type targetType) where TAttribute : Attribute where TTextAttribute : Attribute
     {
-        for (var t = targetType; t != null; t = t.BaseType)
+        for (var t = targetType; t != null && t != limit; t = t.BaseType)
+            if (t.IsDefined(typeof(TTextAttribute), inherit: false) || t.GetFields(Util.BindingFlagsALL | BindingFlags.DeclaredOnly).Any(field => field.IsDefined(typeof(TAttribute), inherit: false)))
+                yield return t;
+    }
+
+    public void LoadTexts<TAttribute, TTextAttribute>(Type targetType, Func<Type, string> getPath, bool log) where TAttribute : Attribute where TTextAttribute : Attribute
+    {
+        foreach (var t in ETextLayers<TAttribute, TTextAttribute>(targetType))
         {
             string path = getPath(t);
-            if (path.TryNJRead(out JObject jobj, log_success: log))
+            if (path.TryNJRead(out JObject jobj, log_success: log, log_failure: t == targetType))
                 Add(t, jobj);
         }
     }
 
-    public void LoadRTexts<TAttribute>(Type targetType, bool log) where TAttribute : Attribute
+    public void LoadRTexts<TAttribute, TTextAttribute>(Type targetType, bool log) where TAttribute : Attribute where TTextAttribute : Attribute
     {
-        for (var t = targetType; t != null; t = t.BaseType)
+        foreach (var t in ETextLayers<TAttribute, TTextAttribute>(targetType))
         {
             string rname = t.GetJSonFileName_noTXT();
-            if (rname.TryNJRead_resource(out JObject jobj, log_success: log))
+            if (rname.TryNJRead_resource(out JObject jobj, log_success: log, log_failure: t == targetType))
                 Add(t, jobj);
         }
     }
 
     public void SetFields<TAttribute>(object target, Type targetType = null) where TAttribute : Attribute
     {
-        foreach (var field in (targetType ?? target.GetType()).EFieldsByLayer())
+        foreach (var field in (targetType ?? target.GetType()).EFieldsByLayer(limit))
         {
             var attr = field.GetCustomAttribute<TAttribute>();
             if (attr == null)
@@ -125,9 +143,9 @@ partial class Util
     public static IEnumerable<FieldInfo> EFields<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).EFieldsByLayer().Where(field => field.GetCustomAttribute<T>() != null);
     public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).EFieldsByLayer().Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
 
-    public static IEnumerable<FieldInfo> EFieldsByLayer(this Type type)
+    public static IEnumerable<FieldInfo> EFieldsByLayer(this Type type, Type limit = null)
     {
-        for (var layer = type; layer != null; layer = layer.BaseType)
+        for (var layer = type; layer != null && layer != limit; layer = layer.BaseType)
             foreach (var field in layer.GetFields(BindingFlagsALL | BindingFlags.DeclaredOnly))
                 yield return field;
     }

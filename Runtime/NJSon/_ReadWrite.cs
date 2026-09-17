@@ -45,7 +45,8 @@ partial class Util
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"ERROR {nameof(TryNJRead)}: \"{e.TrimmedExceptionMessage()}\" ({path})");
+                if (log_failure)
+                    Debug.LogWarning($"ERROR {nameof(TryNJRead)}: \"{e.TrimmedExceptionMessage()}\" ({path})");
                 return false;
             }
         }
@@ -66,18 +67,19 @@ partial class Util
 
     public static bool TryNJRead_resource<T>(this string rname, out T njson, in bool log_success = true, in bool log_failure = true) where T : JToken, new()
     {
+        string error = null;
         TextAsset rtext = Resources.Load<TextAsset>(rname);
         if (rtext == null)
-            Debug.LogWarning($"{nameof(TryNJRead_resource)} no resource named: \"{rname}\"");
+            error ??= $"no resource named: \"{rname}\"";
         else if (string.IsNullOrWhiteSpace(rtext.text))
-            Debug.LogWarning($"{nameof(TryNJRead_resource)} empty resource text: \"{rname}\"");
+            error ??= $"empty resource text: \"{rname}\"";
         else
         {
             try
             {
                 njson = JsonConvert.DeserializeObject<T>(rtext.text);
                 if (njson == null)
-                    Debug.LogWarning($"{nameof(TryNJRead_resource)} empty njson in resource text: \"{rname}\"");
+                    error ??= $"empty njson in resource text: \"{rname}\"";
                 else
                 {
                     if (log_success)
@@ -87,10 +89,12 @@ partial class Util
             }
             catch (Exception e)
             {
-                if (log_failure)
-                    Debug.LogWarning($"ERROR {nameof(TryNJRead_resource)}: \"{e.TrimmedExceptionMessage()}\" ({rname})");
+                error ??= $"{e.TrimmedExceptionMessage()} ({rname})";
             }
         }
+
+        if (log_failure)
+            Debug.LogWarning($"{nameof(TryNJRead_resource)} error -> \"{error}\"");
 
         njson = null;
         return false;
