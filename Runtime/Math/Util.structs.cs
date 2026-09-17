@@ -19,7 +19,7 @@ namespace _UTIL_
         }
     }
 
-    [Serializable]
+    [Serializable, Newtonsoft.Json.JsonObject(Newtonsoft.Json.MemberSerialization.Fields)]
     public struct PosEul : IBytes
     {
         public Vector3 pos;

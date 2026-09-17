@@ -48,6 +48,14 @@ public sealed class NJDict : Dictionary<Type, JObject>
 
     public void SaveTexts<T>(Func<Type, string> getPath, bool log, in object target, in Type type = null) where T : Attribute
     {
+        GetFields<T>(target, type);
+
+        foreach (var pair in this)
+            pair.Value.NJSave(getPath(pair.Key), log);
+    }
+
+    public void GetFields<T>(in object target, in Type type = null) where T : Attribute
+    {
         foreach (var field in (type ?? target.GetType()).EFieldsByLayer(limit))
         {
             var attr = field.GetCustomAttribute<T>();
@@ -59,16 +67,9 @@ public sealed class NJDict : Dictionary<Type, JObject>
 
             jobj[field.Name] = Util.GetNJFieldToken(field, target);
         }
-
-        if (Count > 0)
-            foreach (var pair in this)
-            {
-                string spath = getPath(pair.Key);
-                pair.Value.NJSave(spath, log);
-            }
     }
 
-    IEnumerable<Type> ETextLayers<TAttribute, TTextAttribute>(Type targetType) where TAttribute : Attribute where TTextAttribute : Attribute
+    public IEnumerable<Type> ETextLayers<TAttribute, TTextAttribute>(Type targetType) where TAttribute : Attribute where TTextAttribute : Attribute
     {
         for (var t = targetType; t != null && t != limit; t = t.BaseType)
             if (t.IsDefined(typeof(TTextAttribute), inherit: false) || t.GetFields(Util.BindingFlagsALL | BindingFlags.DeclaredOnly).Any(field => field.IsDefined(typeof(TAttribute), inherit: false)))
