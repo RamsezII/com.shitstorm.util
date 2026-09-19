@@ -12,11 +12,11 @@ namespace _UTIL_.Editor
 {
     static class OpenTerminalHere
     {
-        const string button_prefixe = "Assets/" + nameof(_UTIL_) + "/";
+        const string button_name = "Assets/" + nameof(OpenTerminalHere);
 
         //----------------------------------------------------------------------------------------------------------
 
-        [MenuItem(button_prefixe + nameof(OpenTerminalHere), false)]
+        [MenuItem(button_name, false)]
         static void OpenTerminal()
         {
             string projectPath = GetSelectedProjectPath();
@@ -31,8 +31,52 @@ namespace _UTIL_.Editor
             OpenTerminalAt(absolutePath);
         }
 
-        [MenuItem(button_prefixe + nameof(OpenTerminalHere), true)]
+        [MenuItem(button_name, true)]
         static bool ValidateOpenTerminal() => true;
+
+        [MenuItem("Assets/OpenVSCodeHere", false)]
+        static void OpenVSCode()
+        {
+            string directory = ResolveAbsolutePath(GetSelectedProjectPath());
+
+            if (!Directory.Exists(directory))
+            {
+                Debug.LogError($"Impossible d'ouvrir VS Code :\n{directory}");
+                return;
+            }
+
+            string arguments = $"--new-window {Quote(directory)}";
+
+            if (Application.platform == RuntimePlatform.WindowsEditor)
+            {
+                string[] installationRoots = { Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) };
+
+                foreach (string root in installationRoots)
+                {
+                    if (string.IsNullOrEmpty(root))
+                        continue;
+
+                    string executable = Path.Combine(root, root == installationRoots[0] ? "Programs/Microsoft VS Code/Code.exe" : "Microsoft VS Code/Code.exe");
+
+                    if (File.Exists(executable) && TryStartProcess(executable, arguments))
+                        return;
+                }
+
+                if (TryStartProcess("code.cmd", arguments))
+                    return;
+            }
+            else if (Application.platform == RuntimePlatform.OSXEditor)
+            {
+                if (TryStartProcess("/usr/bin/open", $"-a \"Visual Studio Code\" --args {arguments}"))
+                    return;
+            }
+            else if (TryStartProcess("code", arguments))
+            {
+                return;
+            }
+
+            Debug.LogError("Impossible de lancer VS Code. Vérifiez son installation et la disponibilité de la commande 'code' dans le PATH.");
+        }
 
         /// <summary>
         /// Retourne le dossier sélectionné dans la fenêtre Project.
