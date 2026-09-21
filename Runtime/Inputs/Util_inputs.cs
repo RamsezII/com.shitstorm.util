@@ -62,6 +62,14 @@ namespace _UTIL_
         ScrollX,
         /// <summary><c>&lt;Mouse&gt;/scroll/y</c>; vertical scrolling from the main wheel as a <c>float</c>.</summary>
         ScrollY,
+        /// <summary><c>&lt;Mouse&gt;/scroll/up</c>; positive vertical scrolling.</summary>
+        ScrollUp,
+        /// <summary><c>&lt;Mouse&gt;/scroll/down</c>; negative vertical scrolling, exposed as a positive value.</summary>
+        ScrollDown,
+        /// <summary><c>&lt;Mouse&gt;/scroll/left</c>; negative horizontal scrolling, exposed as a positive value.</summary>
+        ScrollLeft,
+        /// <summary><c>&lt;Mouse&gt;/scroll/right</c>; positive horizontal scrolling.</summary>
+        ScrollRight,
     }
 
     public enum AxisCompositePart
@@ -172,6 +180,10 @@ namespace _UTIL_
             MouseSpecial.Scroll => "scroll",
             MouseSpecial.ScrollX => "scroll/x",
             MouseSpecial.ScrollY => "scroll/y",
+            MouseSpecial.ScrollUp => "scroll/up",
+            MouseSpecial.ScrollDown => "scroll/down",
+            MouseSpecial.ScrollLeft => "scroll/left",
+            MouseSpecial.ScrollRight => "scroll/right",
 
             _ => throw new ArgumentOutOfRangeException(nameof(control)),
         };

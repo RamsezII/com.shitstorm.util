@@ -12,10 +12,12 @@ namespace _UTIL_.Editor
     {
         const string ClipboardKey = "_UTIL_.PrefabCopyPaster.Hierarchy";
         const string UndoName = "Paste Hierarchy Values";
+        static readonly HashSet<string> IdentityFields = new HashSet<string> { "m_ObjectHideFlags", "m_CorrespondingSourceObject", "m_PrefabInstance", "m_PrefabAsset", "m_GameObject", "m_Script", "m_Father", "m_Children", "m_RootOrder" };
 
         [Serializable]
         class Node
         {
+            public int id;
             public string name;
             public bool active;
             public int layer;
@@ -27,8 +29,17 @@ namespace _UTIL_.Editor
         [Serializable]
         class ComponentData
         {
+            public int id;
             public string type;
             public string json;
+            public List<ReferenceData> references = new List<ReferenceData>();
+        }
+
+        [Serializable]
+        class ReferenceData
+        {
+            public string path;
+            public int target;
         }
 
         [MenuItem("CONTEXT/Transform/Copy Hierarchy Values")]
@@ -49,7 +60,14 @@ namespace _UTIL_.Editor
             try
             {
                 // SessionState survives assembly reloads and Play/Edit transitions, until the Editor closes.
-                SessionState.SetString(ClipboardKey, JsonUtility.ToJson(Capture(source)));
+                var internalIds = new Dictionary<Object, int>();
+                foreach (var transform in source.GetComponentsInChildren<Transform>(true))
+                {
+                    internalIds.Add(transform.gameObject, internalIds.Count + 1);
+                    foreach (var component in transform.GetComponents<Component>())
+                        if (component != null) internalIds.Add(component, internalIds.Count + 1);
+                }
+                SessionState.SetString(ClipboardKey, JsonUtility.ToJson(Capture(source, internalIds)));
                 Debug.Log($"Hierarchy values copied: {source.name}", source);
             }
             catch (Exception exception)
@@ -58,21 +76,35 @@ namespace _UTIL_.Editor
             }
         }
 
-        static Node Capture(GameObject source)
+        static Node Capture(GameObject source, Dictionary<Object, int> internalIds)
         {
-            var node = new Node { name = source.name, active = source.activeSelf, layer = source.layer, tag = source.tag };
+            var node = new Node { id = internalIds[source], name = source.name, active = source.activeSelf, layer = source.layer, tag = source.tag };
             foreach (var component in source.GetComponents<Component>())
             {
                 if (component == null) throw new InvalidOperationException($"Missing script on {source.name}; copy cancelled.");
                 var json = JObject.Parse(EditorJsonUtility.ToJson(component));
                 // Never transfer Unity identity, prefab links, or hierarchy ownership from the runtime object.
-                foreach (var key in new[] { "m_ObjectHideFlags", "m_CorrespondingSourceObject", "m_PrefabInstance", "m_PrefabAsset", "m_GameObject", "m_Script", "m_Father", "m_Children", "m_RootOrder" })
-                    json.Remove(key);
+                var body = json.Count == 1 && json.Properties().First().Value is JObject wrapped ? wrapped : json;
+                foreach (var key in IdentityFields) body.Remove(key);
                 RemoveReferences(json);
-                node.components.Add(new ComponentData { type = component.GetType().AssemblyQualifiedName, json = json.ToString(Newtonsoft.Json.Formatting.None) });
+                var data = new ComponentData { id = internalIds[component], type = component.GetType().AssemblyQualifiedName, json = json.ToString(Newtonsoft.Json.Formatting.None) };
+                using (var serialized = new SerializedObject(component))
+                {
+                    var property = serialized.GetIterator();
+                    while (property.Next(true))
+                    {
+                        if (property.propertyType != SerializedPropertyType.ObjectReference || IdentityFields.Contains(property.propertyPath.Split('.')[0])) continue;
+                        var reference = property.objectReferenceValue;
+                        if (reference == null)
+                            data.references.Add(new ReferenceData { path = property.propertyPath, target = 0 });
+                        else if (internalIds.TryGetValue(reference, out int id))
+                            data.references.Add(new ReferenceData { path = property.propertyPath, target = id });
+                    }
+                }
+                node.components.Add(data);
             }
             foreach (Transform child in source.transform)
-                node.children.Add(Capture(child.gameObject));
+                node.children.Add(Capture(child.gameObject, internalIds));
             return node;
         }
 
@@ -121,7 +153,17 @@ namespace _UTIL_.Editor
             try
             {
                 ValidateTypes(node);
-                Restore(node, destination);
+                var objects = new Dictionary<int, Object>();
+                var values = new List<KeyValuePair<Component, ComponentData>>();
+                Restore(node, destination, objects, values);
+                // All targets now exist, including children and components created during this paste.
+                foreach (var pair in values)
+                {
+                    Undo.RegisterCompleteObjectUndo(pair.Key, UndoName);
+                    EditorJsonUtility.FromJsonOverwrite(pair.Value.json, pair.Key);
+                    RecordOverrides(pair.Key);
+                }
+                foreach (var pair in values) RestoreReferences(pair.Key, pair.Value, objects);
                 Undo.FlushUndoRecordObjects();
                 Undo.CollapseUndoOperations(group);
                 Debug.Log($"Hierarchy values pasted: {destination.name}. Undo and prefab Apply/Revert are available.", destination);
@@ -145,8 +187,29 @@ namespace _UTIL_.Editor
             foreach (var child in node.children) ValidateTypes(child);
         }
 
-        static void Restore(Node node, GameObject destination)
+        static void RestoreReferences(Component component, ComponentData data, Dictionary<int, Object> objects)
         {
+            if (data.references == null || data.references.Count == 0) return;
+            using (var serialized = new SerializedObject(component))
+            {
+                foreach (var reference in data.references)
+                {
+                    var property = serialized.FindProperty(reference.path);
+                    if (property == null || property.propertyType != SerializedPropertyType.ObjectReference)
+                        throw new InvalidOperationException($"Reference property unavailable: {reference.path}");
+                    Object target = null;
+                    if (reference.target != 0 && (!objects.TryGetValue(reference.target, out target) || target == null))
+                        throw new InvalidOperationException($"Copied reference has no destination: {reference.path}");
+                    property.objectReferenceValue = target;
+                }
+                serialized.ApplyModifiedProperties();
+            }
+            RecordOverrides(component);
+        }
+
+        static void Restore(Node node, GameObject destination, Dictionary<int, Object> objects, List<KeyValuePair<Component, ComponentData>> values)
+        {
+            if (node.id != 0) objects.Add(node.id, destination);
             Undo.RegisterCompleteObjectUndo(destination, UndoName);
             destination.name = node.name;
             destination.layer = node.layer;
@@ -170,6 +233,7 @@ namespace _UTIL_.Editor
                 }
                 if (component == null) throw new InvalidOperationException($"Cannot add {type.Name} to {destination.name}.");
                 pairs.Add(new KeyValuePair<Component, ComponentData>(component, data));
+                if (data.id != 0) objects.Add(data.id, component);
             }
             // Remove dependents before their requirements where possible; fail atomically if Unity refuses.
             for (int index = remaining.Count - 1; index >= 0; index--)
@@ -180,12 +244,7 @@ namespace _UTIL_.Editor
                 Undo.DestroyObjectImmediate(component);
                 if (component != null) throw new InvalidOperationException($"Cannot remove component on {destination.name}.");
             }
-            foreach (var pair in pairs)
-            {
-                Undo.RegisterCompleteObjectUndo(pair.Key, UndoName);
-                EditorJsonUtility.FromJsonOverwrite(pair.Value.json, pair.Key);
-                RecordOverrides(pair.Key);
-            }
+            values.AddRange(pairs);
 
             // Match direct children by name and occurrence, so duplicate names are supported.
             var children = destination.transform.Cast<Transform>().ToList();
@@ -205,7 +264,7 @@ namespace _UTIL_.Editor
                 }
                 Undo.RegisterCompleteObjectUndo(child, UndoName);
                 child.SetSiblingIndex(index);
-                Restore(childData, child.gameObject);
+                Restore(childData, child.gameObject, objects, values);
             }
             foreach (var child in children)
             {

@@ -62,7 +62,9 @@ namespace _UTIL_
         public Action<T> onChangeT_once;
         public Func<T, T> processor;
         public bool Has => _value != null;
+        public bool HasNot => _value == null;
         public bool Had => old != null;
+        public bool HadNot => old == null;
 
         public override object BoxedValue { set => Value = (T)value; get => _value; }
 
