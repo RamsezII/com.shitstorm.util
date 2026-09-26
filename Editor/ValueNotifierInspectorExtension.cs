@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace _UTIL_.Editor
 {
     [CustomEditor(typeof(MonoBehaviour), true, isFallback = true)]
     [CanEditMultipleObjects]
-    sealed class ValueNotifierMonoBehaviourEditor : UnityEditor.Editor
+    sealed partial class ValueNotifierMonoBehaviourEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
@@ -39,7 +40,7 @@ namespace _UTIL_.Editor
         }
     }
 
-    static class ValueNotifierInspectorGUI
+    static partial class ValueNotifierInspectorGUI
     {
         const BindingFlags notifier_field_flags =
             BindingFlags.Instance |
@@ -48,7 +49,7 @@ namespace _UTIL_.Editor
             BindingFlags.NonPublic |
             BindingFlags.DeclaredOnly;
 
-        static readonly Dictionary<Type, FieldInfo[]> notifier_fields = new();
+        [AutoStaticsCleanup] static readonly Dictionary<Type, FieldInfo[]> notifier_fields = new();
 
         //----------------------------------------------------------------------------------------------------------
 

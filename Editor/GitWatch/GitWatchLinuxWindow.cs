@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -646,8 +647,8 @@ namespace _UTIL_.Editor
         internal int RestoredCount;
         internal bool CommitCreated;
         internal bool PushCompleted;
-        internal readonly List<string> ChangedFiles = new List<string>();
-        internal readonly List<GitWatchSuspiciousChange> SuspiciousChanges = new List<GitWatchSuspiciousChange>();
+        internal readonly List<string> ChangedFiles = new();
+        internal readonly List<GitWatchSuspiciousChange> SuspiciousChanges = new();
     }
 
     internal sealed class GitWatchSuspiciousChange
@@ -656,9 +657,10 @@ namespace _UTIL_.Editor
         internal string Reason = string.Empty;
     }
 
-    internal static class GitWatchLinuxEngine
+    internal static partial class GitWatchLinuxEngine
     {
-        static readonly HashSet<string> IgnoredDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        [AutoStaticsCleanup]
+        static readonly HashSet<string> IgnoredDirectories = new(StringComparer.OrdinalIgnoreCase)
         {
             ".git", ".vs", ".idea", ".cache", "Library", "Temp", "Logs", "obj",
             "Build", "Builds", "MemoryCaptures", "Recordings", "node_modules"

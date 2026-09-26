@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace _UTIL_.Editor
 {
-    static class PrefabCopyPaster
+    static partial class PrefabCopyPaster
     {
         const string ClipboardKey = "_UTIL_.PrefabCopyPaster.Hierarchy";
         const string UndoName = "Paste Hierarchy Values";
-        static readonly HashSet<string> IdentityFields = new HashSet<string> { "m_ObjectHideFlags", "m_CorrespondingSourceObject", "m_PrefabInstance", "m_PrefabAsset", "m_GameObject", "m_Script", "m_Father", "m_Children", "m_RootOrder" };
+        [AutoStaticsCleanup] static readonly HashSet<string> IdentityFields = new() { "m_ObjectHideFlags", "m_CorrespondingSourceObject", "m_PrefabInstance", "m_PrefabAsset", "m_GameObject", "m_Script", "m_Father", "m_Children", "m_RootOrder" };
 
         [Serializable]
         class Node

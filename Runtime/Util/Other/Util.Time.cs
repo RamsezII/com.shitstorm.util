@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 public static partial class Util
 {
     public static float DeltaTime => Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
 
-    static readonly Stopwatch stopwatch = new();
+    [AutoStaticsCleanup] static readonly Stopwatch stopwatch = new();
     public static double TotalMilliseconds => stopwatch.Elapsed.TotalMilliseconds;
 
     //----------------------------------------------------------------------------------------------------------
@@ -14,7 +15,6 @@ public static partial class Util
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
     {
-        stopwatch.Reset();
         stopwatch.Start();
     }
 
