@@ -32,9 +32,10 @@ namespace _UTIL_
             Value = value;
         }
 
-        protected override void OnDispose()
+        protected override void OnClear()
         {
-            base.OnDispose();
+            base.OnClear();
+
             SetGroup(null);
         }
     }

@@ -175,7 +175,7 @@ namespace _UTIL_.Editor
             {
                 editable = false;
                 new_value = value;
-                EditorGUILayout.LabelField(label, FormatValue(value, notifier));
+                EditorGUILayout.LabelField(label, FormatValue(value));
             }
 
             bool changed = EditorGUI.EndChangeCheck();
@@ -276,7 +276,7 @@ namespace _UTIL_.Editor
             object changed = changed_field?.GetValue(notifier);
             object last_frame = frame_field?.GetValue(notifier);
 
-            return $"{tooltip}\nold: {FormatValue(old_value)}\nchanged: {changed}\nlast frame: {last_frame}\ndisposed: {notifier._disposed}";
+            return $"{tooltip}\n{nameof(old_value)}: {FormatValue(old_value)}\n{nameof(changed)}: {changed}\n{nameof(last_frame)}: {last_frame}";
         }
 
         static FieldInfo FindField(Type type, string field_name)
@@ -296,12 +296,10 @@ namespace _UTIL_.Editor
             return null;
         }
 
-        static string FormatValue(object value, ValueNotifier notifier = null)
+        static string FormatValue(object value)
         {
-            if (notifier == null && value == null)
+            if (value == null)
                 return "null";
-            if (notifier != null && value == null)
-                return notifier._disposed ? "null (disposed)" : "null";
 
             string result = value switch
             {
@@ -309,9 +307,6 @@ namespace _UTIL_.Editor
                 string text => text,
                 _ => value.ToString()
             };
-
-            if (notifier != null && notifier._disposed)
-                result += " (disposed)";
 
             return result;
         }

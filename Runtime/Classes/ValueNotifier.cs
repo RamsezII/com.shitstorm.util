@@ -19,9 +19,8 @@ partial class Util
 namespace _UTIL_
 {
     [Serializable]
-    public abstract class ValueNotifier : IDisposable
+    public abstract class ValueNotifier
     {
-        public bool _disposed;
         public readonly Type type;
         public abstract object BoxedValue { set; get; }
 
@@ -34,18 +33,12 @@ namespace _UTIL_
 
         //------------------------------------------------------------------------------------------------------------------------------
 
-        public void Dispose()
+        public void Clear()
         {
-            lock (this)
-            {
-                if (_disposed)
-                    return;
-                _disposed = true;
-                OnDispose();
-            }
+            OnClear();
         }
 
-        protected virtual void OnDispose()
+        protected virtual void OnClear()
         {
         }
     }
@@ -91,20 +84,17 @@ namespace _UTIL_
 
         public bool WasLastChangedThisFrame => changed && last_frame == Time.frameCount;
 
-        public void Reset()
+        protected override void OnClear()
         {
+            base.OnClear();
+
             last_frame = Time.frameCount;
             changed = false;
             _value = default;
             old = default;
-            onChange = null;
-            onChangeT = null;
+            onChange = onChange_once = null;
+            onChangeT = onChangeT_once = null;
             processor = null;
-            OnReset();
-        }
-
-        protected virtual void OnReset()
-        {
         }
 
         public void Revert() => Value = old;

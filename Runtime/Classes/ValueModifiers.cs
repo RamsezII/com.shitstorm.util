@@ -38,11 +38,13 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        protected override void OnDispose()
+        protected override void OnClear()
         {
-            base.OnDispose();
+            base.OnClear();
+
             foreach (var node in _nodes.ToArray())
                 RemoveNode(node);
+
             _nodes.Clear();
         }
     }
@@ -125,9 +127,10 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        protected override void OnDispose()
+        protected override void OnClear()
         {
-            base.OnDispose();
+            base.OnClear();
+
             _node.RemoveListener(PropagateValue);
         }
     }
@@ -165,9 +168,10 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        protected override void OnDispose()
+        protected override void OnClear()
         {
-            base.OnDispose();
+            base.OnClear();
+
             SetInput(null);
         }
     }
