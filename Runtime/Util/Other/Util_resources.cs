@@ -1,9 +1,20 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Object = UnityEngine.Object;
+
+namespace _UTIL_
+{
+    public readonly struct CreationInfos
+    {
+        public readonly string name;
+        public readonly Type type;
+    }
+}
 
 public static partial class Util
 {
     public static T LoadResourceByType<T>() where T : Object => Resources.Load<T>(typeof(T).FullName);
-    public static Object LoadResourceByType(in System.Type type) => Resources.Load(type.FullName, type);
+    public static Object LoadResourceByType(in Type type) => Resources.Load(type.FullName, type);
 
     public static bool TryLoadResourceByTypeWithComponent<T>(in System.Type type, out T resource) where T : Component
     {
@@ -16,7 +27,7 @@ public static partial class Util
         return false;
     }
 
-    public static bool TryLoadResourceByType(in System.Type type, out Object resource)
+    public static bool TryLoadResourceByType(in Type type, out Object resource)
     {
         resource = Resources.Load(type.FullName);
         if (resource != null)
@@ -40,14 +51,14 @@ public static partial class Util
         return clone.GetComponent(type);
     }
 
-    public static T InstantiateOrCreate<T>(in Vector3 position = default, in Quaternion rotation = default, in Transform parent = null) where T : Component => InstantiateOrCreate<T>(typeof(T), position, rotation, parent);
-    public static Component InstantiateOrCreate(in System.Type type, in Vector3 position = default, in Quaternion rotation = default, in Transform parent = null) => InstantiateOrCreate<Component>(type, position, rotation, parent);
-    public static T InstantiateOrCreate<T>(in System.Type type, in Vector3 position = default, Quaternion rotation = default, in Transform parent = null) where T : Component
+    public static T InstantiateOrCreate<T>(in Vector3 position = default, in Quaternion rotation = default, in Transform parent = null, in string name = null) where T : Component => InstantiateOrCreate<T>(typeof(T), position, rotation, parent, name);
+    public static Component InstantiateOrCreate(in Type type, in Vector3 position = default, in Quaternion rotation = default, in Transform parent = null, in string name = null) => InstantiateOrCreate<Component>(type, position, rotation, parent, name);
+    public static T InstantiateOrCreate<T>(in Type type, in Vector3 position = default, Quaternion rotation = default, in Transform parent = null, string name = null) where T : Component
     {
         if (type.IsAbstract)
-            throw new System.ArgumentException($"Can not instantiate abstract type: \"{type}\"");
+            throw new ArgumentException($"Can not instantiate abstract type: \"{type}\"");
 
-        string name = type.FullName;
+        name ??= type.FullName;
         T resource = (T)Resources.Load(name, type);
         T clone;
         string log;
