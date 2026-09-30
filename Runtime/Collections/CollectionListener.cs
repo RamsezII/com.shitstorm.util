@@ -93,20 +93,17 @@ namespace _UTIL_
             }
         }
 
-        protected abstract void OnClear();
-        public void Clear() => Modify(collection => OnClear());
-
-        //------------------------------------------------------------------------------------------------------------------------------
-
-        public void Reset()
+        public void Clear()
         {
             lock (this)
             {
                 _listeners1 = null;
                 _listeners2 = null;
                 _listeners2_once = null;
-                OnClear();
+                Modify(collection => OnClear());
             }
         }
+
+        protected abstract void OnClear();
     }
 }

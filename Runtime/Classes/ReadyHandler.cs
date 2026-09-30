@@ -19,18 +19,18 @@ namespace _UTIL_
 
         //--------------------------------------------------------------------------------------------------------------
 
-        public void Reset()
+        public void TriggerReady()
         {
-            is_ready = false;
+            is_ready = true;
+            on_ready?.Invoke();
             on_ready = null;
         }
 
         //--------------------------------------------------------------------------------------------------------------
 
-        public void TriggerReady()
+        public void Clear()
         {
-            is_ready = true;
-            on_ready?.Invoke();
+            is_ready = false;
             on_ready = null;
         }
     }
