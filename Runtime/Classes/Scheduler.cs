@@ -6,6 +6,7 @@ namespace _UTIL_
 {
     public sealed class Scheduler : IDisposable
     {
+        [Serializable]
         public class Operation : Disposable
         {
             public float delay;
