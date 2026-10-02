@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace _UTIL_
 {
-    public abstract class Interpolator<T> where T : struct
+    public abstract class Interpolator1<T> where T : struct
     {
         public T a, b;
         public float ta, tb;
@@ -38,14 +38,14 @@ namespace _UTIL_
     }
 
     [Serializable]
-    public class InterpolatorV3 : Interpolator<Vector3>
+    public class Interpolator1_V3 : Interpolator1<Vector3>
     {
         protected override Vector3 Lerp(in float lerp) => Vector3.Lerp(a, b, lerp);
         protected override Vector3 SlerpAround(in float lerp, in Vector3 pivot) => pivot + Vector3.Slerp(a - pivot, b - pivot, lerp);
     }
 
     [Serializable]
-    public class InterpolatorQuaternion : Interpolator<Quaternion>
+    public class Interpolator1_Q : Interpolator1<Quaternion>
     {
         protected override Quaternion Lerp(in float lerp) => Quaternion.Slerp(a, b, lerp);
         protected override Quaternion SlerpAround(in float lerp, in Vector3 pivot) => throw new NotImplementedException();
