@@ -105,6 +105,8 @@ namespace _UTIL_
                 offset = reader.Read_f16(),
                 stateForce = true,
                 frameForce = true,
+                transitionForce = true,
+                maintainFadeWhenForced = !animator.isHuman,
             };
             Apply(options);
         }

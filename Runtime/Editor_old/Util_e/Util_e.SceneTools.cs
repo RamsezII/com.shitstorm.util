@@ -27,7 +27,7 @@ public static partial class Util_e_OLD
         foreach (var renderer in ((Transform)command.context).GetComponentsInChildren<Renderer>(true))
             foreach (var mat in renderer.sharedMaterials)
                 if (mat.HasProperty("_EmissionColor"))
-                    mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.BakedEmissive;
+                    mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.BakedEmission;
     }
 }
 #endif
