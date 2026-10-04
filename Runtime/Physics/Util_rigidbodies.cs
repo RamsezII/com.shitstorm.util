@@ -5,9 +5,14 @@ partial class Util
     public static Vector3 TransformPoint(this Rigidbody rigidbody, in Vector3 position) => rigidbody.position + rigidbody.rotation * position;
     public static Vector3 InverseTransformPoint(this Rigidbody rigidbody, in Vector3 position) => Quaternion.Inverse(rigidbody.rotation) * (position - rigidbody.position);
 
-    // Use the visual Transform pose and its full scale for points attached to the rendered object.
-    public static Vector3 TransformPoint_scaled(this Rigidbody rigidbody, in Vector3 position) => rigidbody.transform.TransformPoint(position);
-    public static Vector3 InverseTransformPoint_scaled(this Rigidbody rigidbody, in Vector3 position) => rigidbody.transform.InverseTransformPoint(position);
+    // Use the physics pose; only the scale comes from the Transform.
+    public static Vector3 TransformPoint_scaled(this Rigidbody rigidbody, in Vector3 position) => rigidbody.position + rigidbody.rotation * Vector3.Scale(position, rigidbody.transform.lossyScale);
+    public static Vector3 InverseTransformPoint_scaled(this Rigidbody rigidbody, in Vector3 position)
+    {
+        Vector3 localPosition = Quaternion.Inverse(rigidbody.rotation) * (position - rigidbody.position);
+        Vector3 scale = rigidbody.transform.lossyScale;
+        return new Vector3(localPosition.x / scale.x, localPosition.y / scale.y, localPosition.z / scale.z);
+    }
 
     public static Vector3 TransformDirection(this Rigidbody rigidbody, in Vector3 direction) => rigidbody.rotation * direction;
     public static Vector3 InverseTransformDirection(this Rigidbody rigidbody, in Vector3 direction) => Quaternion.Inverse(rigidbody.rotation) * direction;
