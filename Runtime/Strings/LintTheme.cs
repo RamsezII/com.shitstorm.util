@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace _UTIL_
 {
     [Serializable]
-    public sealed class LintTheme
+    public sealed partial class LintTheme
     {
         public Color
             argument = Color.deepPink,
@@ -38,6 +39,7 @@ namespace _UTIL_
             fallback_default = Color.gray
             ;
 
+        [NoAutoStaticsCleanup]
         public static readonly LintTheme
             theme_dark = new()
             {

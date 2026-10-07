@@ -1,13 +1,14 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 partial class Util
 {
-    public static readonly IPAddress IP_GOOGLE = IPAddress.Parse("8.8.8.8");
+    [NoAutoStaticsCleanup] public static readonly IPAddress IP_GOOGLE = IPAddress.Parse("8.8.8.8");
     public const ushort PORT_ARMA = 40000;
-    static IPAddress localIP;
+    [AutoStaticsCleanup] static IPAddress localIP;
 
     //----------------------------------------------------------------------------------------------------------
 

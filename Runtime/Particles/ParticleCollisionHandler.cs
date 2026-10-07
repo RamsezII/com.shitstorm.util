@@ -9,7 +9,7 @@ namespace _UTIL_
 #if UNITY_EDITOR
         [SerializeField] int _count;
 #endif
-        public new ParticleSystem particleSystem;
+        public ParticleSystem particleSystem;
         public Action<GameObject, ParticleCollisionEvent> onParticleCollision;
         readonly List<ParticleCollisionEvent> collisionEvents = new();
 

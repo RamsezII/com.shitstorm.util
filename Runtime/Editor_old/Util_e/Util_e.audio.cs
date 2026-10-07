@@ -43,7 +43,7 @@ public static partial class Util_e_OLD
     [MenuItem("Assets/" + nameof(_EDITOR_) + "/" + nameof(LogAllAudioListeners))]
     static void LogAllAudioListeners(MenuCommand command)
     {
-        foreach (AudioListener listener in Object.FindObjectsOfType<AudioListener>(true))
+        foreach (AudioListener listener in Object.FindObjectsByType<AudioListener>(FindObjectsInactive.Include))
             Debug.Log($"{listener.name}.{nameof(listener.enabled)}: {listener.enabled} ({listener.transform.GetPath(true)})");
     }
 }

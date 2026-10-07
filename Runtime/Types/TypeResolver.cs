@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Scripting.LifecycleManagement;
 
 namespace _UTIL_
 {
-    public static class TypeResolver
+    public static partial class TypeResolver
     {
-        static readonly Dictionary<Type, Type[]> cache = new();
+        [AutoStaticsCleanup] static readonly Dictionary<Type, Type[]> cache = new();
 
         //------------------------------------------------------------------------------------------------------------------------------
 

@@ -1,25 +1,17 @@
 ﻿using System;
-using UnityEngine;
+using Unity.Scripting.LifecycleManagement;
 
 namespace _UTIL_
 {
     [Serializable]
-    public class Disposable : IDisposable
+    public partial class Disposable : IDisposable
     {
         public readonly string name;
         public Action onDispose;
         public bool _disposed;
 
-        static ushort _id;
+        [AutoStaticsCleanup] static ushort _id;
         public readonly ushort disposable_id = _id++;
-
-        //----------------------------------------------------------------------------------------------------------
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics()
-        {
-            _id = 0;
-        }
 
         //----------------------------------------------------------------------------------------------------------
 

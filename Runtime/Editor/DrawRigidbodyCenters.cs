@@ -1,15 +1,15 @@
 ﻿#if UNITY_EDITOR
 using System.Collections.Generic;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor;
 using UnityEngine;
 
 namespace _UTIL_e
 {
-    public static class DrawRigidbodyCenters
+    public static partial class DrawRigidbodyCenters
     {
-        static readonly List<Rigidbody> rigidbodies = new();
-
-        public static readonly bool DRAW = false;
+        [AutoStaticsCleanup] static readonly HashSet<Rigidbody> rigidbodies = new();
+        [NoAutoStaticsCleanup] public static readonly bool DRAW = false;
 
         //----------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ namespace _UTIL_e
         static void RefreshList()
         {
             rigidbodies.Clear();
-            rigidbodies.AddRange(Object.FindObjectsByType<Rigidbody>(FindObjectsInactive.Exclude, FindObjectsSortMode.None));
+            rigidbodies.UnionWith(Object.FindObjectsByType<Rigidbody>(FindObjectsInactive.Exclude));
         }
 
         static void OnSceneGUI(SceneView sceneView)
@@ -44,34 +44,31 @@ namespace _UTIL_e
             Color color_cog = Color.yellow;
             color_cog.a = .85f;
 
-            for (int i = 0; i < rigidbodies.Count; i++)
-                if (rigidbodies[i] != null)
+            foreach (var rb in rigidbodies)
+            {
+                Vector3 com = rb.worldCenterOfMass;
+                float size = Mathf.Lerp(
+                    0.25f,
+                    .1f * HandleUtility.GetHandleSize(com),
+                    .5f);
+                Vector3 size_x = new(size, 0, 0);
+                Vector3 size_y = new(0, size, 0);
+                Vector3 size_z = new(0, 0, size);
+
+                Draw(com, color_cog);
+                Draw(rb.position, color_rb);
+
+                void Draw(in Vector3 com, in Color color)
                 {
-                    Rigidbody rb = rigidbodies[i];
+                    Handles.color = color;
 
-                    Vector3 com = rb.worldCenterOfMass;
-                    float size = Mathf.Lerp(
-                        0.25f,
-                        .1f * HandleUtility.GetHandleSize(com),
-                        .5f);
-                    Vector3 size_x = new(size, 0, 0);
-                    Vector3 size_y = new(0, size, 0);
-                    Vector3 size_z = new(0, 0, size);
+                    Handles.DrawLine(com + size_x, com - size_x);
+                    Handles.DrawLine(com + size_y, com - size_y);
+                    Handles.DrawLine(com + size_z, com - size_z);
 
-                    Draw(com, color_cog);
-                    Draw(rb.position, color_rb);
-
-                    void Draw(in Vector3 com, in Color color)
-                    {
-                        Handles.color = color;
-
-                        Handles.DrawLine(com + size_x, com - size_x);
-                        Handles.DrawLine(com + size_y, com - size_y);
-                        Handles.DrawLine(com + size_z, com - size_z);
-
-                        Handles.DrawWireDisc(com, disc_dir, size * 0.6f);
-                    }
+                    Handles.DrawWireDisc(com, disc_dir, size * 0.6f);
                 }
+            }
         }
     }
 }

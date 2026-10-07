@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using Unity.Scripting.LifecycleManagement;
+using UnityEngine;
 
 public static partial class Util
 {
-    static string sublogColor = "#EEEEEE";
+    [AutoStaticsCleanup] static string sublogColor = "#EEEEEE";
 
     //--------------------------------------------------------------------------------------------------------------
 

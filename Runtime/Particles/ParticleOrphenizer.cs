@@ -4,7 +4,7 @@ namespace _UTIL_
 {
     internal class ParticleOrphenizer : MonoBehaviour
     {
-        [SerializeField] new ParticleSystem particleSystem;
+        [SerializeField] ParticleSystem particleSystem;
         [SerializeField] float delay = 1;
 
         //--------------------------------------------------------------------------------------------------------------

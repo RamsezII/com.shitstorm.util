@@ -12,10 +12,10 @@ partial class Util
 
         StringBuilder sb = new("enum ShaderIDs\n{\n");
 
-        int propertyCount = ShaderUtil.GetPropertyCount(shader);
+        int propertyCount = shader.GetPropertyCount();
         for (int i = 0; i < propertyCount; i++)
         {
-            string propName = ShaderUtil.GetPropertyName(shader, i);
+            string propName = shader.GetPropertyName(i);
             int propID = Shader.PropertyToID(propName);
             sb.AppendLine($"{propName} = {propID},");
         }

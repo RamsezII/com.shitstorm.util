@@ -1,9 +1,7 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace _UTIL_
 {
-    [Obsolete]
     public class ShowPropertyAttribute : PropertyAttribute
     {
         public string propertyName;

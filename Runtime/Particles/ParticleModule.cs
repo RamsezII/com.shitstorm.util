@@ -5,7 +5,7 @@ namespace _UTIL_
     internal abstract class ParticleModule : MonoBehaviour
     {
         protected ParticleCollisionHandler handler;
-        protected new ParticleSystem particleSystem;
+        protected ParticleSystem particleSystem;
 
         //--------------------------------------------------------------------------------------------------------------
 

@@ -6,6 +6,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using Unity.Scripting.LifecycleManagement;
 
 namespace _UTIL_
 {
@@ -149,7 +150,7 @@ partial class Util
         BindingFlags.Instance |
         BindingFlags.Static;
 
-    internal static readonly JsonSerializer njSerializer = CreateNJSerializer();
+    [NoAutoStaticsCleanup] internal static readonly JsonSerializer njSerializer = CreateNJSerializer();
 
     static JsonSerializer CreateNJSerializer()
     {
@@ -200,8 +201,9 @@ partial class Util
     }
 }
 
-sealed class UnityStructJsonConverter : JsonConverter
+sealed partial class UnityStructJsonConverter : JsonConverter
 {
+    [NoAutoStaticsCleanup]
     static readonly HashSet<Type> supportedTypes = new()
     {
         typeof(Vector2),
