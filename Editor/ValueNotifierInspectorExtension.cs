@@ -175,7 +175,7 @@ namespace _UTIL_.Editor
             {
                 editable = false;
                 new_value = value;
-                EditorGUILayout.LabelField(label, FormatValue(value));
+                EditorGUILayout.LabelField(label, new GUIContent(FormatValue(value)));
             }
 
             bool changed = EditorGUI.EndChangeCheck();
