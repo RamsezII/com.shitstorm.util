@@ -2,9 +2,6 @@
 
 public class HiResScreenShots : MonoBehaviour
 {
-    new Camera camera;
-
-
     public int resWidth = 2550;
     public int resHeight = 3300;
 
@@ -28,6 +25,7 @@ public class HiResScreenShots : MonoBehaviour
         takeHiResShot |= Input.GetKeyDown("k");
         if (takeHiResShot)
         {
+            var camera = GetComponent<Camera>();
             RenderTexture rt = new RenderTexture(resWidth, resHeight, 24);
             camera.targetTexture = rt;
             Texture2D screenShot = new Texture2D(resWidth, resHeight, TextureFormat.RGB24, false);

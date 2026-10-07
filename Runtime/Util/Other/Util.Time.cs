@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
@@ -7,7 +7,7 @@ public static partial class Util
 {
     public static float DeltaTime => Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
 
-    [AutoStaticsCleanup] static readonly Stopwatch stopwatch = new();
+    [NoAutoStaticsCleanup] static readonly Stopwatch stopwatch = new();
     public static double TotalMilliseconds => stopwatch.Elapsed.TotalMilliseconds;
 
     //----------------------------------------------------------------------------------------------------------
