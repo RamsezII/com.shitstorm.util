@@ -34,6 +34,8 @@ namespace _UTIL_
             Update(value, true);
             target = velocity = delta = value;
         }
+
+        public abstract void ClampDifference(in float clamp);
     }
 
     [Serializable]
@@ -54,6 +56,15 @@ namespace _UTIL_
             else
                 delta = value - _value;
             return base.Update(value, true);
+        }
+
+        public override void ClampDifference(in float clamp)
+        {
+            if (Mathf.Abs(_value - target) <= clamp)
+                return;
+
+            _value = Mathf.MoveTowards(target, _value, clamp);
+            velocity = 0;
         }
 
         public bool SmoothDamp(in float smoothTime, in float deltaTime)
@@ -121,6 +132,16 @@ namespace _UTIL_
             return base.Update(value, false);
         }
 
+        public override void ClampDifference(in float clamp)
+        {
+            if ((_value - target).sqrMagnitude <= clamp * clamp)
+                return;
+
+            _value = Vector2.MoveTowards(target, _value, clamp);
+            velocity = Vector2.zero;
+            sqr = _value.sqrMagnitude;
+        }
+
         public bool SmoothDamp(in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity)
         {
             if (deltaTime <= 0)
@@ -145,6 +166,8 @@ namespace _UTIL_
     [Serializable]
     public class SmoothVector3 : SmoothVector<Vector3>
     {
+        //----------------------------------------------------------------------------------------------------------
+
         public SmoothVector3(in Vector3 init = default) : base(init) { sqr = init.sqrMagnitude; }
 
         //----------------------------------------------------------------------------------------------------------
@@ -156,6 +179,16 @@ namespace _UTIL_
             else
                 delta = value - _value;
             return base.Update(value, false);
+        }
+
+        public override void ClampDifference(in float clamp)
+        {
+            if ((_value - target).sqrMagnitude <= clamp * clamp)
+                return;
+
+            _value = Vector3.MoveTowards(target, _value, clamp);
+            velocity = Vector3.zero;
+            sqr = _value.sqrMagnitude;
         }
 
         public bool SmoothDamp(in float damp, in float deltaTime, in float maxSpeed = Mathf.Infinity)
