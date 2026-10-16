@@ -38,15 +38,11 @@ partial class Util
 
     public static string NormalizePath(this string full_path)
     {
-        full_path = Path.GetFullPath(full_path).ForceLinuxPathSeparators();
-
+        full_path = Path.GetFullPath(full_path);
         string root = Path.GetPathRoot(full_path);
+        string trimmed = full_path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-        full_path = (full_path.EndsWith(Path.DirectorySeparatorChar) && full_path != root)
-            ? full_path.TrimEnd(Path.DirectorySeparatorChar)
-            : full_path;
-
-        return full_path;
+        return (trimmed.Length < root.Length ? root : trimmed).ForceLinuxPathSeparators();
     }
 
     public static string ForceLinuxPathSeparators(this string path) => path.Replace('\\', '/');
