@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System;
+using UnityEngine.Assemblies;
 
 partial class Util
 {
@@ -8,8 +9,8 @@ partial class Util
 
     public static IEnumerable<Type> EGetAllDerivedTypes(this Type type, bool include_abstracts = false)
     {
-        Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-        for (int i = 0; i < assemblies.Length; i++)
+        var assemblies = CurrentAssemblies.GetLoadedAssemblies();
+        for (int i = 0; i < assemblies.Count; i++)
         {
             Assembly assembly = assemblies[i];
             foreach (Type candidate in assembly.GetTypes())
@@ -21,8 +22,8 @@ partial class Util
 
     public static IEnumerable<Type> EAllTypes(bool include_abstracts = false)
     {
-        Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-        for (int i = 0; i < assemblies.Length; i++)
+        var assemblies = CurrentAssemblies.GetLoadedAssemblies();
+        for (int i = 0; i < assemblies.Count; i++)
         {
             Assembly assembly = assemblies[i];
             foreach (Type candidate in assembly.GetTypes())
@@ -39,7 +40,7 @@ partial class Util
             if (include_abstracts || !type.IsAbstract)
                 return true;
 
-        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+        foreach (Assembly assembly in CurrentAssemblies.GetLoadedAssemblies())
         {
             type = assembly.GetType(typeName);
             if (type != null)
