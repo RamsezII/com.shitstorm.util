@@ -161,8 +161,8 @@ partial class Util
 
     //----------------------------------------------------------------------------------------------------------
 
-    public static IEnumerable<FieldInfo> EFields<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).EFieldsByLayer().Where(field => field.GetCustomAttribute<T>() != null);
-    public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this object target, in Type type = null) where T : Attribute => (type ?? target.GetType()).EFieldsByLayer().Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
+    public static IEnumerable<FieldInfo> EFields<T>(this Type type) where T : Attribute => type.EFieldsByLayer().Where(field => field.GetCustomAttribute<T>() != null);
+    public static IEnumerable<(FieldInfo field, T attribute)> EFieldsAndAttributes<T>(this Type type) where T : Attribute => type.EFieldsByLayer().Select(field => (field, field.GetCustomAttribute<T>())).Where(pair => pair.Item2 != null);
 
     public static IEnumerable<FieldInfo> EFieldsByLayer(this Type type, Type limit = null)
     {
