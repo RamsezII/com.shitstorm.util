@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace _UTIL_
@@ -7,12 +8,14 @@ namespace _UTIL_
     {
         public Action<PointerEventData> onBeginDrag, onDrag, onEndDrag;
         public bool dragging;
+        public Vector2 delta;
 
         //--------------------------------------------------------------------------------------------------------------
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
             dragging = true;
+            delta = eventData.delta;
             onBeginDrag?.Invoke(eventData);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<IBeginDragHandler>()?.OnBeginDrag(eventData);
@@ -20,6 +23,7 @@ namespace _UTIL_
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
+            delta = eventData.delta;
             onDrag?.Invoke(eventData);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<IDragHandler>()?.OnDrag(eventData);
@@ -28,6 +32,7 @@ namespace _UTIL_
         void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
             dragging = false;
+            delta = Vector2.zero;
             onEndDrag?.Invoke(eventData);
             if (propagateToParent)
                 transform.parent.GetComponentInParent<IEndDragHandler>()?.OnEndDrag(eventData);
