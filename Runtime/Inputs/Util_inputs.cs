@@ -1,5 +1,6 @@
 ﻿#if ENABLE_INPUT_SYSTEM
 using System;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using static UnityEngine.InputSystem.InputActionSetupExtensions;
@@ -227,6 +228,12 @@ namespace _UTIL_
         public static BindingSyntax AddBinding_gamepad_special(this InputAction action, in GamepadSpecial control) => action.AddBinding($"<Gamepad>/{control.Path()}");
         public static BindingSyntax AddBinding_mouse_special(this InputAction action, in MouseSpecial control) => action.AddBinding($"<Mouse>/{control.Path()}");
         public static BindingSyntax AddBinding_mouse(this InputAction action, in MouseButton button) => action.AddBinding($"<Mouse>/{button.Path()}");
+
+        public static void Reset(this IInputActionCollection2 iam)
+        {
+            foreach (var ia in iam)
+                ia.Reset();
+        }
     }
 }
 #endif
