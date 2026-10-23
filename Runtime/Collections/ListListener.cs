@@ -18,32 +18,6 @@ namespace _UTIL_
                 return element != null && _collection.Count > 0 && _collection[index].Equals(element);
         }
 
-        public void MoveToLast(T element) => Modify(list =>
-        {
-            list.Remove(element);
-            list.Add(element);
-        });
-
-        public void Move(T element, int index) => Modify(list =>
-        {
-            list.Remove(element);
-            list.Insert(index, element);
-        });
-
-        public bool TryPeek(out T element)
-        {
-            lock (this)
-            {
-                if (IsNotEmpty)
-                {
-                    element = _collection[^1];
-                    return true;
-                }
-                element = default;
-                return false;
-            }
-        }
-
         public IEnumerable<(int index, T element)> ReversedOrderIteration()
         {
             lock (this)
