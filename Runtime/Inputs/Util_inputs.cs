@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using static UnityEngine.InputSystem.InputActionSetupExtensions;
 
@@ -156,6 +157,16 @@ namespace _UTIL_
             GamepadSpecial.DpadY => "dpad/y",
 
             _ => throw new ArgumentOutOfRangeException(nameof(control)),
+        };
+
+        public static ButtonControl GetButton(this Mouse mouse, MouseButton button) => button switch
+        {
+            MouseButton.Left => mouse.leftButton,
+            MouseButton.Right => mouse.rightButton,
+            MouseButton.Middle => mouse.middleButton,
+            MouseButton.Forward => mouse.forwardButton,
+            MouseButton.Back => mouse.backButton,
+            _ => throw new ArgumentOutOfRangeException(nameof(button)),
         };
 
         public static string Path(this MouseButton button) => button switch
