@@ -166,8 +166,12 @@ partial class Util
 
     public static IEnumerable<FieldInfo> EFieldsByLayer(this Type type, Type limit = null)
     {
+        var layers = new Stack<Type>();
         for (var layer = type; layer != null && layer != limit; layer = layer.BaseType)
-            foreach (var field in layer.GetFields(BindingFlagsALL | BindingFlags.DeclaredOnly))
+            layers.Push(layer);
+
+        foreach (var layer in layers)
+            foreach (var field in layer.GetFields(BindingFlagsALL | BindingFlags.DeclaredOnly).OrderBy(field => field.MetadataToken))
                 yield return field;
     }
 
