@@ -1,6 +1,6 @@
 ﻿#if ENABLE_INPUT_SYSTEM
+using _UTIL_;
 using System;
-using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -93,158 +93,157 @@ namespace _UTIL_
         /// <summary>The rightward direction of a <c>2DVector</c> composite.</summary>
         Right,
     }
-
-    public static partial class Util_inputs
+}
+public static partial class Util_inputs
+{
+    public static string Path(this Key key) => key switch
     {
-        public static string Path(this Key key) => key switch
-        {
-            Key.None => throw new ArgumentOutOfRangeException(nameof(key)),
-            Key.Digit0 => "0",
-            Key.Digit1 => "1",
-            Key.Digit2 => "2",
-            Key.Digit3 => "3",
-            Key.Digit4 => "4",
-            Key.Digit5 => "5",
-            Key.Digit6 => "6",
-            Key.Digit7 => "7",
-            Key.Digit8 => "8",
-            Key.Digit9 => "9",
-            _ when Enum.IsDefined(typeof(Key), key) => key.ToString(),
-            _ => throw new ArgumentOutOfRangeException(nameof(key)),
-        };
+        Key.None => throw new ArgumentOutOfRangeException(nameof(key)),
+        Key.Digit0 => "0",
+        Key.Digit1 => "1",
+        Key.Digit2 => "2",
+        Key.Digit3 => "3",
+        Key.Digit4 => "4",
+        Key.Digit5 => "5",
+        Key.Digit6 => "6",
+        Key.Digit7 => "7",
+        Key.Digit8 => "8",
+        Key.Digit9 => "9",
+        _ when Enum.IsDefined(typeof(Key), key) => key.ToString(),
+        _ => throw new ArgumentOutOfRangeException(nameof(key)),
+    };
 
-        public static string Path(this KeyboardSpecial key) => key switch
-        {
-            KeyboardSpecial.Shift => "shift",
-            KeyboardSpecial.Ctrl => "ctrl",
-            KeyboardSpecial.Alt => "alt",
-            _ => throw new ArgumentOutOfRangeException(nameof(key)),
-        };
+    public static string Path(this KeyboardSpecial key) => key switch
+    {
+        KeyboardSpecial.Shift => "shift",
+        KeyboardSpecial.Ctrl => "ctrl",
+        KeyboardSpecial.Alt => "alt",
+        _ => throw new ArgumentOutOfRangeException(nameof(key)),
+    };
 
-        public static string Path(this GamepadButton button) => button switch
-        {
-            GamepadButton.DpadUp => "dpad/up",
-            GamepadButton.DpadDown => "dpad/down",
-            GamepadButton.DpadLeft => "dpad/left",
-            GamepadButton.DpadRight => "dpad/right",
-            GamepadButton.North => "buttonNorth",
-            GamepadButton.East => "buttonEast",
-            GamepadButton.South => "buttonSouth",
-            GamepadButton.West => "buttonWest",
-            GamepadButton.LeftStick => "leftStickPress",
-            GamepadButton.RightStick => "rightStickPress",
-            GamepadButton.LeftShoulder => "leftShoulder",
-            GamepadButton.RightShoulder => "rightShoulder",
-            GamepadButton.Start => "start",
-            GamepadButton.Select => "select",
-            GamepadButton.LeftTrigger => "leftTrigger",
-            GamepadButton.RightTrigger => "rightTrigger",
-            _ => throw new ArgumentOutOfRangeException(nameof(button)),
-        };
+    public static string Path(this GamepadButton button) => button switch
+    {
+        GamepadButton.DpadUp => "dpad/up",
+        GamepadButton.DpadDown => "dpad/down",
+        GamepadButton.DpadLeft => "dpad/left",
+        GamepadButton.DpadRight => "dpad/right",
+        GamepadButton.North => "buttonNorth",
+        GamepadButton.East => "buttonEast",
+        GamepadButton.South => "buttonSouth",
+        GamepadButton.West => "buttonWest",
+        GamepadButton.LeftStick => "leftStickPress",
+        GamepadButton.RightStick => "rightStickPress",
+        GamepadButton.LeftShoulder => "leftShoulder",
+        GamepadButton.RightShoulder => "rightShoulder",
+        GamepadButton.Start => "start",
+        GamepadButton.Select => "select",
+        GamepadButton.LeftTrigger => "leftTrigger",
+        GamepadButton.RightTrigger => "rightTrigger",
+        _ => throw new ArgumentOutOfRangeException(nameof(button)),
+    };
 
-        public static string Path(this GamepadSpecial control) => control switch
-        {
-            GamepadSpecial.LeftStick => "leftStick",
-            GamepadSpecial.LeftStickX => "leftStick/x",
-            GamepadSpecial.LeftStickY => "leftStick/y",
+    public static string Path(this GamepadSpecial control) => control switch
+    {
+        GamepadSpecial.LeftStick => "leftStick",
+        GamepadSpecial.LeftStickX => "leftStick/x",
+        GamepadSpecial.LeftStickY => "leftStick/y",
 
-            GamepadSpecial.RightStick => "rightStick",
-            GamepadSpecial.RightStickX => "rightStick/x",
-            GamepadSpecial.RightStickY => "rightStick/y",
+        GamepadSpecial.RightStick => "rightStick",
+        GamepadSpecial.RightStickX => "rightStick/x",
+        GamepadSpecial.RightStickY => "rightStick/y",
 
-            GamepadSpecial.Dpad => "dpad",
-            GamepadSpecial.DpadX => "dpad/x",
-            GamepadSpecial.DpadY => "dpad/y",
+        GamepadSpecial.Dpad => "dpad",
+        GamepadSpecial.DpadX => "dpad/x",
+        GamepadSpecial.DpadY => "dpad/y",
 
-            _ => throw new ArgumentOutOfRangeException(nameof(control)),
-        };
+        _ => throw new ArgumentOutOfRangeException(nameof(control)),
+    };
 
-        public static ButtonControl GetButton(this Mouse mouse, MouseButton button) => button switch
-        {
-            MouseButton.Left => mouse.leftButton,
-            MouseButton.Right => mouse.rightButton,
-            MouseButton.Middle => mouse.middleButton,
-            MouseButton.Forward => mouse.forwardButton,
-            MouseButton.Back => mouse.backButton,
-            _ => throw new ArgumentOutOfRangeException(nameof(button)),
-        };
+    public static ButtonControl GetButton(this Mouse mouse, MouseButton button) => button switch
+    {
+        MouseButton.Left => mouse.leftButton,
+        MouseButton.Right => mouse.rightButton,
+        MouseButton.Middle => mouse.middleButton,
+        MouseButton.Forward => mouse.forwardButton,
+        MouseButton.Back => mouse.backButton,
+        _ => throw new ArgumentOutOfRangeException(nameof(button)),
+    };
 
-        public static string Path(this MouseButton button) => button switch
-        {
-            MouseButton.Left => "leftButton",
-            MouseButton.Right => "rightButton",
-            MouseButton.Middle => "middleButton",
-            MouseButton.Forward => "forwardButton",
-            MouseButton.Back => "backButton",
-            _ => throw new ArgumentOutOfRangeException(nameof(button)),
-        };
+    public static string Path(this MouseButton button) => button switch
+    {
+        MouseButton.Left => "leftButton",
+        MouseButton.Right => "rightButton",
+        MouseButton.Middle => "middleButton",
+        MouseButton.Forward => "forwardButton",
+        MouseButton.Back => "backButton",
+        _ => throw new ArgumentOutOfRangeException(nameof(button)),
+    };
 
-        public static string Path(this MouseSpecial control) => control switch
-        {
-            MouseSpecial.Position => "position",
-            MouseSpecial.PositionX => "position/x",
-            MouseSpecial.PositionY => "position/y",
+    public static string Path(this MouseSpecial control) => control switch
+    {
+        MouseSpecial.Position => "position",
+        MouseSpecial.PositionX => "position/x",
+        MouseSpecial.PositionY => "position/y",
 
-            MouseSpecial.Delta => "delta",
-            MouseSpecial.DeltaX => "delta/x",
-            MouseSpecial.DeltaY => "delta/y",
+        MouseSpecial.Delta => "delta",
+        MouseSpecial.DeltaX => "delta/x",
+        MouseSpecial.DeltaY => "delta/y",
 
-            MouseSpecial.Scroll => "scroll",
-            MouseSpecial.ScrollX => "scroll/x",
-            MouseSpecial.ScrollY => "scroll/y",
-            MouseSpecial.ScrollUp => "scroll/up",
-            MouseSpecial.ScrollDown => "scroll/down",
-            MouseSpecial.ScrollLeft => "scroll/left",
-            MouseSpecial.ScrollRight => "scroll/right",
+        MouseSpecial.Scroll => "scroll",
+        MouseSpecial.ScrollX => "scroll/x",
+        MouseSpecial.ScrollY => "scroll/y",
+        MouseSpecial.ScrollUp => "scroll/up",
+        MouseSpecial.ScrollDown => "scroll/down",
+        MouseSpecial.ScrollLeft => "scroll/left",
+        MouseSpecial.ScrollRight => "scroll/right",
 
-            _ => throw new ArgumentOutOfRangeException(nameof(control)),
-        };
+        _ => throw new ArgumentOutOfRangeException(nameof(control)),
+    };
 
-        public static CompositeSyntax AddCompositeBinding_1DAxis(this InputAction action) => action.AddCompositeBinding("1DAxis");
+    public static CompositeSyntax AddCompositeBinding_1DAxis(this InputAction action) => action.AddCompositeBinding("1DAxis");
 
-        public static CompositeSyntax With_gamepad(this CompositeSyntax composite, in AxisCompositePart part, in GamepadButton button) => composite.With(part switch
-        {
-            AxisCompositePart.Negative => "Negative",
-            AxisCompositePart.Positive => "Positive",
-            _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        }, $"<Gamepad>/{button.Path()}");
+    public static CompositeSyntax With_gamepad(this CompositeSyntax composite, in AxisCompositePart part, in GamepadButton button) => composite.With(part switch
+    {
+        AxisCompositePart.Negative => "Negative",
+        AxisCompositePart.Positive => "Positive",
+        _ => throw new ArgumentOutOfRangeException(nameof(part)),
+    }, $"<Gamepad>/{button.Path()}");
 
-        public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in AxisCompositePart part, in Key key) => composite.With(part switch
-        {
-            AxisCompositePart.Negative => "Negative",
-            AxisCompositePart.Positive => "Positive",
-            _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        }, $"<Keyboard>/{key.Path()}");
+    public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in AxisCompositePart part, in Key key) => composite.With(part switch
+    {
+        AxisCompositePart.Negative => "Negative",
+        AxisCompositePart.Positive => "Positive",
+        _ => throw new ArgumentOutOfRangeException(nameof(part)),
+    }, $"<Keyboard>/{key.Path()}");
 
-        public static CompositeSyntax AddCompositeBinding_2DVector(this InputAction action) => action.AddCompositeBinding("2DVector");
+    public static CompositeSyntax AddCompositeBinding_2DVector(this InputAction action) => action.AddCompositeBinding("2DVector");
 
-        public static CompositeSyntax AddCompositeBinding_2DVector_ZQSD(this InputAction action) => action.AddCompositeBinding_2DVector()
-            .With_keyboard(Vector2CompositePart.Up, Key.W)
-            .With_keyboard(Vector2CompositePart.Down, Key.S)
-            .With_keyboard(Vector2CompositePart.Left, Key.A)
-            .With_keyboard(Vector2CompositePart.Right, Key.D);
+    public static CompositeSyntax AddCompositeBinding_2DVector_ZQSD(this InputAction action) => action.AddCompositeBinding_2DVector()
+        .With_keyboard(Vector2CompositePart.Up, Key.W)
+        .With_keyboard(Vector2CompositePart.Down, Key.S)
+        .With_keyboard(Vector2CompositePart.Left, Key.A)
+        .With_keyboard(Vector2CompositePart.Right, Key.D);
 
-        public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in Vector2CompositePart part, in Key key) => composite.With(part switch
-        {
-            Vector2CompositePart.Up => "Up",
-            Vector2CompositePart.Down => "Down",
-            Vector2CompositePart.Left => "Left",
-            Vector2CompositePart.Right => "Right",
-            _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        }, $"<Keyboard>/{key.Path()}");
+    public static CompositeSyntax With_keyboard(this CompositeSyntax composite, in Vector2CompositePart part, in Key key) => composite.With(part switch
+    {
+        Vector2CompositePart.Up => "Up",
+        Vector2CompositePart.Down => "Down",
+        Vector2CompositePart.Left => "Left",
+        Vector2CompositePart.Right => "Right",
+        _ => throw new ArgumentOutOfRangeException(nameof(part)),
+    }, $"<Keyboard>/{key.Path()}");
 
-        public static BindingSyntax AddBinding_keyboard(this InputAction action, in Key key) => action.AddBinding($"<Keyboard>/{key.Path()}");
-        public static BindingSyntax AddBinding_keyboard_special(this InputAction action, in KeyboardSpecial key) => action.AddBinding($"<Keyboard>/{key.Path()}");
-        public static BindingSyntax AddBinding_gamepad(this InputAction action, in GamepadButton button) => action.AddBinding($"<Gamepad>/{button.Path()}");
-        public static BindingSyntax AddBinding_gamepad_special(this InputAction action, in GamepadSpecial control) => action.AddBinding($"<Gamepad>/{control.Path()}");
-        public static BindingSyntax AddBinding_mouse_special(this InputAction action, in MouseSpecial control) => action.AddBinding($"<Mouse>/{control.Path()}");
-        public static BindingSyntax AddBinding_mouse(this InputAction action, in MouseButton button) => action.AddBinding($"<Mouse>/{button.Path()}");
+    public static BindingSyntax AddBinding_keyboard(this InputAction action, in Key key) => action.AddBinding($"<Keyboard>/{key.Path()}");
+    public static BindingSyntax AddBinding_keyboard_special(this InputAction action, in KeyboardSpecial key) => action.AddBinding($"<Keyboard>/{key.Path()}");
+    public static BindingSyntax AddBinding_gamepad(this InputAction action, in GamepadButton button) => action.AddBinding($"<Gamepad>/{button.Path()}");
+    public static BindingSyntax AddBinding_gamepad_special(this InputAction action, in GamepadSpecial control) => action.AddBinding($"<Gamepad>/{control.Path()}");
+    public static BindingSyntax AddBinding_mouse_special(this InputAction action, in MouseSpecial control) => action.AddBinding($"<Mouse>/{control.Path()}");
+    public static BindingSyntax AddBinding_mouse(this InputAction action, in MouseButton button) => action.AddBinding($"<Mouse>/{button.Path()}");
 
-        public static void Reset(this IInputActionCollection2 iam)
-        {
-            foreach (var ia in iam)
-                ia.Reset();
-        }
+    public static void Reset(this IInputActionCollection2 iam)
+    {
+        foreach (var ia in iam)
+            ia.Reset();
     }
 }
 #endif
